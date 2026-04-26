@@ -14,7 +14,7 @@ const TICK_RATE = 60;
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR_Y = 430;
-const GRAVITY = 0.75;
+const GRAVITY = 0.78;
 
 const players = {};
 const lobbies = {};
@@ -23,53 +23,57 @@ const leaderboard = {};
 let nextLobbyId = 1;
 
 const CHARACTERS = {
-  striker: {
-    name: "Striker",
-    maxHp: 100,
-    speed: 5.2,
-    jump: 15,
-    lightDamage: 6,
-    heavyDamage: 13,
-    specialDamage: 10,
-    width: 44,
-    height: 92,
-    reach: 62
-  },
-  brute: {
-    name: "Brute",
-    maxHp: 130,
-    speed: 3.8,
-    jump: 13,
-    lightDamage: 8,
-    heavyDamage: 17,
-    specialDamage: 12,
-    width: 58,
-    height: 104,
-    reach: 68
-  },
-  viper: {
-    name: "Viper",
-    maxHp: 85,
-    speed: 6.4,
-    jump: 16,
-    lightDamage: 5,
-    heavyDamage: 11,
-    specialDamage: 15,
-    width: 38,
-    height: 86,
-    reach: 58
-  },
-  mirror: {
-    name: "Mirror",
-    maxHp: 100,
+  king: {
+    name: "King",
+    title: "Balanced royal bruiser",
+    maxHp: 115,
     speed: 4.8,
     jump: 14,
+    width: 48,
+    height: 98,
+    reach: 64,
     lightDamage: 7,
+    heavyDamage: 14,
+    specialDamage: 16
+  },
+  knight: {
+    name: "Knight",
+    title: "Fast aerial attacker",
+    maxHp: 95,
+    speed: 6.1,
+    jump: 17,
+    width: 44,
+    height: 92,
+    reach: 58,
+    lightDamage: 6,
     heavyDamage: 12,
-    specialDamage: 13,
+    specialDamage: 15
+  },
+  bishop: {
+    name: "Bishop",
+    title: "Long diagonal blade",
+    maxHp: 90,
+    speed: 5.2,
+    jump: 15,
     width: 42,
-    height: 90,
-    reach: 60
+    height: 96,
+    reach: 78,
+    lightDamage: 5,
+    heavyDamage: 13,
+    specialDamage: 17
+  },
+  rook: {
+    name: "Rook",
+    title: "Slow armored wall",
+    maxHp: 140,
+    speed: 3.7,
+    jump: 12,
+    width: 62,
+    height: 108,
+    reach: 70,
+    lightDamage: 8,
+    heavyDamage: 18,
+    specialDamage: 19
   }
 };
 
@@ -82,7 +86,7 @@ function cleanName(name) {
 }
 
 function getCharacter(key) {
-  return CHARACTERS[key] || CHARACTERS.striker;
+  return CHARACTERS[key] || CHARACTERS.king;
 }
 
 function publicLobbyList() {
@@ -121,7 +125,7 @@ function createFighter(socketId, side, characterKey) {
     side,
     characterKey,
     characterName: ch.name,
-    color: side === "red" ? "#ff3e3e" : "#3e89ff",
+    color: side === "red" ? "#e53935" : "#2f7cff",
 
     x: side === "red" ? 220 : 700,
     y: FLOOR_Y - ch.height,
@@ -129,7 +133,10 @@ function createFighter(socketId, side, characterKey) {
     vy: 0,
 
     width: ch.width,
+    standingHeight: ch.height,
+    crouchHeight: Math.floor(ch.height * 0.62),
     height: ch.height,
+
     maxHp: ch.maxHp,
     hp: ch.maxHp,
     speed: ch.speed,
@@ -138,6 +145,7 @@ function createFighter(socketId, side, characterKey) {
 
     facing: side === "red" ? 1 : -1,
     grounded: true,
+    crouching: false,
     blocking: false,
 
     lightDamage: ch.lightDamage,
@@ -152,21 +160,19 @@ function createFighter(socketId, side, characterKey) {
     heavyCooldown: 0,
     specialCooldown: 0,
 
-    hurtTimer: 0,
-    wins: 0
+    hurtTimer: 0
   };
 }
 
 function createGame(lobby) {
   lobby.status = "playing";
   lobby.winner = null;
-  lobby.message = "Fight!";
+  lobby.message = "The board is set. Fight.";
 
   lobby.game = {
     width: WIDTH,
     height: HEIGHT,
     floorY: FLOOR_Y,
-    startedAt: Date.now(),
     roundOver: false,
     roundOverTimer: 0,
     fighters: {
@@ -203,12 +209,14 @@ function leaveCurrentLobby(socketId) {
 
   if (lobby.status === "playing") {
     const remainingId = lobby.p1 || lobby.p2;
+
     if (remainingId && players[remainingId]) {
       const winnerName = players[remainingId].name;
       leaderboard[winnerName] = (leaderboard[winnerName] || 0) + 1;
       lobby.winner = winnerName;
       lobby.message = `${winnerName} wins because the opponent disconnected.`;
     }
+
     resetLobbyAfterFight(lobby);
   }
 
@@ -247,88 +255,206 @@ function rectsOverlap(a, b) {
   );
 }
 
+function startAttack(f, baseType) {
+  if (f.attack) return;
+
+  let type = baseType;
+
+  if (!f.grounded) {
+    if (baseType === "light") type = "airLight";
+    if (baseType === "heavy") type = "airHeavy";
+    if (baseType === "special") type = "airSpecial";
+  } else if (f.crouching) {
+    if (baseType === "light") type = "crouchLight";
+    if (baseType === "heavy") type = "crouchHeavy";
+  }
+
+  const cooldown = getCooldown(type);
+
+  if (baseType === "light" && f.lightCooldown > 0) return;
+  if (baseType === "heavy" && f.heavyCooldown > 0) return;
+  if (baseType === "special" && f.specialCooldown > 0) return;
+
+  f.attack = type;
+  f.attackTimer = getAttackDuration(type);
+  f.hitThisAttack = false;
+
+  if (baseType === "light") f.lightCooldown = cooldown;
+  if (baseType === "heavy") f.heavyCooldown = cooldown;
+  if (baseType === "special") f.specialCooldown = cooldown;
+
+  if (type === "airSpecial") {
+    f.vx += f.facing * 7;
+    f.vy += 2;
+  }
+
+  if (type === "crouchHeavy") {
+    f.vx += f.facing * 2.5;
+  }
+
+  if (type === "special" && f.characterKey === "rook") {
+    f.vx += f.facing * 8;
+  }
+
+  if (type === "special" && f.characterKey === "knight") {
+    f.vy = -10;
+    f.grounded = false;
+  }
+}
+
+function getAttackDuration(type) {
+  const durations = {
+    light: 14,
+    heavy: 28,
+    special: 38,
+    crouchLight: 16,
+    crouchHeavy: 31,
+    airLight: 18,
+    airHeavy: 30,
+    airSpecial: 34
+  };
+
+  return durations[type] || 20;
+}
+
+function getCooldown(type) {
+  const cooldowns = {
+    light: 19,
+    heavy: 48,
+    special: 96,
+    crouchLight: 24,
+    crouchHeavy: 58,
+    airLight: 28,
+    airHeavy: 64,
+    airSpecial: 105
+  };
+
+  return cooldowns[type] || 30;
+}
+
+function getDamage(f) {
+  const multipliers = {
+    light: 1,
+    heavy: 1,
+    special: 1,
+    crouchLight: 0.8,
+    crouchHeavy: 1.15,
+    airLight: 0.9,
+    airHeavy: 1.25,
+    airSpecial: 1.35
+  };
+
+  let base = f.lightDamage;
+
+  if (f.attack.includes("Heavy")) base = f.heavyDamage;
+  else if (f.attack.includes("Special")) base = f.specialDamage;
+  else if (f.attack === "heavy") base = f.heavyDamage;
+  else if (f.attack === "special") base = f.specialDamage;
+
+  return Math.ceil(base * (multipliers[f.attack] || 1));
+}
+
+function getKnockback(f) {
+  const values = {
+    light: 6,
+    heavy: 13,
+    special: 16,
+    crouchLight: 4,
+    crouchHeavy: 15,
+    airLight: 7,
+    airHeavy: 13,
+    airSpecial: 18
+  };
+
+  return values[f.attack] || 8;
+}
+
+function activeWindow(f) {
+  const t = f.attackTimer;
+
+  if (f.attack === "light") return t <= 10 && t >= 4;
+  if (f.attack === "heavy") return t <= 17 && t >= 5;
+  if (f.attack === "special") return t <= 24 && t >= 7;
+
+  if (f.attack === "crouchLight") return t <= 11 && t >= 4;
+  if (f.attack === "crouchHeavy") return t <= 19 && t >= 6;
+
+  if (f.attack === "airLight") return t <= 13 && t >= 4;
+  if (f.attack === "airHeavy") return t <= 19 && t >= 5;
+  if (f.attack === "airSpecial") return t <= 23 && t >= 6;
+
+  return false;
+}
+
 function attackBox(f) {
-  const range = f.attack === "heavy" ? f.reach + 22 : f.reach;
-  const height = f.attack === "special" ? f.height * 0.75 : f.height * 0.55;
+  const low = f.attack === "crouchLight" || f.attack === "crouchHeavy";
+  const air = f.attack === "airLight" || f.attack === "airHeavy" || f.attack === "airSpecial";
+
+  let range = f.reach;
+  let height = f.height * 0.5;
+  let y = f.y + 22;
+
+  if (f.attack === "heavy" || f.attack === "crouchHeavy" || f.attack === "airHeavy") {
+    range += 25;
+  }
+
+  if (f.attack === "special" || f.attack === "airSpecial") {
+    range += 34;
+    height = f.height * 0.72;
+  }
+
+  if (low) {
+    y = f.y + f.height * 0.58;
+    height = f.height * 0.36;
+  }
+
+  if (air) {
+    y = f.y + f.height * 0.42;
+    height = f.height * 0.45;
+  }
 
   if (f.facing === 1) {
     return {
-      x: f.x + f.width,
-      y: f.y + 18,
+      x: f.x + f.width - 4,
+      y,
       width: range,
       height
     };
   }
 
   return {
-    x: f.x - range,
-    y: f.y + 18,
+    x: f.x - range + 4,
+    y,
     width: range,
     height
   };
 }
 
-function startAttack(f, type) {
-  if (f.attack) return;
-
-  if (type === "light") {
-    if (f.lightCooldown > 0) return;
-    f.attack = "light";
-    f.attackTimer = 14;
-    f.hitThisAttack = false;
-    f.lightCooldown = 20;
-  }
-
-  if (type === "heavy") {
-    if (f.heavyCooldown > 0) return;
-    f.attack = "heavy";
-    f.attackTimer = 26;
-    f.hitThisAttack = false;
-    f.heavyCooldown = 48;
-  }
-
-  if (type === "special") {
-    if (f.specialCooldown > 0) return;
-    f.attack = "special";
-    f.attackTimer = 34;
-    f.hitThisAttack = false;
-    f.specialCooldown = 90;
-  }
-}
-
-function damageFor(f) {
-  if (f.attack === "light") return f.lightDamage;
-  if (f.attack === "heavy") return f.heavyDamage;
-  if (f.attack === "special") return f.specialDamage;
-  return 0;
-}
-
-function knockbackFor(f) {
-  if (f.attack === "light") return 6;
-  if (f.attack === "heavy") return 12;
-  if (f.attack === "special") return 15;
-  return 0;
-}
-
 function updateFighter(f, opponent, input) {
-  const left = input.left;
-  const right = input.right;
-  const jump = input.jump;
-  const block = input.block;
-
   if (f.hurtTimer > 0) f.hurtTimer--;
 
-  f.blocking = block && f.grounded && !f.attack;
+  const wantsCrouch = !!input.crouch && f.grounded && !f.attack;
+  f.crouching = wantsCrouch;
 
-  if (!f.attack && f.hurtTimer <= 8) {
-    if (left && !right) f.vx = -f.speed;
-    else if (right && !left) f.vx = f.speed;
-    else f.vx *= 0.72;
+  const oldHeight = f.height;
+  f.height = f.crouching ? f.crouchHeight : f.standingHeight;
+  f.y += oldHeight - f.height;
+
+  f.blocking = !!input.block && f.grounded && !f.attack && !f.crouching;
+
+  if (!f.attack && f.hurtTimer <= 8 && !f.blocking) {
+    if (input.left && !input.right) {
+      f.vx = f.crouching ? -f.speed * 0.35 : -f.speed;
+    } else if (input.right && !input.left) {
+      f.vx = f.crouching ? f.speed * 0.35 : f.speed;
+    } else {
+      f.vx *= 0.72;
+    }
   } else {
     f.vx *= 0.84;
   }
 
-  if (jump && f.grounded && !f.blocking && !f.attack) {
+  if (input.jump && f.grounded && !f.blocking && !f.attack && !f.crouching) {
     f.vy = -f.jump;
     f.grounded = false;
   }
@@ -346,6 +472,8 @@ function updateFighter(f, opponent, input) {
     f.y = FLOOR_Y - f.height;
     f.vy = 0;
     f.grounded = true;
+  } else {
+    f.grounded = false;
   }
 
   f.x = Math.max(20, Math.min(WIDTH - f.width - 20, f.x));
@@ -369,31 +497,32 @@ function updateFighter(f, opponent, input) {
 
 function handleHit(attacker, defender) {
   if (!attacker.attack || attacker.hitThisAttack) return;
-
-  const activeWindow =
-    attacker.attack === "light"
-      ? attacker.attackTimer <= 10 && attacker.attackTimer >= 4
-      : attacker.attack === "heavy"
-      ? attacker.attackTimer <= 16 && attacker.attackTimer >= 5
-      : attacker.attackTimer <= 22 && attacker.attackTimer >= 6;
-
-  if (!activeWindow) return;
-
+  if (!activeWindow(attacker)) return;
   if (!rectsOverlap(attackBox(attacker), defender)) return;
 
-  let dmg = damageFor(attacker);
-  let kb = knockbackFor(attacker);
+  let dmg = getDamage(attacker);
+  let kb = getKnockback(attacker);
 
-  if (defender.blocking && defender.facing === -attacker.facing) {
+  const defenderFacingAttack =
+    defender.facing === -attacker.facing;
+
+  if (defender.blocking && defenderFacingAttack) {
     dmg = Math.ceil(dmg * 0.25);
-    kb *= 0.4;
+    kb *= 0.35;
   } else {
-    defender.hurtTimer = 18;
+    defender.hurtTimer = 20;
   }
 
   defender.hp = Math.max(0, defender.hp - dmg);
   defender.vx += attacker.facing * kb;
-  defender.vy -= attacker.attack === "heavy" ? 4 : 2;
+
+  if (attacker.attack === "crouchHeavy") {
+    defender.vy -= 7;
+  } else if (attacker.attack === "airHeavy" || attacker.attack === "airSpecial") {
+    defender.vy += 4;
+  } else {
+    defender.vy -= 2.5;
+  }
 
   attacker.hitThisAttack = true;
 }
@@ -435,7 +564,7 @@ function updateGame(lobby) {
     const winnerName = winner.name;
 
     lobby.winner = winnerName;
-    lobby.message = `${winnerName} wins!`;
+    lobby.message = `Checkmate. ${winnerName} wins.`;
     leaderboard[winnerName] = (leaderboard[winnerName] || 0) + 1;
   }
 }
@@ -453,7 +582,7 @@ io.on("connection", (socket) => {
   players[socket.id] = {
     id: socket.id,
     name: `Player ${Object.keys(players).length + 1}`,
-    characterKey: "striker",
+    characterKey: "king",
     lobbyId: null,
     role: "menu",
     input: {}
@@ -468,9 +597,11 @@ io.on("connection", (socket) => {
 
   socket.on("setName", (name) => {
     players[socket.id].name = cleanName(name);
+
     if (!leaderboard[players[socket.id].name]) {
       leaderboard[players[socket.id].name] = 0;
     }
+
     sendLobbyData();
   });
 
@@ -487,7 +618,7 @@ io.on("connection", (socket) => {
 
     lobbies[id] = {
       id,
-      name: String(lobbyName || `${players[socket.id].name}'s Lobby`).trim().slice(0, 28),
+      name: String(lobbyName || `${players[socket.id].name}'s Board`).trim().slice(0, 28),
       hostId: socket.id,
       p1: socket.id,
       p2: null,
@@ -517,7 +648,7 @@ io.on("connection", (socket) => {
 
     lobby.p2 = socket.id;
     lobby.status = "playing";
-    lobby.message = "Fight!";
+    lobby.message = "The board is set. Fight.";
 
     players[socket.id].lobbyId = lobbyId;
     players[socket.id].role = "p2";
@@ -565,6 +696,7 @@ io.on("connection", (socket) => {
       left: !!input.left,
       right: !!input.right,
       jump: !!input.jump,
+      crouch: !!input.crouch,
       block: !!input.block,
       light: !!input.light,
       heavy: !!input.heavy,

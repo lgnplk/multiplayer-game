@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Link Fighter</title>
+  <title>Checkmate Clash</title>
   <style>
     * {
       box-sizing: border-box;
@@ -9,7 +9,8 @@
 
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #252538, #07070b);
+      background:
+        radial-gradient(circle at top, #24252c, #050506);
       color: white;
       font-family: Arial, sans-serif;
       min-height: 100vh;
@@ -21,8 +22,8 @@
       border-radius: 10px;
       padding: 10px 14px;
       font-weight: bold;
-      background: #eeeeee;
-      color: #111;
+      background: #f0e6d2;
+      color: #17120b;
     }
 
     button:hover {
@@ -49,7 +50,7 @@
 
     .panel {
       background: rgba(255, 255, 255, 0.075);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(240, 230, 210, 0.18);
       border-radius: 18px;
       padding: 18px;
       box-shadow: 0 0 35px rgba(0, 0, 0, 0.35);
@@ -57,14 +58,14 @@
 
     h1 {
       text-align: center;
-      font-size: 46px;
+      font-size: 48px;
       margin-bottom: 5px;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
     }
 
     .subtitle {
       text-align: center;
-      color: #bbb;
+      color: #c8bea9;
       margin-top: 0;
       margin-bottom: 25px;
     }
@@ -90,8 +91,8 @@
     }
 
     .characterCard.selected {
-      border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.16);
+      border-color: #f0e6d2;
+      background: rgba(240, 230, 210, 0.16);
     }
 
     .characterName {
@@ -100,7 +101,7 @@
     }
 
     .stats {
-      color: #bbb;
+      color: #c8bea9;
       font-size: 13px;
       margin-top: 4px;
       line-height: 1.35;
@@ -123,17 +124,17 @@
     }
 
     .lobbyMeta {
-      color: #bbb;
+      color: #c8bea9;
       font-size: 13px;
       margin-top: 4px;
     }
 
     .waiting {
-      color: #88ffaa;
+      color: #91ffad;
     }
 
     .playing {
-      color: #ffdf70;
+      color: #ffe185;
     }
 
     .finished {
@@ -179,15 +180,14 @@
       height: auto;
       margin: 0 auto;
       background: #111;
-      border: 3px solid rgba(255, 255, 255, 0.45);
+      border: 3px solid rgba(240, 230, 210, 0.55);
       border-radius: 14px;
-      image-rendering: auto;
     }
 
     #controls {
       max-width: 960px;
       margin: 12px auto 0;
-      color: #ccc;
+      color: #d4cab4;
       font-size: 14px;
       line-height: 1.5;
       display: grid;
@@ -217,12 +217,12 @@
 </head>
 <body>
   <div id="menuScreen" class="screen active">
-    <h1>LINK FIGHTER</h1>
-    <p class="subtitle">Create a lobby, join a fight, or watch someone get folded.</p>
+    <h1>CHECKMATE CLASH</h1>
+    <p class="subtitle">A board-fighting duel where every piece cheats its own movement rules.</p>
 
     <div id="menuGrid">
       <div class="panel">
-        <h2>Your Fighter</h2>
+        <h2>Your Piece</h2>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
           <input id="nameInput" placeholder="Your name" maxlength="18" style="flex:1;">
@@ -233,11 +233,11 @@
       </div>
 
       <div class="panel">
-        <h2>Lobbies</h2>
+        <h2>Boards</h2>
 
         <div id="createArea">
-          <input id="lobbyName" placeholder="Lobby name">
-          <button id="createLobbyBtn">Create Lobby</button>
+          <input id="lobbyName" placeholder="Board name">
+          <button id="createLobbyBtn">Create Board</button>
         </div>
 
         <div id="lobbyList"></div>
@@ -255,7 +255,7 @@
       <button id="leaveBtn">Leave</button>
       <div id="gameInfo">
         <h2 id="gameTitle" style="margin:0;">Fight</h2>
-        <div id="gameMessage" style="color:#bbb; margin-top:4px;"></div>
+        <div id="gameMessage" style="color:#c8bea9; margin-top:4px;"></div>
       </div>
       <button id="backToLobbyBtn">Lobby</button>
     </div>
@@ -265,14 +265,14 @@
     <div id="controls">
       <div class="panel">
         <strong>Controls</strong><br>
-        A/D = move, W = jump, S = block<br>
+        A/D = move, W = jump, S = crouch, Shift = block<br>
         J = light, K = heavy, L = special
       </div>
 
       <div class="panel">
-        <strong>Notes</strong><br>
-        Light is quick, heavy has big reach, special is slower but flashier.
-        Blocking reduces damage if you face the attack.
+        <strong>Extra mechanics</strong><br>
+        Crouch + J/K gives low attacks. Jump + J/K/L gives aerial attacks.
+        Rook charges, Knight leaps, Bishop cuts diagonally, King guards space.
       </div>
     </div>
 
@@ -309,7 +309,7 @@
     const ctx = canvas.getContext("2d");
 
     let characters = {};
-    let selectedCharacter = "striker";
+    let selectedCharacter = "king";
     let currentGameState = null;
     let myRole = "menu";
 
@@ -324,6 +324,7 @@
       left: false,
       right: false,
       jump: false,
+      crouch: false,
       block: false,
       light: false,
       heavy: false,
@@ -382,22 +383,22 @@
     }
 
     function makeHitSpark(x, y, color) {
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 14; i++) {
         hitSparks.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * 9,
-          vy: (Math.random() - 0.5) * 9,
-          life: 20 + Math.random() * 10,
-          maxLife: 30,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10,
+          life: 22 + Math.random() * 12,
+          maxLife: 34,
           color
         });
       }
     }
 
     function screenShake(damage) {
-      shakeTimer = Math.min(14, 5 + damage);
-      shakePower = Math.min(12, 3 + damage * 0.45);
+      shakeTimer = Math.min(16, 5 + damage);
+      shakePower = Math.min(13, 3 + damage * 0.45);
     }
 
     saveNameBtn.addEventListener("click", () => {
@@ -444,12 +445,10 @@
         div.className = "characterCard";
         if (key === selectedCharacter) div.classList.add("selected");
 
-        const description = getCharacterDescription(key);
-
         div.innerHTML = `
-          <div class="characterName">${escapeHtml(ch.name)}</div>
+          <div class="characterName">${pieceIcon(key)} ${escapeHtml(ch.name)}</div>
           <div class="stats">
-            ${description}<br>
+            ${escapeHtml(ch.title || getCharacterDescription(key))}<br>
             HP ${ch.maxHp} · Speed ${ch.speed} · Jump ${ch.jump}<br>
             Light ${ch.lightDamage} · Heavy ${ch.heavyDamage} · Special ${ch.specialDamage}
           </div>
@@ -466,18 +465,26 @@
     }
 
     function getCharacterDescription(key) {
-      if (key === "striker") return "Fast boxer. Big gloves, clean punches.";
-      if (key === "brute") return "Slow wall. Huge body, huge swings.";
-      if (key === "viper") return "Quick knife-fighter. Thin and sharp.";
-      if (key === "mirror") return "Balanced trickster. Afterimages and arcs.";
-      return "Unknown fighter.";
+      if (key === "king") return "Balanced royal bruiser.";
+      if (key === "knight") return "Fast aerial attacker.";
+      if (key === "bishop") return "Long diagonal blade.";
+      if (key === "rook") return "Slow armored wall.";
+      return "Unknown piece.";
+    }
+
+    function pieceIcon(key) {
+      if (key === "king") return "♔";
+      if (key === "knight") return "♘";
+      if (key === "bishop") return "♗";
+      if (key === "rook") return "♖";
+      return "♙";
     }
 
     function renderLobbies(lobbies) {
       lobbyList.innerHTML = "";
 
       if (lobbies.length === 0) {
-        lobbyList.innerHTML = `<p style="color:#aaa;">No lobbies yet. Create one.</p>`;
+        lobbyList.innerHTML = `<p style="color:#c8bea9;">No boards yet. Create one.</p>`;
         return;
       }
 
@@ -532,7 +539,7 @@
       target.innerHTML = "";
 
       if (!rows.length) {
-        target.innerHTML = `<p style="color:#aaa;">No wins yet.</p>`;
+        target.innerHTML = `<p style="color:#c8bea9;">No wins yet.</p>`;
         return;
       }
 
@@ -551,8 +558,7 @@
       if (!currentGameState) return;
 
       const lobby = currentGameState.lobby;
-
-      gameTitle.textContent = `${lobby.name || "Fight"} — ${myRole.toUpperCase()}`;
+      gameTitle.textContent = `${lobby.name || "Board"} — ${myRole.toUpperCase()}`;
       gameMessage.textContent = lobby.message || "";
     }
 
@@ -562,7 +568,8 @@
       if (e.key === "a" || e.key === "A") keys.left = true;
       if (e.key === "d" || e.key === "D") keys.right = true;
       if (e.key === "w" || e.key === "W") keys.jump = true;
-      if (e.key === "s" || e.key === "S") keys.block = true;
+      if (e.key === "s" || e.key === "S") keys.crouch = true;
+      if (e.key === "Shift") keys.block = true;
       if (e.key === "j" || e.key === "J") keys.light = true;
       if (e.key === "k" || e.key === "K") keys.heavy = true;
       if (e.key === "l" || e.key === "L") keys.special = true;
@@ -574,7 +581,8 @@
       if (e.key === "a" || e.key === "A") keys.left = false;
       if (e.key === "d" || e.key === "D") keys.right = false;
       if (e.key === "w" || e.key === "W") keys.jump = false;
-      if (e.key === "s" || e.key === "S") keys.block = false;
+      if (e.key === "s" || e.key === "S") keys.crouch = false;
+      if (e.key === "Shift") keys.block = false;
       if (e.key === "j" || e.key === "J") keys.light = false;
       if (e.key === "k" || e.key === "K") keys.heavy = false;
       if (e.key === "l" || e.key === "L") keys.special = false;
@@ -614,7 +622,7 @@
 
       ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
 
-      drawBackground(game);
+      drawChessBackground(game);
       drawHealthBars(red, blue);
 
       drawShadow(red);
@@ -629,7 +637,7 @@
       drawParticles();
 
       if (game.roundOver) {
-        drawCenterText(currentGameState.lobby.message || "Round over");
+        drawCenterText(currentGameState.lobby.message || "Checkmate.");
       }
 
       ctx.restore();
@@ -639,47 +647,56 @@
 
     function drawWaitingScreen() {
       ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
-      drawBackground({ floorY: 430 });
+      drawChessBackground({ floorY: 430 });
       drawCenterText(currentGameState?.lobby?.message || "Waiting...");
     }
 
-    function drawBackground(game) {
-      const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      g.addColorStop(0, "#1a1d36");
-      g.addColorStop(0.55, "#11121d");
-      g.addColorStop(0.56, "#30261f");
-      g.addColorStop(1, "#15100d");
-      ctx.fillStyle = g;
+    function drawChessBackground(game) {
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, "#15161c");
+      grad.addColorStop(0.55, "#070708");
+      grad.addColorStop(0.56, "#2d261b");
+      grad.addColorStop(1, "#17120c");
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "rgba(255,255,255,0.04)";
-      for (let i = 0; i < 10; i++) {
-        const x = i * 110 + 10;
-        const h = 160 + (i % 4) * 35;
-        ctx.fillRect(x, 210 - h / 2, 55, h);
+      ctx.fillStyle = "rgba(240,230,210,0.05)";
+      ctx.font = "90px Georgia";
+      ctx.fillText("♜", 70, 145);
+      ctx.fillText("♞", 230, 120);
+      ctx.fillText("♝", 380, 150);
+      ctx.fillText("♚", 535, 118);
+      ctx.fillText("♛", 690, 150);
+      ctx.fillText("♟", 835, 125);
+
+      const squareSize = 80;
+      const startX = 0;
+      const startY = game.floorY;
+
+      for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 12; col++) {
+          const dark = (row + col) % 2 === 0;
+          ctx.fillStyle = dark ? "#3a2f20" : "#bba67a";
+          ctx.globalAlpha = dark ? 0.9 : 0.75;
+          ctx.fillRect(startX + col * squareSize, startY + row * 55, squareSize, 55);
+        }
       }
 
-      ctx.fillStyle = "rgba(255, 220, 120, 0.13)";
-      ctx.beginPath();
-      ctx.arc(480, 100, 90, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.globalAlpha = 1;
 
-      ctx.fillStyle = "#2b221b";
-      ctx.fillRect(0, game.floorY, canvas.width, canvas.height - game.floorY);
-
-      ctx.strokeStyle = "rgba(255,255,255,0.16)";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(0, game.floorY);
       ctx.lineTo(canvas.width, game.floorY);
       ctx.stroke();
 
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.strokeStyle = "rgba(240,230,210,0.15)";
       ctx.lineWidth = 2;
-      for (let x = 0; x < canvas.width; x += 80) {
+      for (let x = 0; x <= canvas.width; x += 80) {
         ctx.beginPath();
         ctx.moveTo(x, game.floorY);
-        ctx.lineTo(x + 40, canvas.height);
+        ctx.lineTo(x, canvas.height);
         ctx.stroke();
       }
     }
@@ -696,30 +713,30 @@
       roundRect(x, y, w, 28, 7);
       ctx.fill();
 
-      ctx.fillStyle = f.side === "red" ? "#ff3e3e" : "#3e89ff";
+      ctx.fillStyle = f.side === "red" ? "#e53935" : "#2f7cff";
       roundRect(x, y, w * pct, 28, 7);
       ctx.fill();
 
-      ctx.strokeStyle = "white";
+      ctx.strokeStyle = "#f0e6d2";
       ctx.lineWidth = 2;
       roundRect(x, y, w, 28, 7);
       ctx.stroke();
 
-      ctx.fillStyle = "white";
+      ctx.fillStyle = "#f0e6d2";
       ctx.font = "16px Arial";
       ctx.fillText(`${label}: ${f.name} / ${f.characterName}`, x, y - 8);
 
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fillStyle = "rgba(240,230,210,0.9)";
       ctx.font = "13px Arial";
       ctx.fillText(`${Math.ceil(f.hp)} / ${f.maxHp}`, x + w - 70, y + 19);
     }
 
     function drawShadow(f) {
       ctx.save();
-      ctx.globalAlpha = 0.35;
+      ctx.globalAlpha = 0.36;
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.ellipse(f.x + f.width / 2, 433, f.width * 0.85, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(f.x + f.width / 2, 433, f.width * 0.9, 12, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -728,21 +745,19 @@
       ctx.save();
 
       const blink = f.hurtTimer > 0 && Math.floor(f.hurtTimer / 3) % 2 === 0;
-      const bob = f.grounded && !f.attack
+      const bob = f.grounded && !f.attack && !f.crouching
         ? Math.sin(Date.now() / 180 + f.x * 0.03) * 2
         : 0;
 
       ctx.translate(0, bob);
 
-      if (blink) {
-        ctx.globalAlpha = 0.48;
-      }
+      if (blink) ctx.globalAlpha = 0.5;
 
-      if (f.characterKey === "striker") drawStriker(f);
-      else if (f.characterKey === "brute") drawBrute(f);
-      else if (f.characterKey === "viper") drawViper(f);
-      else if (f.characterKey === "mirror") drawMirror(f);
-      else drawBasicFighter(f);
+      if (f.characterKey === "king") drawKing(f);
+      else if (f.characterKey === "knight") drawKnight(f);
+      else if (f.characterKey === "bishop") drawBishop(f);
+      else if (f.characterKey === "rook") drawRook(f);
+      else drawPawn(f);
 
       ctx.globalAlpha = 1;
 
@@ -751,223 +766,175 @@
       ctx.restore();
     }
 
-    function drawStriker(f) {
+    function drawKing(f) {
       const cx = f.x + f.width / 2;
-      const headY = f.y + 20;
-      const c = f.color;
       const dir = f.facing;
+      const c = f.color;
+      const crouch = f.crouching;
 
       ctx.fillStyle = c;
-      roundRect(f.x + 9, f.y + 38, f.width - 18, f.height - 42, 12);
+      roundRect(f.x + 7, f.y + 30, f.width - 14, f.height - 30, 14);
       ctx.fill();
 
-      ctx.fillStyle = brighten(c, 0.4);
+      ctx.fillStyle = brighten(c, 0.38);
       ctx.beginPath();
-      ctx.arc(cx, headY, 17, 0, Math.PI * 2);
+      ctx.arc(cx, f.y + 18, crouch ? 13 : 17, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#151515";
-      const frontGloveX = dir === 1 ? f.x + f.width + 3 : f.x - 3;
-      const backGloveX = dir === 1 ? f.x + 1 : f.x + f.width - 1;
-
-      const attacking = f.attack === "light" || f.attack === "heavy";
-      const extension = attacking ? (f.attack === "heavy" ? 25 : 17) * dir : 0;
-
+      ctx.strokeStyle = "#f0e6d2";
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(frontGloveX + extension, f.y + 58, 13, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(backGloveX, f.y + 69, 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 7;
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 54);
-      ctx.lineTo(frontGloveX + extension, f.y + 58);
+      ctx.moveTo(cx, f.y + 4);
+      ctx.lineTo(cx, f.y - 18);
+      ctx.moveTo(cx - 10, f.y - 9);
+      ctx.lineTo(cx + 10, f.y - 9);
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 60);
-      ctx.lineTo(backGloveX, f.y + 69);
-      ctx.stroke();
-
-      ctx.strokeStyle = "#111";
+      ctx.strokeStyle = "#f0e6d2";
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(cx - 8, f.y + f.height - 12);
-      ctx.lineTo(cx - 17, f.y + f.height + 4);
+      ctx.moveTo(cx, f.y + 55);
+      ctx.lineTo(cx + dir * 36, f.y + 56);
       ctx.stroke();
 
+      ctx.fillStyle = "#f0e6d2";
       ctx.beginPath();
-      ctx.moveTo(cx + 8, f.y + f.height - 12);
-      ctx.lineTo(cx + 17, f.y + f.height + 4);
-      ctx.stroke();
+      ctx.arc(cx + dir * 42, f.y + 56, 8, 0, Math.PI * 2);
+      ctx.fill();
 
-      drawEye(cx, headY, dir);
+      drawLegs(f, cx);
+      drawEye(cx, f.y + 18, dir);
     }
 
-    function drawBrute(f) {
+    function drawKnight(f) {
       const cx = f.x + f.width / 2;
       const dir = f.facing;
       const c = f.color;
 
-      ctx.fillStyle = darken(c, 0.12);
-      roundRect(f.x + 4, f.y + 32, f.width - 8, f.height - 30, 16);
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(f.x + 5, f.y + f.height);
+      ctx.lineTo(f.x + f.width - 5, f.y + f.height);
+      ctx.lineTo(f.x + f.width - 8, f.y + 38);
+      ctx.lineTo(cx + dir * 20, f.y + 15);
+      ctx.lineTo(cx - dir * 3, f.y + 5);
+      ctx.lineTo(f.x + 8, f.y + 38);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = brighten(c, 0.42);
+      ctx.beginPath();
+      ctx.moveTo(cx - 12, f.y + 23);
+      ctx.quadraticCurveTo(cx + dir * 20, f.y - 8, cx + dir * 35, f.y + 23);
+      ctx.quadraticCurveTo(cx + dir * 20, f.y + 34, cx - 8, f.y + 30);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 60);
+      ctx.lineTo(cx + dir * 40, f.y + 50);
+      ctx.stroke();
+
+      drawLegs(f, cx);
+      drawEye(cx + dir * 12, f.y + 18, dir);
+    }
+
+    function drawBishop(f) {
+      const cx = f.x + f.width / 2;
+      const dir = f.facing;
+      const c = f.color;
+
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 5);
+      ctx.quadraticCurveTo(f.x + f.width + 5, f.y + 35, f.x + f.width - 5, f.y + f.height);
+      ctx.lineTo(f.x + 5, f.y + f.height);
+      ctx.quadraticCurveTo(f.x - 5, f.y + 35, cx, f.y + 5);
+      ctx.fill();
+
+      ctx.strokeStyle = "#f0e6d2";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, f.y + 22);
+      ctx.lineTo(cx + 10, f.y + 42);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#f0e6d2";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 60);
+      ctx.lineTo(cx + dir * 55, f.y + 28);
+      ctx.stroke();
+
+      ctx.fillStyle = brighten(c, 0.45);
+      ctx.beginPath();
+      ctx.arc(cx, f.y + 19, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawLegs(f, cx);
+      drawEye(cx, f.y + 19, dir);
+    }
+
+    function drawRook(f) {
+      const cx = f.x + f.width / 2;
+      const dir = f.facing;
+      const c = f.color;
+
+      ctx.fillStyle = c;
+      roundRect(f.x + 3, f.y + 28, f.width - 6, f.height - 28, 5);
       ctx.fill();
 
       ctx.fillStyle = brighten(c, 0.35);
-      ctx.beginPath();
-      ctx.arc(cx, f.y + 20, 21, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(f.x + 5, f.y + 8, f.width - 10, 25);
+
+      ctx.fillStyle = c;
+      ctx.fillRect(f.x + 6, f.y, 10, 14);
+      ctx.fillRect(cx - 5, f.y, 10, 14);
+      ctx.fillRect(f.x + f.width - 16, f.y, 10, 14);
 
       ctx.fillStyle = "#111";
-      const shoulderY = f.y + 54;
-      ctx.beginPath();
-      ctx.arc(f.x + 5, shoulderY, 16, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(f.x + f.width - 5, shoulderY, 16, 0, Math.PI * 2);
-      ctx.fill();
-
-      const fistX = dir === 1 ? f.x + f.width + 10 : f.x - 10;
-      const fistY = f.attack === "heavy" ? f.y + 34 : f.y + 74;
-
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.arc(fistX, fistY, f.attack ? 18 : 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 65);
-      ctx.lineTo(fistX, fistY);
-      ctx.stroke();
+      ctx.fillRect(f.x + 12, f.y + 52, f.width - 24, 12);
 
       ctx.strokeStyle = "#111";
       ctx.lineWidth = 8;
       ctx.beginPath();
-      ctx.moveTo(cx - 14, f.y + f.height - 10);
-      ctx.lineTo(cx - 25, f.y + f.height + 4);
+      ctx.moveTo(cx, f.y + 72);
+      ctx.lineTo(cx + dir * 46, f.y + 72);
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(cx + 14, f.y + f.height - 10);
-      ctx.lineTo(cx + 25, f.y + f.height + 4);
-      ctx.stroke();
-
-      drawEye(cx, f.y + 20, dir);
+      drawLegs(f, cx);
+      drawEye(cx + dir * 6, f.y + 24, dir);
     }
 
-    function drawViper(f) {
+    function drawPawn(f) {
       const cx = f.x + f.width / 2;
-      const dir = f.facing;
-      const c = f.color;
 
-      ctx.fillStyle = c;
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 28);
-      ctx.lineTo(f.x + f.width - 4, f.y + f.height - 6);
-      ctx.lineTo(f.x + 4, f.y + f.height - 6);
-      ctx.closePath();
+      ctx.fillStyle = f.color;
+      roundRect(f.x, f.y + 30, f.width, f.height - 30, 12);
       ctx.fill();
 
-      ctx.fillStyle = brighten(c, 0.45);
       ctx.beginPath();
-      ctx.arc(cx, f.y + 17, 15, 0, Math.PI * 2);
+      ctx.arc(cx, f.y + 18, 16, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 5;
-      const handX = dir === 1 ? f.x + f.width + 7 : f.x - 7;
-      const handY = f.y + 60;
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 50);
-      ctx.lineTo(handX, handY);
-      ctx.stroke();
+      drawEye(cx, f.y + 18, f.facing);
+    }
 
-      ctx.strokeStyle = "#d9fff7";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(handX, handY);
-      ctx.lineTo(handX + dir * 28, handY - 8);
-      ctx.stroke();
-
+    function drawLegs(f, cx) {
       ctx.strokeStyle = "#111";
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 6;
+
       ctx.beginPath();
-      ctx.moveTo(cx - 4, f.y + f.height - 10);
+      ctx.moveTo(cx - 8, f.y + f.height - 8);
       ctx.lineTo(cx - 20, f.y + f.height + 4);
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.moveTo(cx + 4, f.y + f.height - 10);
+      ctx.moveTo(cx + 8, f.y + f.height - 8);
       ctx.lineTo(cx + 20, f.y + f.height + 4);
       ctx.stroke();
-
-      drawEye(cx, f.y + 17, dir);
-    }
-
-    function drawMirror(f) {
-      const cx = f.x + f.width / 2;
-      const dir = f.facing;
-      const c = f.color;
-      const t = Date.now() / 160;
-
-      ctx.save();
-      ctx.globalAlpha = 0.2;
-      ctx.fillStyle = c;
-      roundRect(f.x - dir * 16 + Math.sin(t) * 3, f.y + 8, f.width, f.height - 8, 16);
-      ctx.fill();
-      ctx.restore();
-
-      ctx.fillStyle = darken(c, 0.05);
-      roundRect(f.x + 7, f.y + 34, f.width - 14, f.height - 38, 14);
-      ctx.fill();
-
-      ctx.fillStyle = brighten(c, 0.5);
-      ctx.beginPath();
-      ctx.arc(cx, f.y + 19, 16, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "#f0f0ff";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(cx, f.y + 55, 28, -0.5, 2.4);
-      ctx.stroke();
-
-      const handX = dir === 1 ? f.x + f.width + 5 : f.x - 5;
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(cx, f.y + 55);
-      ctx.lineTo(handX, f.y + 62);
-      ctx.stroke();
-
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(cx - 8, f.y + f.height - 10);
-      ctx.lineTo(cx - 18, f.y + f.height + 4);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(cx + 8, f.y + f.height - 10);
-      ctx.lineTo(cx + 18, f.y + f.height + 4);
-      ctx.stroke();
-
-      drawEye(cx, f.y + 19, dir);
-    }
-
-    function drawBasicFighter(f) {
-      ctx.fillStyle = f.color;
-      roundRect(f.x, f.y, f.width, f.height, 10);
-      ctx.fill();
-
-      drawEye(f.x + f.width / 2, f.y + 25, f.facing);
     }
 
     function drawEye(cx, cy, dir) {
@@ -983,16 +950,22 @@
     }
 
     function drawBlockEffect(f) {
-      const shieldX = f.facing === 1 ? f.x + f.width + 15 : f.x - 15;
+      const shieldX = f.facing === 1 ? f.x + f.width + 17 : f.x - 17;
       const shieldY = f.y + f.height / 2;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(180, 220, 255, 0.9)";
-      ctx.fillStyle = "rgba(120, 180, 255, 0.16)";
+      ctx.strokeStyle = "rgba(240,230,210,0.95)";
+      ctx.fillStyle = "rgba(240,230,210,0.14)";
       ctx.lineWidth = 5;
 
       ctx.beginPath();
-      ctx.arc(shieldX, shieldY, 30, 0, Math.PI * 2);
+      ctx.moveTo(shieldX, shieldY - 35);
+      ctx.lineTo(shieldX + f.facing * 28, shieldY - 14);
+      ctx.lineTo(shieldX + f.facing * 22, shieldY + 24);
+      ctx.lineTo(shieldX, shieldY + 38);
+      ctx.lineTo(shieldX - f.facing * 22, shieldY + 24);
+      ctx.lineTo(shieldX - f.facing * 28, shieldY - 14);
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
@@ -1012,68 +985,81 @@
         return;
       }
 
-      if (f.attack === "light") drawLightEffect(f);
-      else if (f.attack === "heavy") drawHeavyEffect(f);
-      else if (f.attack === "special") drawSpecialEffect(f);
+      if (f.attack === "crouchLight" || f.attack === "crouchHeavy") {
+        drawLowAttack(f);
+      } else if (f.attack === "airLight" || f.attack === "airHeavy" || f.attack === "airSpecial") {
+        drawAirAttack(f);
+      } else if (f.attack === "special") {
+        drawPieceSpecial(f);
+      } else if (f.attack === "heavy") {
+        drawHeavyArc(f);
+      } else {
+        drawLightStrike(f);
+      }
     }
 
     function getAttackPhase(f) {
       if (!f.attack) return "none";
 
-      if (f.attack === "light") {
-        if (f.attackTimer > 10) return "windup";
-        if (f.attackTimer >= 4) return "active";
-        return "recovery";
-      }
+      const t = f.attackTimer;
 
-      if (f.attack === "heavy") {
-        if (f.attackTimer > 16) return "windup";
-        if (f.attackTimer >= 5) return "active";
-        return "recovery";
-      }
+      const windows = {
+        light: [10, 4],
+        heavy: [17, 5],
+        special: [24, 7],
+        crouchLight: [11, 4],
+        crouchHeavy: [19, 6],
+        airLight: [13, 4],
+        airHeavy: [19, 5],
+        airSpecial: [23, 6]
+      };
 
-      if (f.attack === "special") {
-        if (f.attackTimer > 22) return "windup";
-        if (f.attackTimer >= 6) return "active";
-        return "recovery";
-      }
+      const w = windows[f.attack];
+      if (!w) return "none";
 
-      return "none";
+      if (t > w[0]) return "windup";
+      if (t >= w[1]) return "active";
+      return "recovery";
     }
 
     function drawWindupEffect(f) {
       ctx.save();
-      ctx.globalAlpha = 0.45;
-      ctx.strokeStyle = f.color;
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = "#f0e6d2";
       ctx.lineWidth = 3;
 
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
 
       ctx.beginPath();
-      ctx.arc(cx, cy, 35 + Math.sin(Date.now() / 60) * 4, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 34 + Math.sin(Date.now() / 55) * 5, 0, Math.PI * 2);
       ctx.stroke();
+
+      ctx.font = "22px Georgia";
+      ctx.fillStyle = "rgba(240,230,210,0.75)";
+      ctx.fillText(pieceIcon(f.characterKey), cx - 8, cy + 8);
 
       ctx.restore();
     }
 
     function drawRecoveryEffect(f) {
       ctx.save();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = "#fff";
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = "#f0e6d2";
       const box = getAttackBox(f);
       ctx.fillRect(box.x, box.y, box.width, box.height);
       ctx.restore();
     }
 
-    function drawLightEffect(f) {
-      const y = f.y + f.height * 0.48;
-      const startX = f.facing === 1 ? f.x + f.width - 4 : f.x + 4;
-      const endX = startX + f.facing * 75;
+    function drawLightStrike(f) {
+      const y = f.y + f.height * 0.5;
+      const startX = f.facing === 1 ? f.x + f.width : f.x;
+      const endX = startX + f.facing * 76;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.strokeStyle = "rgba(240,230,210,0.95)";
       ctx.lineWidth = 5;
+      ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(startX, y);
       ctx.lineTo(endX, y - 8);
@@ -1083,25 +1069,26 @@
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(startX, y + 10);
-      ctx.lineTo(endX - f.facing * 12, y + 4);
+      ctx.lineTo(endX - f.facing * 12, y + 3);
       ctx.stroke();
+
       ctx.restore();
     }
 
-    function drawHeavyEffect(f) {
+    function drawHeavyArc(f) {
       const cx = f.facing === 1 ? f.x + f.width + 25 : f.x - 25;
       const cy = f.y + 58;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.82)";
+      ctx.strokeStyle = "rgba(240,230,210,0.85)";
       ctx.lineWidth = 13;
       ctx.lineCap = "round";
       ctx.beginPath();
 
       if (f.facing === 1) {
-        ctx.arc(cx, cy, 48, -1.35, 1.15);
+        ctx.arc(cx, cy, 52, -1.35, 1.15);
       } else {
-        ctx.arc(cx, cy, 48, Math.PI - 1.15, Math.PI + 1.35);
+        ctx.arc(cx, cy, 52, Math.PI - 1.15, Math.PI + 1.35);
       }
 
       ctx.stroke();
@@ -1111,132 +1098,209 @@
       ctx.beginPath();
 
       if (f.facing === 1) {
-        ctx.arc(cx, cy, 58, -1.15, 0.9);
+        ctx.arc(cx, cy, 64, -1.1, 0.95);
       } else {
-        ctx.arc(cx, cy, 58, Math.PI - 0.9, Math.PI + 1.15);
+        ctx.arc(cx, cy, 64, Math.PI - 0.95, Math.PI + 1.1);
       }
 
       ctx.stroke();
       ctx.restore();
     }
 
-    function drawSpecialEffect(f) {
-      if (f.characterKey === "brute") {
-        drawShockwave(f);
-      } else if (f.characterKey === "viper") {
-        drawNeedleBurst(f);
-      } else if (f.characterKey === "mirror") {
-        drawMirrorSlash(f);
-      } else {
-        drawDashPunch(f);
-      }
-    }
-
-    function drawDashPunch(f) {
-      const y = f.y + f.height * 0.52;
+    function drawLowAttack(f) {
+      const y = f.y + f.height * 0.78;
       const startX = f.facing === 1 ? f.x + f.width : f.x;
-      const endX = startX + f.facing * 105;
+      const endX = startX + f.facing * (f.attack === "crouchHeavy" ? 105 : 74);
 
       ctx.save();
-
-      ctx.strokeStyle = "rgba(255,255,255,0.9)";
-      ctx.lineWidth = 9;
+      ctx.strokeStyle = f.attack === "crouchHeavy"
+        ? "rgba(255,210,120,0.95)"
+        : "rgba(240,230,210,0.9)";
+      ctx.lineWidth = f.attack === "crouchHeavy" ? 9 : 5;
       ctx.lineCap = "round";
+
       ctx.beginPath();
       ctx.moveTo(startX, y);
-      ctx.lineTo(endX, y);
+      ctx.lineTo(endX, y + 12);
       ctx.stroke();
 
-      ctx.strokeStyle = f.color;
-      ctx.lineWidth = 4;
+      ctx.restore();
+    }
+
+    function drawAirAttack(f) {
+      const cx = f.x + f.width / 2;
+      const cy = f.y + f.height / 2;
+      const dir = f.facing;
+
+      ctx.save();
+
+      if (f.attack === "airSpecial") {
+        ctx.strokeStyle = "rgba(240,230,210,0.95)";
+        ctx.lineWidth = 12;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx - dir * 35, cy - 35);
+        ctx.lineTo(cx + dir * 80, cy + 45);
+        ctx.stroke();
+
+        ctx.strokeStyle = f.color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(cx - dir * 15, cy - 50);
+        ctx.lineTo(cx + dir * 95, cy + 30);
+        ctx.stroke();
+      } else if (f.attack === "airHeavy") {
+        ctx.strokeStyle = "rgba(255,220,140,0.92)";
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.arc(cx + dir * 30, cy + 15, 46, -1.0, 1.8);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = "rgba(240,230,210,0.9)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + dir * 70, cy + 24);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawPieceSpecial(f) {
+      if (f.characterKey === "rook") drawRookCharge(f);
+      else if (f.characterKey === "knight") drawKnightLeap(f);
+      else if (f.characterKey === "bishop") drawBishopDiagonal(f);
+      else drawKingCommand(f);
+    }
+
+    function drawKingCommand(f) {
+      const cx = f.facing === 1 ? f.x + f.width + 42 : f.x - 42;
+      const cy = f.y + f.height / 2;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(240,230,210,0.95)";
+      ctx.fillStyle = "rgba(240,230,210,0.14)";
+      ctx.lineWidth = 5;
+
       ctx.beginPath();
-      ctx.moveTo(startX - f.facing * 20, y + 18);
-      ctx.lineTo(endX - f.facing * 18, y + 18);
+      ctx.arc(cx, cy, 48, 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
 
-      ctx.restore();
-    }
-
-    function drawShockwave(f) {
-      const baseX = f.facing === 1 ? f.x + f.width + 20 : f.x - 20;
-      const baseY = 430;
-
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      ctx.strokeStyle = f.color;
-      ctx.lineWidth = 4;
-
-      for (let i = 0; i < 3; i++) {
-        const x = baseX + f.facing * i * 32;
-        ctx.beginPath();
-        ctx.moveTo(x, baseY);
-        ctx.lineTo(x + f.facing * 18, baseY - 40 + i * 5);
-        ctx.lineTo(x + f.facing * 36, baseY);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
+      ctx.font = "40px Georgia";
+      ctx.fillStyle = "#f0e6d2";
+      ctx.fillText("♔", cx - 17, cy + 15);
 
       ctx.restore();
     }
 
-    function drawNeedleBurst(f) {
-      const startX = f.facing === 1 ? f.x + f.width + 5 : f.x - 5;
-      const startY = f.y + 55;
+    function drawKnightLeap(f) {
+      const cx = f.x + f.width / 2;
+      const cy = f.y + f.height / 2;
+      const dir = f.facing;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(190,255,245,0.95)";
-      ctx.lineWidth = 3;
-
-      for (let i = -2; i <= 2; i++) {
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(startX + f.facing * 95, startY + i * 12);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    }
-
-    function drawMirrorSlash(f) {
-      const cx = f.facing === 1 ? f.x + f.width + 25 : f.x - 25;
-      const cy = f.y + 55;
-
-      ctx.save();
-      ctx.strokeStyle = "rgba(220,220,255,0.95)";
-      ctx.lineWidth = 7;
+      ctx.strokeStyle = "rgba(240,230,210,0.95)";
+      ctx.lineWidth = 8;
       ctx.lineCap = "round";
 
       ctx.beginPath();
-      ctx.arc(cx, cy, 62, -1.4, 1.4);
+      ctx.moveTo(cx - dir * 40, cy + 50);
+      ctx.quadraticCurveTo(cx + dir * 25, cy - 80, cx + dir * 95, cy + 10);
       ctx.stroke();
 
-      ctx.globalAlpha = 0.35;
-      ctx.strokeStyle = f.color;
-      ctx.lineWidth = 12;
+      ctx.font = "34px Georgia";
+      ctx.fillStyle = "#f0e6d2";
+      ctx.fillText("♘", cx + dir * 48 - 15, cy - 20);
+
+      ctx.restore();
+    }
+
+    function drawBishopDiagonal(f) {
+      const cx = f.x + f.width / 2;
+      const cy = f.y + f.height / 2;
+      const dir = f.facing;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(240,230,210,0.96)";
+      ctx.lineWidth = 11;
+      ctx.lineCap = "round";
+
       ctx.beginPath();
-      ctx.arc(cx - f.facing * 18, cy, 72, -1.0, 1.0);
+      ctx.moveTo(cx - dir * 20, cy + 60);
+      ctx.lineTo(cx + dir * 110, cy - 65);
       ctx.stroke();
+
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - dir * 35, cy + 42);
+      ctx.lineTo(cx + dir * 92, cy - 82);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawRookCharge(f) {
+      const x = f.facing === 1 ? f.x + f.width : f.x - 110;
+      const y = f.y + f.height * 0.38;
+
+      ctx.save();
+
+      ctx.fillStyle = "rgba(240,230,210,0.22)";
+      ctx.fillRect(x, y, 110, 42);
+
+      ctx.strokeStyle = "rgba(240,230,210,0.9)";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(x, y, 110, 42);
+
+      ctx.font = "34px Georgia";
+      ctx.fillStyle = "#f0e6d2";
+      ctx.fillText("♖", x + 38, y + 34);
 
       ctx.restore();
     }
 
     function getAttackBox(f) {
-      const range = f.attack === "heavy" ? f.reach + 22 : f.reach;
-      const height = f.attack === "special" ? f.height * 0.75 : f.height * 0.55;
+      const low = f.attack === "crouchLight" || f.attack === "crouchHeavy";
+      const air = f.attack === "airLight" || f.attack === "airHeavy" || f.attack === "airSpecial";
+
+      let range = f.reach;
+      let height = f.height * 0.5;
+      let y = f.y + 22;
+
+      if (f.attack === "heavy" || f.attack === "crouchHeavy" || f.attack === "airHeavy") {
+        range += 25;
+      }
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        range += 34;
+        height = f.height * 0.72;
+      }
+
+      if (low) {
+        y = f.y + f.height * 0.58;
+        height = f.height * 0.36;
+      }
+
+      if (air) {
+        y = f.y + f.height * 0.42;
+        height = f.height * 0.45;
+      }
 
       if (f.facing === 1) {
         return {
-          x: f.x + f.width,
-          y: f.y + 18,
+          x: f.x + f.width - 4,
+          y,
           width: range,
           height
         };
       }
 
       return {
-        x: f.x - range,
-        y: f.y + 18,
+        x: f.x - range + 4,
+        y,
         width: range,
         height
       };
@@ -1253,10 +1317,11 @@
         ctx.arc(p.x, p.y, 3 + alpha * 4, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "#f0e6d2";
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1.5 + alpha * 2, 0, Math.PI * 2);
         ctx.fill();
+
         ctx.restore();
       }
     }
@@ -1277,17 +1342,17 @@
     }
 
     function drawCenterText(text) {
-      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      ctx.fillStyle = "rgba(0,0,0,0.72)";
       roundRect(210, 210, 540, 95, 18);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.strokeStyle = "rgba(240,230,210,0.45)";
       ctx.lineWidth = 2;
       roundRect(210, 210, 540, 95, 18);
       ctx.stroke();
 
-      ctx.fillStyle = "white";
-      ctx.font = "34px Arial";
+      ctx.fillStyle = "#f0e6d2";
+      ctx.font = "34px Georgia";
       ctx.textAlign = "center";
       ctx.fillText(text, canvas.width / 2, 268);
       ctx.textAlign = "left";
@@ -1314,14 +1379,6 @@
       const r = Math.min(255, Math.floor(c.r + (255 - c.r) * amount));
       const g = Math.min(255, Math.floor(c.g + (255 - c.g) * amount));
       const b = Math.min(255, Math.floor(c.b + (255 - c.b) * amount));
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-
-    function darken(hex, amount) {
-      const c = parseHexColor(hex);
-      const r = Math.max(0, Math.floor(c.r * (1 - amount)));
-      const g = Math.max(0, Math.floor(c.g * (1 - amount)));
-      const b = Math.max(0, Math.floor(c.b * (1 - amount)));
       return `rgb(${r}, ${g}, ${b})`;
     }
 
