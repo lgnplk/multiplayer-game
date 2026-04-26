@@ -1,103 +1,593 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Multiplayer Game</title>
+  <title>The Listening Room</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      background: #111;
+      background: radial-gradient(circle at top, #252536, #08080d);
       color: white;
-      font-family: Arial, sans-serif;
+      font-family: Georgia, serif;
+      min-height: 100vh;
+    }
+
+    #nameScreen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, #1d1d2e, #050507);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #nameBox {
+      width: 360px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    #nameBox h1 {
+      margin-top: 0;
+      letter-spacing: 2px;
+    }
+
+    #nameInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
       text-align: center;
     }
 
-    canvas {
-      background: #222;
-      border: 3px solid white;
-      margin-top: 20px;
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 15px;
+      background: #eeeeee;
+      color: #111;
+    }
+
+    button:hover {
+      filter: brightness(1.15);
+    }
+
+    #game {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 260px 1fr 330px;
+      gap: 20px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.075);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.35);
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    #title {
+      grid-column: 1 / 4;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #title h1 {
+      margin-bottom: 5px;
+      font-size: 42px;
+      letter-spacing: 4px;
+    }
+
+    #title p {
+      color: #bbb;
+      margin-top: 0;
+    }
+
+    .player {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.24);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playerName {
+      font-weight: bold;
+    }
+
+    .score {
+      opacity: 0.8;
+    }
+
+    #clueBox {
+      min-height: 160px;
+      background: rgba(0, 0, 0, 0.28);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      margin-bottom: 15px;
+    }
+
+    #signal {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .clear {
+      background: rgba(90, 255, 120, 0.18);
+      color: #9dffad;
+    }
+
+    .hazy {
+      background: rgba(255, 221, 80, 0.18);
+      color: #ffe680;
+    }
+
+    .fractured {
+      background: rgba(255, 80, 120, 0.18);
+      color: #ff91aa;
+    }
+
+    #clueText {
+      font-size: 22px;
+      line-height: 1.4;
+    }
+
+    #doors {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .door {
+      min-height: 200px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.34);
+      border: 2px solid rgba(255, 255, 255, 0.16);
+      padding: 18px;
+      text-align: center;
+      position: relative;
+      transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .door:hover {
+      transform: translateY(-3px);
+      border-color: white;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .door.voted {
+      border-color: #8cffaa;
+      box-shadow: 0 0 20px rgba(140, 255, 170, 0.25);
+    }
+
+    .doorNumber {
+      font-family: Arial, sans-serif;
+      opacity: 0.65;
+      margin-bottom: 8px;
+    }
+
+    .doorColor {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .doorShape {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .doorWord {
+      font-size: 28px;
+      letter-spacing: 3px;
+      margin: 15px 0;
+    }
+
+    .doorTone {
+      opacity: 0.75;
+      font-style: italic;
+    }
+
+    #chatLog {
+      height: 410px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.28);
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .chatMessage {
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .system {
+      color: #aaa;
+      font-style: italic;
+    }
+
+    #chatForm {
+      display: flex;
+      gap: 8px;
+    }
+
+    #chatInput {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #outcome {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      display: none;
+    }
+
+    #outcome.good {
+      border: 1px solid rgba(120, 255, 150, 0.5);
+    }
+
+    #outcome.bad {
+      border: 1px solid rgba(255, 90, 120, 0.5);
+    }
+
+    .revealedClue {
+      padding: 8px;
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    #newRoundBtn {
+      width: 100%;
+      margin-top: 10px;
+      background: #d7ccff;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 950px) {
+      #game {
+        grid-template-columns: 1fr;
+      }
+
+      #title {
+        grid-column: 1;
+      }
+
+      #doors {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Multiplayer Square Game</h1>
-  <p>Move with WASD or arrow keys.</p>
+  <div id="nameScreen">
+    <div id="nameBox">
+      <h1>The Listening Room</h1>
+      <p>Enter a name. Then decide who to trust.</p>
+      <input id="nameInput" placeholder="Your name" maxlength="18">
+      <button id="joinBtn">Enter</button>
+    </div>
+  </div>
 
-  <canvas id="game" width="800" height="600"></canvas>
+  <div id="game">
+    <div id="title">
+      <h1>The Listening Room</h1>
+      <p>One door is correct. Every player sees a private clue. Some clues are broken.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Players</h2>
+      <div id="players"></div>
+
+      <button id="newRoundBtn">Force New Round</button>
+
+      <h3 style="margin-top: 20px;">Rules</h3>
+      <p class="small">
+        Each round, everyone gets one private clue. Talk it out, but remember:
+        a fractured clue may be false. Everyone votes for a door. When all players vote,
+        the room reveals the truth.
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2 id="roundTitle">Round</h2>
+
+      <div id="clueBox">
+        <div id="signal">NO SIGNAL</div>
+        <div id="clueText">Waiting for your clue...</div>
+      </div>
+
+      <div id="doors"></div>
+
+      <div id="outcome"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Table Talk</h2>
+      <div id="chatLog"></div>
+
+      <form id="chatForm">
+        <input id="chatInput" placeholder="Say something suspicious...">
+        <button>Send</button>
+      </form>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
 
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    let myVote = null;
+    let state = null;
+    let privateClue = null;
 
-    const players = {};
+    const nameScreen = document.getElementById("nameScreen");
+    const nameInput = document.getElementById("nameInput");
+    const joinBtn = document.getElementById("joinBtn");
 
-    const keys = {
-      up: false,
-      down: false,
-      left: false,
-      right: false
-    };
+    const playersDiv = document.getElementById("players");
+    const doorsDiv = document.getElementById("doors");
+    const roundTitle = document.getElementById("roundTitle");
+    const signalDiv = document.getElementById("signal");
+    const clueText = document.getElementById("clueText");
+    const chatLog = document.getElementById("chatLog");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const outcomeDiv = document.getElementById("outcome");
+    const newRoundBtn = document.getElementById("newRoundBtn");
 
-    socket.on("currentPlayers", (serverPlayers) => {
-      Object.assign(players, serverPlayers);
+    function join() {
+      const name = nameInput.value.trim() || "Nameless";
+      socket.emit("setName", name);
+      nameScreen.style.display = "none";
+    }
+
+    joinBtn.addEventListener("click", join);
+
+    nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") join();
     });
 
-    socket.on("newPlayer", (data) => {
-      players[data.id] = data.player;
+    socket.on("state", (newState) => {
+      const oldRound = state?.round?.number;
+      state = newState;
+
+      if (oldRound !== state.round.number) {
+        myVote = null;
+      }
+
+      render();
     });
 
-    socket.on("playerMoved", (data) => {
-      players[data.id] = data.player;
+    socket.on("privateClue", (clue) => {
+      privateClue = clue;
+      renderClue();
     });
 
-    socket.on("playerDisconnected", (id) => {
-      delete players[id];
-    });
+    function render() {
+      if (!state) return;
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "w" || e.key === "ArrowUp") keys.up = true;
-      if (e.key === "s" || e.key === "ArrowDown") keys.down = true;
-      if (e.key === "a" || e.key === "ArrowLeft") keys.left = true;
-      if (e.key === "d" || e.key === "ArrowRight") keys.right = true;
-    });
+      renderPlayers();
+      renderDoors();
+      renderChat();
+      renderClue();
+      renderOutcome();
 
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "w" || e.key === "ArrowUp") keys.up = false;
-      if (e.key === "s" || e.key === "ArrowDown") keys.down = false;
-      if (e.key === "a" || e.key === "ArrowLeft") keys.left = false;
-      if (e.key === "d" || e.key === "ArrowRight") keys.right = false;
-    });
+      roundTitle.textContent = `Round ${state.round.number}`;
+    }
 
-    function update() {
-      if (keys.up || keys.down || keys.left || keys.right) {
-        socket.emit("move", keys);
+    function renderPlayers() {
+      playersDiv.innerHTML = "";
+
+      for (const id in state.players) {
+        const player = state.players[id];
+        const hasVoted = state.round.votes[id] !== undefined;
+
+        const div = document.createElement("div");
+        div.className = "player";
+
+        div.innerHTML = `
+          <div>
+            <div class="playerName" style="color:${player.color}">
+              ${escapeHtml(player.name)}
+            </div>
+            <div class="small">${hasVoted ? "chosen" : "thinking"}</div>
+          </div>
+          <div class="score">${player.score}</div>
+        `;
+
+        playersDiv.appendChild(div);
       }
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function renderDoors() {
+      doorsDiv.innerHTML = "";
 
-      for (const id in players) {
-        const p = players[id];
+      for (const artifact of state.round.artifacts) {
+        const door = document.createElement("div");
+        door.className = "door";
 
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, 20, 20);
+        if (myVote === artifact.index) {
+          door.classList.add("voted");
+        }
 
-        ctx.fillStyle = "white";
-        ctx.font = "12px Arial";
-        ctx.fillText(id.slice(0, 4), p.x, p.y - 5);
+        door.innerHTML = `
+          <div class="doorNumber">Door ${artifact.index + 1}</div>
+          <div class="doorColor">${escapeHtml(artifact.color)}</div>
+          <div class="doorShape">${escapeHtml(artifact.shape)}</div>
+          <div class="doorWord">${escapeHtml(artifact.word)}</div>
+          <div class="doorTone">feels ${escapeHtml(artifact.tone)}</div>
+        `;
+
+        door.addEventListener("click", () => {
+          if (state.round.phase !== "playing") return;
+
+          myVote = artifact.index;
+          socket.emit("vote", artifact.index);
+          renderDoors();
+        });
+
+        doorsDiv.appendChild(door);
       }
     }
 
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
+    function renderClue() {
+      if (!privateClue) {
+        signalDiv.textContent = "NO SIGNAL";
+        signalDiv.className = "";
+        clueText.textContent = "Waiting for your clue...";
+        return;
+      }
+
+      signalDiv.textContent = privateClue.signal;
+      signalDiv.className = "";
+
+      if (privateClue.signal === "CLEAR") {
+        signalDiv.classList.add("clear");
+      } else if (privateClue.signal === "HAZY") {
+        signalDiv.classList.add("hazy");
+      } else {
+        signalDiv.classList.add("fractured");
+      }
+
+      clueText.textContent = privateClue.text;
     }
 
-    gameLoop();
+    function renderChat() {
+      chatLog.innerHTML = "";
+
+      for (const msg of state.chatLog) {
+        const div = document.createElement("div");
+        div.className = "chatMessage";
+
+        if (msg.system) {
+          div.classList.add("system");
+          div.textContent = msg.text;
+        } else {
+          div.innerHTML = `
+            <strong style="color:${msg.color}">
+              ${escapeHtml(msg.name)}:
+            </strong>
+            ${escapeHtml(msg.text)}
+          `;
+        }
+
+        chatLog.appendChild(div);
+      }
+
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function renderOutcome() {
+      const outcome = state.lastOutcome;
+
+      if (!outcome) {
+        outcomeDiv.style.display = "none";
+        outcomeDiv.innerHTML = "";
+        outcomeDiv.className = "";
+        return;
+      }
+
+      outcomeDiv.style.display = "block";
+      outcomeDiv.className = outcome.correct ? "good" : "bad";
+
+      const correctDoor = outcome.correctDoor;
+      const chosenDoor = outcome.chosenDoor;
+
+      let html = `
+        <h3>${outcome.correct ? "The room opened." : "The room stayed shut."}</h3>
+        <p>
+          The group chose <strong>Door ${chosenDoor.index + 1}</strong>.
+          The correct answer was <strong>Door ${correctDoor.index + 1}</strong>:
+          ${escapeHtml(correctDoor.color)} /
+          ${escapeHtml(correctDoor.shape)} /
+          ${escapeHtml(correctDoor.word)}.
+        </p>
+        <h4>Revealed Clues</h4>
+      `;
+
+      for (const id in outcome.clues) {
+        const clue = outcome.clues[id];
+
+        html += `
+          <div class="revealedClue">
+            <strong>${escapeHtml(clue.name)}</strong>
+            had a <strong>${escapeHtml(clue.signal)}</strong> clue:
+            “${escapeHtml(clue.text)}”
+            <br>
+            <span class="small">
+              This clue was ${clue.reliable ? "reliable" : "false"}.
+            </span>
+          </div>
+        `;
+      }
+
+      outcomeDiv.innerHTML = html;
+    }
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      socket.emit("chat", text);
+      chatInput.value = "";
+    });
+
+    newRoundBtn.addEventListener("click", () => {
+      socket.emit("forceNewRound");
+    });
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
   </script>
 </body>
 </html>
