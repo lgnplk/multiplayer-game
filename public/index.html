@@ -178,9 +178,10 @@
       max-width: 960px;
       height: auto;
       margin: 0 auto;
-      background: linear-gradient(#20243d, #11111a 60%, #2a231d 60%, #17120f);
+      background: #111;
       border: 3px solid rgba(255, 255, 255, 0.45);
       border-radius: 14px;
+      image-rendering: auto;
     }
 
     #controls {
@@ -270,7 +271,8 @@
 
       <div class="panel">
         <strong>Notes</strong><br>
-        Blocking reduces damage if you face the attack. Winner gains one leaderboard point.
+        Light is quick, heavy has big reach, special is slower but flashier.
+        Blocking reduces damage if you face the attack.
       </div>
     </div>
 
@@ -310,6 +312,14 @@
     let selectedCharacter = "striker";
     let currentGameState = null;
     let myRole = "menu";
+
+    let shakeTimer = 0;
+    let shakePower = 0;
+    let lastRedHp = null;
+    let lastBlueHp = null;
+
+    const hitSparks = [];
+
     let keys = {
       left: false,
       right: false,
@@ -344,11 +354,51 @@
     });
 
     socket.on("gameState", (state) => {
+      noticeHits(state);
       currentGameState = state;
       renderGameText();
       renderLeaderboard(state.leaderboard || [], leaderboardInGame);
       drawGame();
     });
+
+    function noticeHits(newState) {
+      if (!newState || !newState.game) return;
+
+      const red = newState.game.fighters.red;
+      const blue = newState.game.fighters.blue;
+
+      if (lastRedHp !== null && red.hp < lastRedHp) {
+        makeHitSpark(red.x + red.width / 2, red.y + red.height / 2, blue.color);
+        screenShake(lastRedHp - red.hp);
+      }
+
+      if (lastBlueHp !== null && blue.hp < lastBlueHp) {
+        makeHitSpark(blue.x + blue.width / 2, blue.y + blue.height / 2, red.color);
+        screenShake(lastBlueHp - blue.hp);
+      }
+
+      lastRedHp = red.hp;
+      lastBlueHp = blue.hp;
+    }
+
+    function makeHitSpark(x, y, color) {
+      for (let i = 0; i < 12; i++) {
+        hitSparks.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 9,
+          vy: (Math.random() - 0.5) * 9,
+          life: 20 + Math.random() * 10,
+          maxLife: 30,
+          color
+        });
+      }
+    }
+
+    function screenShake(damage) {
+      shakeTimer = Math.min(14, 5 + damage);
+      shakePower = Math.min(12, 3 + damage * 0.45);
+    }
 
     saveNameBtn.addEventListener("click", () => {
       socket.emit("setName", nameInput.value);
@@ -394,9 +444,12 @@
         div.className = "characterCard";
         if (key === selectedCharacter) div.classList.add("selected");
 
+        const description = getCharacterDescription(key);
+
         div.innerHTML = `
           <div class="characterName">${escapeHtml(ch.name)}</div>
           <div class="stats">
+            ${description}<br>
             HP ${ch.maxHp} · Speed ${ch.speed} · Jump ${ch.jump}<br>
             Light ${ch.lightDamage} · Heavy ${ch.heavyDamage} · Special ${ch.specialDamage}
           </div>
@@ -410,6 +463,14 @@
 
         characterGrid.appendChild(div);
       }
+    }
+
+    function getCharacterDescription(key) {
+      if (key === "striker") return "Fast boxer. Big gloves, clean punches.";
+      if (key === "brute") return "Slow wall. Huge body, huge swings.";
+      if (key === "viper") return "Quick knife-fighter. Thin and sharp.";
+      if (key === "mirror") return "Balanced trickster. Afterimages and arcs.";
+      return "Unknown fighter.";
     }
 
     function renderLobbies(lobbies) {
@@ -530,8 +591,20 @@
     setInterval(sendInput, 1000 / 30);
 
     function drawGame() {
+      ctx.save();
+
+      if (shakeTimer > 0) {
+        const sx = (Math.random() - 0.5) * shakePower;
+        const sy = (Math.random() - 0.5) * shakePower;
+        ctx.translate(sx, sy);
+        shakeTimer--;
+        shakePower *= 0.9;
+      }
+
       if (!currentGameState || !currentGameState.game) {
         drawWaitingScreen();
+        ctx.restore();
+        updateParticles();
         return;
       }
 
@@ -539,110 +612,612 @@
       const red = game.fighters.red;
       const blue = game.fighters.blue;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
 
       drawBackground(game);
       drawHealthBars(red, blue);
+
+      drawShadow(red);
+      drawShadow(blue);
+
+      if (red.attack) drawAttackEffect(red);
+      if (blue.attack) drawAttackEffect(blue);
+
       drawFighter(red);
       drawFighter(blue);
 
-      if (red.attack) drawAttackBox(red);
-      if (blue.attack) drawAttackBox(blue);
+      drawParticles();
 
       if (game.roundOver) {
         drawCenterText(currentGameState.lobby.message || "Round over");
       }
+
+      ctx.restore();
+
+      updateParticles();
     }
 
     function drawWaitingScreen() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
       drawBackground({ floorY: 430 });
       drawCenterText(currentGameState?.lobby?.message || "Waiting...");
     }
 
     function drawBackground(game) {
-      ctx.fillStyle = "#1a1b2f";
+      const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      g.addColorStop(0, "#1a1d36");
+      g.addColorStop(0.55, "#11121d");
+      g.addColorStop(0.56, "#30261f");
+      g.addColorStop(1, "#15100d");
+      ctx.fillStyle = g;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "#25294a";
-      for (let i = 0; i < 8; i++) {
-        ctx.fillRect(i * 140 - 20, 120 + (i % 2) * 30, 80, 280);
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      for (let i = 0; i < 10; i++) {
+        const x = i * 110 + 10;
+        const h = 160 + (i % 4) * 35;
+        ctx.fillRect(x, 210 - h / 2, 55, h);
       }
 
-      ctx.fillStyle = "#292018";
+      ctx.fillStyle = "rgba(255, 220, 120, 0.13)";
+      ctx.beginPath();
+      ctx.arc(480, 100, 90, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#2b221b";
       ctx.fillRect(0, game.floorY, canvas.width, canvas.height - game.floorY);
 
-      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.strokeStyle = "rgba(255,255,255,0.16)";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(0, game.floorY);
       ctx.lineTo(canvas.width, game.floorY);
       ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 2;
+      for (let x = 0; x < canvas.width; x += 80) {
+        ctx.beginPath();
+        ctx.moveTo(x, game.floorY);
+        ctx.lineTo(x + 40, canvas.height);
+        ctx.stroke();
+      }
     }
 
     function drawHealthBars(red, blue) {
-      drawOneHealthBar(30, 28, 360, red, "RED");
-      drawOneHealthBar(570, 28, 360, blue, "BLUE");
+      drawOneHealthBar(30, 32, 360, red, "RED");
+      drawOneHealthBar(570, 32, 360, blue, "BLUE");
     }
 
     function drawOneHealthBar(x, y, w, f, label) {
       const pct = Math.max(0, f.hp / f.maxHp);
 
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.fillRect(x, y, w, 26);
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      roundRect(x, y, w, 28, 7);
+      ctx.fill();
 
       ctx.fillStyle = f.side === "red" ? "#ff3e3e" : "#3e89ff";
-      ctx.fillRect(x, y, w * pct, 26);
+      roundRect(x, y, w * pct, 28, 7);
+      ctx.fill();
 
       ctx.strokeStyle = "white";
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, 26);
+      roundRect(x, y, w, 28, 7);
+      ctx.stroke();
 
       ctx.fillStyle = "white";
       ctx.font = "16px Arial";
-      ctx.fillText(`${label}: ${f.name} / ${f.characterName}`, x, y - 7);
+      ctx.fillText(`${label}: ${f.name} / ${f.characterName}`, x, y - 8);
+
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "13px Arial";
+      ctx.fillText(`${Math.ceil(f.hp)} / ${f.maxHp}`, x + w - 70, y + 19);
+    }
+
+    function drawShadow(f) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.ellipse(f.x + f.width / 2, 433, f.width * 0.85, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     function drawFighter(f) {
       ctx.save();
 
       const blink = f.hurtTimer > 0 && Math.floor(f.hurtTimer / 3) % 2 === 0;
+      const bob = f.grounded && !f.attack
+        ? Math.sin(Date.now() / 180 + f.x * 0.03) * 2
+        : 0;
 
-      ctx.fillStyle = blink ? "#ffffff" : f.color;
-      ctx.fillRect(f.x, f.y, f.width, f.height);
+      ctx.translate(0, bob);
 
-      ctx.fillStyle = "#111";
-      const eyeX = f.facing === 1 ? f.x + f.width - 14 : f.x + 8;
-      ctx.fillRect(eyeX, f.y + 22, 7, 7);
-
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.fillRect(f.x + 8, f.y + 8, f.width - 16, 14);
-
-      if (f.blocking) {
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 5;
-        const shieldX = f.facing === 1 ? f.x + f.width + 8 : f.x - 18;
-        ctx.beginPath();
-        ctx.arc(shieldX, f.y + f.height / 2, 24, 0, Math.PI * 2);
-        ctx.stroke();
+      if (blink) {
+        ctx.globalAlpha = 0.48;
       }
 
-      if (f.attack) {
-        ctx.fillStyle = "#fff";
-        ctx.font = "14px Arial";
-        ctx.fillText(f.attack.toUpperCase(), f.x - 5, f.y - 10);
+      if (f.characterKey === "striker") drawStriker(f);
+      else if (f.characterKey === "brute") drawBrute(f);
+      else if (f.characterKey === "viper") drawViper(f);
+      else if (f.characterKey === "mirror") drawMirror(f);
+      else drawBasicFighter(f);
+
+      ctx.globalAlpha = 1;
+
+      if (f.blocking) drawBlockEffect(f);
+
+      ctx.restore();
+    }
+
+    function drawStriker(f) {
+      const cx = f.x + f.width / 2;
+      const headY = f.y + 20;
+      const c = f.color;
+      const dir = f.facing;
+
+      ctx.fillStyle = c;
+      roundRect(f.x + 9, f.y + 38, f.width - 18, f.height - 42, 12);
+      ctx.fill();
+
+      ctx.fillStyle = brighten(c, 0.4);
+      ctx.beginPath();
+      ctx.arc(cx, headY, 17, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#151515";
+      const frontGloveX = dir === 1 ? f.x + f.width + 3 : f.x - 3;
+      const backGloveX = dir === 1 ? f.x + 1 : f.x + f.width - 1;
+
+      const attacking = f.attack === "light" || f.attack === "heavy";
+      const extension = attacking ? (f.attack === "heavy" ? 25 : 17) * dir : 0;
+
+      ctx.beginPath();
+      ctx.arc(frontGloveX + extension, f.y + 58, 13, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(backGloveX, f.y + 69, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 54);
+      ctx.lineTo(frontGloveX + extension, f.y + 58);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 60);
+      ctx.lineTo(backGloveX, f.y + 69);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(cx - 8, f.y + f.height - 12);
+      ctx.lineTo(cx - 17, f.y + f.height + 4);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + 8, f.y + f.height - 12);
+      ctx.lineTo(cx + 17, f.y + f.height + 4);
+      ctx.stroke();
+
+      drawEye(cx, headY, dir);
+    }
+
+    function drawBrute(f) {
+      const cx = f.x + f.width / 2;
+      const dir = f.facing;
+      const c = f.color;
+
+      ctx.fillStyle = darken(c, 0.12);
+      roundRect(f.x + 4, f.y + 32, f.width - 8, f.height - 30, 16);
+      ctx.fill();
+
+      ctx.fillStyle = brighten(c, 0.35);
+      ctx.beginPath();
+      ctx.arc(cx, f.y + 20, 21, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111";
+      const shoulderY = f.y + 54;
+      ctx.beginPath();
+      ctx.arc(f.x + 5, shoulderY, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(f.x + f.width - 5, shoulderY, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      const fistX = dir === 1 ? f.x + f.width + 10 : f.x - 10;
+      const fistY = f.attack === "heavy" ? f.y + 34 : f.y + 74;
+
+      ctx.fillStyle = "#1a1a1a";
+      ctx.beginPath();
+      ctx.arc(fistX, fistY, f.attack ? 18 : 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 65);
+      ctx.lineTo(fistX, fistY);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(cx - 14, f.y + f.height - 10);
+      ctx.lineTo(cx - 25, f.y + f.height + 4);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + 14, f.y + f.height - 10);
+      ctx.lineTo(cx + 25, f.y + f.height + 4);
+      ctx.stroke();
+
+      drawEye(cx, f.y + 20, dir);
+    }
+
+    function drawViper(f) {
+      const cx = f.x + f.width / 2;
+      const dir = f.facing;
+      const c = f.color;
+
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 28);
+      ctx.lineTo(f.x + f.width - 4, f.y + f.height - 6);
+      ctx.lineTo(f.x + 4, f.y + f.height - 6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = brighten(c, 0.45);
+      ctx.beginPath();
+      ctx.arc(cx, f.y + 17, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 5;
+      const handX = dir === 1 ? f.x + f.width + 7 : f.x - 7;
+      const handY = f.y + 60;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 50);
+      ctx.lineTo(handX, handY);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#d9fff7";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(handX, handY);
+      ctx.lineTo(handX + dir * 28, handY - 8);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, f.y + f.height - 10);
+      ctx.lineTo(cx - 20, f.y + f.height + 4);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + 4, f.y + f.height - 10);
+      ctx.lineTo(cx + 20, f.y + f.height + 4);
+      ctx.stroke();
+
+      drawEye(cx, f.y + 17, dir);
+    }
+
+    function drawMirror(f) {
+      const cx = f.x + f.width / 2;
+      const dir = f.facing;
+      const c = f.color;
+      const t = Date.now() / 160;
+
+      ctx.save();
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = c;
+      roundRect(f.x - dir * 16 + Math.sin(t) * 3, f.y + 8, f.width, f.height - 8, 16);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = darken(c, 0.05);
+      roundRect(f.x + 7, f.y + 34, f.width - 14, f.height - 38, 14);
+      ctx.fill();
+
+      ctx.fillStyle = brighten(c, 0.5);
+      ctx.beginPath();
+      ctx.arc(cx, f.y + 19, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#f0f0ff";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(cx, f.y + 55, 28, -0.5, 2.4);
+      ctx.stroke();
+
+      const handX = dir === 1 ? f.x + f.width + 5 : f.x - 5;
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(cx, f.y + 55);
+      ctx.lineTo(handX, f.y + 62);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(cx - 8, f.y + f.height - 10);
+      ctx.lineTo(cx - 18, f.y + f.height + 4);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + 8, f.y + f.height - 10);
+      ctx.lineTo(cx + 18, f.y + f.height + 4);
+      ctx.stroke();
+
+      drawEye(cx, f.y + 19, dir);
+    }
+
+    function drawBasicFighter(f) {
+      ctx.fillStyle = f.color;
+      roundRect(f.x, f.y, f.width, f.height, 10);
+      ctx.fill();
+
+      drawEye(f.x + f.width / 2, f.y + 25, f.facing);
+    }
+
+    function drawEye(cx, cy, dir) {
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(cx + dir * 7, cy - 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(cx + dir * 8, cy - 2, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawBlockEffect(f) {
+      const shieldX = f.facing === 1 ? f.x + f.width + 15 : f.x - 15;
+      const shieldY = f.y + f.height / 2;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(180, 220, 255, 0.9)";
+      ctx.fillStyle = "rgba(120, 180, 255, 0.16)";
+      ctx.lineWidth = 5;
+
+      ctx.beginPath();
+      ctx.arc(shieldX, shieldY, 30, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawAttackEffect(f) {
+      const phase = getAttackPhase(f);
+
+      if (phase === "windup") {
+        drawWindupEffect(f);
+        return;
+      }
+
+      if (phase === "recovery") {
+        drawRecoveryEffect(f);
+        return;
+      }
+
+      if (f.attack === "light") drawLightEffect(f);
+      else if (f.attack === "heavy") drawHeavyEffect(f);
+      else if (f.attack === "special") drawSpecialEffect(f);
+    }
+
+    function getAttackPhase(f) {
+      if (!f.attack) return "none";
+
+      if (f.attack === "light") {
+        if (f.attackTimer > 10) return "windup";
+        if (f.attackTimer >= 4) return "active";
+        return "recovery";
+      }
+
+      if (f.attack === "heavy") {
+        if (f.attackTimer > 16) return "windup";
+        if (f.attackTimer >= 5) return "active";
+        return "recovery";
+      }
+
+      if (f.attack === "special") {
+        if (f.attackTimer > 22) return "windup";
+        if (f.attackTimer >= 6) return "active";
+        return "recovery";
+      }
+
+      return "none";
+    }
+
+    function drawWindupEffect(f) {
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 3;
+
+      const cx = f.x + f.width / 2;
+      const cy = f.y + f.height / 2;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 35 + Math.sin(Date.now() / 60) * 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawRecoveryEffect(f) {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#fff";
+      const box = getAttackBox(f);
+      ctx.fillRect(box.x, box.y, box.width, box.height);
+      ctx.restore();
+    }
+
+    function drawLightEffect(f) {
+      const y = f.y + f.height * 0.48;
+      const startX = f.facing === 1 ? f.x + f.width - 4 : f.x + 4;
+      const endX = startX + f.facing * 75;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(endX, y - 8);
+      ctx.stroke();
+
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX, y + 10);
+      ctx.lineTo(endX - f.facing * 12, y + 4);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawHeavyEffect(f) {
+      const cx = f.facing === 1 ? f.x + f.width + 25 : f.x - 25;
+      const cy = f.y + 58;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.82)";
+      ctx.lineWidth = 13;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+
+      if (f.facing === 1) {
+        ctx.arc(cx, cy, 48, -1.35, 1.15);
+      } else {
+        ctx.arc(cx, cy, 48, Math.PI - 1.15, Math.PI + 1.35);
+      }
+
+      ctx.stroke();
+
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+
+      if (f.facing === 1) {
+        ctx.arc(cx, cy, 58, -1.15, 0.9);
+      } else {
+        ctx.arc(cx, cy, 58, Math.PI - 0.9, Math.PI + 1.15);
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSpecialEffect(f) {
+      if (f.characterKey === "brute") {
+        drawShockwave(f);
+      } else if (f.characterKey === "viper") {
+        drawNeedleBurst(f);
+      } else if (f.characterKey === "mirror") {
+        drawMirrorSlash(f);
+      } else {
+        drawDashPunch(f);
+      }
+    }
+
+    function drawDashPunch(f) {
+      const y = f.y + f.height * 0.52;
+      const startX = f.facing === 1 ? f.x + f.width : f.x;
+      const endX = startX + f.facing * 105;
+
+      ctx.save();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.lineWidth = 9;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(endX, y);
+      ctx.stroke();
+
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(startX - f.facing * 20, y + 18);
+      ctx.lineTo(endX - f.facing * 18, y + 18);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawShockwave(f) {
+      const baseX = f.facing === 1 ? f.x + f.width + 20 : f.x - 20;
+      const baseY = 430;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 4;
+
+      for (let i = 0; i < 3; i++) {
+        const x = baseX + f.facing * i * 32;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.lineTo(x + f.facing * 18, baseY - 40 + i * 5);
+        ctx.lineTo(x + f.facing * 36, baseY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
       }
 
       ctx.restore();
     }
 
-    function drawAttackBox(f) {
-      const box = getAttackBox(f);
+    function drawNeedleBurst(f) {
+      const startX = f.facing === 1 ? f.x + f.width + 5 : f.x - 5;
+      const startY = f.y + 55;
 
       ctx.save();
-      ctx.globalAlpha = 0.28;
-      ctx.fillStyle = f.attack === "special" ? "#ffff66" : "#ffffff";
-      ctx.fillRect(box.x, box.y, box.width, box.height);
+      ctx.strokeStyle = "rgba(190,255,245,0.95)";
+      ctx.lineWidth = 3;
+
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + f.facing * 95, startY + i * 12);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawMirrorSlash(f) {
+      const cx = f.facing === 1 ? f.x + f.width + 25 : f.x - 25;
+      const cy = f.y + 55;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(220,220,255,0.95)";
+      ctx.lineWidth = 7;
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 62, -1.4, 1.4);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.arc(cx - f.facing * 18, cy, 72, -1.0, 1.0);
+      ctx.stroke();
+
       ctx.restore();
     }
 
@@ -667,15 +1242,101 @@
       };
     }
 
+    function drawParticles() {
+      for (const p of hitSparks) {
+        const alpha = Math.max(0, p.life / p.maxLife);
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3 + alpha * 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.5 + alpha * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function updateParticles() {
+      for (let i = hitSparks.length - 1; i >= 0; i--) {
+        const p = hitSparks[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.88;
+        p.vy *= 0.88;
+        p.life--;
+
+        if (p.life <= 0) {
+          hitSparks.splice(i, 1);
+        }
+      }
+    }
+
     function drawCenterText(text) {
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.fillRect(210, 210, 540, 90);
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      roundRect(210, 210, 540, 95, 18);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 2;
+      roundRect(210, 210, 540, 95, 18);
+      ctx.stroke();
 
       ctx.fillStyle = "white";
       ctx.font = "34px Arial";
       ctx.textAlign = "center";
-      ctx.fillText(text, canvas.width / 2, 265);
+      ctx.fillText(text, canvas.width / 2, 268);
       ctx.textAlign = "left";
+    }
+
+    function roundRect(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + w - radius, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+      ctx.lineTo(x + w, y + h - radius);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      ctx.lineTo(x + radius, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function brighten(hex, amount) {
+      const c = parseHexColor(hex);
+      const r = Math.min(255, Math.floor(c.r + (255 - c.r) * amount));
+      const g = Math.min(255, Math.floor(c.g + (255 - c.g) * amount));
+      const b = Math.min(255, Math.floor(c.b + (255 - c.b) * amount));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function darken(hex, amount) {
+      const c = parseHexColor(hex);
+      const r = Math.max(0, Math.floor(c.r * (1 - amount)));
+      const g = Math.max(0, Math.floor(c.g * (1 - amount)));
+      const b = Math.max(0, Math.floor(c.b * (1 - amount)));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function parseHexColor(hex) {
+      const clean = String(hex).replace("#", "");
+
+      if (clean.length !== 6) {
+        return { r: 255, g: 255, b: 255 };
+      }
+
+      return {
+        r: parseInt(clean.slice(0, 2), 16),
+        g: parseInt(clean.slice(2, 4), 16),
+        b: parseInt(clean.slice(4, 6), 16)
+      };
     }
 
     function escapeHtml(text) {
