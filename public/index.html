@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>The Listening Room</title>
+  <title>Link Fighter</title>
   <style>
     * {
       box-sizing: border-box;
@@ -9,348 +9,274 @@
 
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #252536, #08080d);
+      background: radial-gradient(circle at top, #252538, #07070b);
       color: white;
-      font-family: Georgia, serif;
+      font-family: Arial, sans-serif;
       min-height: 100vh;
-    }
-
-    #nameScreen {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle, #1d1d2e, #050507);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-
-    #nameBox {
-      width: 360px;
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 18px;
-      text-align: center;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-    }
-
-    #nameBox h1 {
-      margin-top: 0;
-      letter-spacing: 2px;
-    }
-
-    #nameInput {
-      width: 100%;
-      padding: 12px;
-      font-size: 18px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 15px;
-      text-align: center;
     }
 
     button {
       cursor: pointer;
       border: none;
       border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 15px;
+      padding: 10px 14px;
+      font-weight: bold;
       background: #eeeeee;
       color: #111;
     }
 
     button:hover {
-      filter: brightness(1.15);
+      filter: brightness(1.1);
     }
 
-    #game {
-      max-width: 1250px;
+    input {
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 15px;
+    }
+
+    .screen {
+      display: none;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      display: grid;
-      grid-template-columns: 260px 1fr 330px;
-      gap: 20px;
+    }
+
+    .active {
+      display: block;
     }
 
     .panel {
       background: rgba(255, 255, 255, 0.075);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 18px;
-      padding: 16px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.35);
+      padding: 18px;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.35);
     }
 
-    h1, h2, h3 {
-      margin-top: 0;
-    }
-
-    #title {
-      grid-column: 1 / 4;
+    h1 {
       text-align: center;
-      padding: 20px;
-    }
-
-    #title h1 {
+      font-size: 46px;
       margin-bottom: 5px;
-      font-size: 42px;
-      letter-spacing: 4px;
+      letter-spacing: 3px;
     }
 
-    #title p {
+    .subtitle {
+      text-align: center;
       color: #bbb;
       margin-top: 0;
+      margin-bottom: 25px;
     }
 
-    .player {
-      padding: 8px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.24);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .playerName {
-      font-weight: bold;
-    }
-
-    .score {
-      opacity: 0.8;
-    }
-
-    #clueBox {
-      min-height: 160px;
-      background: rgba(0, 0, 0, 0.28);
-      border-radius: 14px;
-      padding: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      margin-bottom: 15px;
-    }
-
-    #signal {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 999px;
-      margin-bottom: 12px;
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
-
-    .clear {
-      background: rgba(90, 255, 120, 0.18);
-      color: #9dffad;
-    }
-
-    .hazy {
-      background: rgba(255, 221, 80, 0.18);
-      color: #ffe680;
-    }
-
-    .fractured {
-      background: rgba(255, 80, 120, 0.18);
-      color: #ff91aa;
-    }
-
-    #clueText {
-      font-size: 22px;
-      line-height: 1.4;
-    }
-
-    #doors {
+    #menuGrid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 18px;
     }
 
-    .door {
-      min-height: 200px;
-      border-radius: 18px;
-      background: rgba(0, 0, 0, 0.34);
-      border: 2px solid rgba(255, 255, 255, 0.16);
-      padding: 18px;
-      text-align: center;
-      position: relative;
-      transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    .characterGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
     }
 
-    .door:hover {
-      transform: translateY(-3px);
-      border-color: white;
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .door.voted {
-      border-color: #8cffaa;
-      box-shadow: 0 0 20px rgba(140, 255, 170, 0.25);
-    }
-
-    .doorNumber {
-      font-family: Arial, sans-serif;
-      opacity: 0.65;
-      margin-bottom: 8px;
-    }
-
-    .doorColor {
-      font-size: 26px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .doorShape {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    .doorWord {
-      font-size: 28px;
-      letter-spacing: 3px;
-      margin: 15px 0;
-    }
-
-    .doorTone {
-      opacity: 0.75;
-      font-style: italic;
-    }
-
-    #chatLog {
-      height: 410px;
-      overflow-y: auto;
+    .characterCard {
+      padding: 12px;
+      border-radius: 14px;
       background: rgba(0, 0, 0, 0.28);
-      padding: 10px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
+      border: 2px solid transparent;
+      cursor: pointer;
     }
 
-    .chatMessage {
-      margin-bottom: 8px;
+    .characterCard.selected {
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .characterName {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .stats {
+      color: #bbb;
+      font-size: 13px;
+      margin-top: 4px;
       line-height: 1.35;
     }
 
-    .system {
-      color: #aaa;
-      font-style: italic;
+    .lobbyItem {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
     }
 
-    #chatForm {
+    .lobbyTitle {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .lobbyMeta {
+      color: #bbb;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .waiting {
+      color: #88ffaa;
+    }
+
+    .playing {
+      color: #ffdf70;
+    }
+
+    .finished {
+      color: #aaa;
+    }
+
+    .leaderboardRow {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      margin-bottom: 7px;
+    }
+
+    #createArea {
       display: flex;
       gap: 8px;
+      margin-bottom: 15px;
     }
 
-    #chatInput {
+    #lobbyName {
       flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
     }
 
-    #outcome {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.3);
-      display: none;
+    #gameTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 12px;
     }
 
-    #outcome.good {
-      border: 1px solid rgba(120, 255, 150, 0.5);
+    #gameInfo {
+      flex: 1;
+      text-align: center;
     }
 
-    #outcome.bad {
-      border: 1px solid rgba(255, 90, 120, 0.5);
-    }
-
-    .revealedClue {
-      padding: 8px;
-      margin-top: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    }
-
-    #newRoundBtn {
+    canvas {
+      display: block;
       width: 100%;
-      margin-top: 10px;
-      background: #d7ccff;
+      max-width: 960px;
+      height: auto;
+      margin: 0 auto;
+      background: linear-gradient(#20243d, #11111a 60%, #2a231d 60%, #17120f);
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      border-radius: 14px;
     }
 
-    .small {
-      font-size: 13px;
-      color: #aaa;
-      line-height: 1.4;
+    #controls {
+      max-width: 960px;
+      margin: 12px auto 0;
+      color: #ccc;
+      font-size: 14px;
+      line-height: 1.5;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
-    @media (max-width: 950px) {
-      #game {
+    #gameLeaderboard {
+      max-width: 960px;
+      margin: 15px auto 0;
+    }
+
+    @media (max-width: 900px) {
+      #menuGrid {
         grid-template-columns: 1fr;
       }
 
-      #title {
-        grid-column: 1;
+      .lobbyItem {
+        grid-template-columns: 1fr;
       }
 
-      #doors {
+      #controls {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div id="nameScreen">
-    <div id="nameBox">
-      <h1>The Listening Room</h1>
-      <p>Enter a name. Then decide who to trust.</p>
-      <input id="nameInput" placeholder="Your name" maxlength="18">
-      <button id="joinBtn">Enter</button>
+  <div id="menuScreen" class="screen active">
+    <h1>LINK FIGHTER</h1>
+    <p class="subtitle">Create a lobby, join a fight, or watch someone get folded.</p>
+
+    <div id="menuGrid">
+      <div class="panel">
+        <h2>Your Fighter</h2>
+
+        <div style="display:flex; gap:8px; margin-bottom:15px;">
+          <input id="nameInput" placeholder="Your name" maxlength="18" style="flex:1;">
+          <button id="saveNameBtn">Save</button>
+        </div>
+
+        <div id="characterGrid" class="characterGrid"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Lobbies</h2>
+
+        <div id="createArea">
+          <input id="lobbyName" placeholder="Lobby name">
+          <button id="createLobbyBtn">Create Lobby</button>
+        </div>
+
+        <div id="lobbyList"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard"></div>
+      </div>
     </div>
   </div>
 
-  <div id="game">
-    <div id="title">
-      <h1>The Listening Room</h1>
-      <p>One door is correct. Every player sees a private clue. Some clues are broken.</p>
+  <div id="gameScreen" class="screen">
+    <div id="gameTop">
+      <button id="leaveBtn">Leave</button>
+      <div id="gameInfo">
+        <h2 id="gameTitle" style="margin:0;">Fight</h2>
+        <div id="gameMessage" style="color:#bbb; margin-top:4px;"></div>
+      </div>
+      <button id="backToLobbyBtn">Lobby</button>
     </div>
 
-    <div class="panel">
-      <h2>Players</h2>
-      <div id="players"></div>
+    <canvas id="canvas" width="960" height="540"></canvas>
 
-      <button id="newRoundBtn">Force New Round</button>
-
-      <h3 style="margin-top: 20px;">Rules</h3>
-      <p class="small">
-        Each round, everyone gets one private clue. Talk it out, but remember:
-        a fractured clue may be false. Everyone votes for a door. When all players vote,
-        the room reveals the truth.
-      </p>
-    </div>
-
-    <div class="panel">
-      <h2 id="roundTitle">Round</h2>
-
-      <div id="clueBox">
-        <div id="signal">NO SIGNAL</div>
-        <div id="clueText">Waiting for your clue...</div>
+    <div id="controls">
+      <div class="panel">
+        <strong>Controls</strong><br>
+        A/D = move, W = jump, S = block<br>
+        J = light, K = heavy, L = special
       </div>
 
-      <div id="doors"></div>
-
-      <div id="outcome"></div>
+      <div class="panel">
+        <strong>Notes</strong><br>
+        Blocking reduces damage if you face the attack. Winner gains one leaderboard point.
+      </div>
     </div>
 
-    <div class="panel">
-      <h2>Table Talk</h2>
-      <div id="chatLog"></div>
-
-      <form id="chatForm">
-        <input id="chatInput" placeholder="Say something suspicious...">
-        <button>Send</button>
-      </form>
+    <div id="gameLeaderboard" class="panel">
+      <h2>Leaderboard</h2>
+      <div id="leaderboardInGame"></div>
     </div>
   </div>
 
@@ -358,227 +284,399 @@
   <script>
     const socket = io();
 
-    let myVote = null;
-    let state = null;
-    let privateClue = null;
+    const menuScreen = document.getElementById("menuScreen");
+    const gameScreen = document.getElementById("gameScreen");
 
-    const nameScreen = document.getElementById("nameScreen");
     const nameInput = document.getElementById("nameInput");
-    const joinBtn = document.getElementById("joinBtn");
+    const saveNameBtn = document.getElementById("saveNameBtn");
+    const characterGrid = document.getElementById("characterGrid");
 
-    const playersDiv = document.getElementById("players");
-    const doorsDiv = document.getElementById("doors");
-    const roundTitle = document.getElementById("roundTitle");
-    const signalDiv = document.getElementById("signal");
-    const clueText = document.getElementById("clueText");
-    const chatLog = document.getElementById("chatLog");
-    const chatForm = document.getElementById("chatForm");
-    const chatInput = document.getElementById("chatInput");
-    const outcomeDiv = document.getElementById("outcome");
-    const newRoundBtn = document.getElementById("newRoundBtn");
+    const lobbyName = document.getElementById("lobbyName");
+    const createLobbyBtn = document.getElementById("createLobbyBtn");
+    const lobbyList = document.getElementById("lobbyList");
 
-    function join() {
-      const name = nameInput.value.trim() || "Nameless";
-      socket.emit("setName", name);
-      nameScreen.style.display = "none";
-    }
+    const leaderboardDiv = document.getElementById("leaderboard");
+    const leaderboardInGame = document.getElementById("leaderboardInGame");
 
-    joinBtn.addEventListener("click", join);
+    const leaveBtn = document.getElementById("leaveBtn");
+    const backToLobbyBtn = document.getElementById("backToLobbyBtn");
+    const gameTitle = document.getElementById("gameTitle");
+    const gameMessage = document.getElementById("gameMessage");
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let characters = {};
+    let selectedCharacter = "striker";
+    let currentGameState = null;
+    let myRole = "menu";
+    let keys = {
+      left: false,
+      right: false,
+      jump: false,
+      block: false,
+      light: false,
+      heavy: false,
+      special: false
+    };
+
+    socket.on("welcome", (data) => {
+      characters = data.characters;
+      renderCharacters();
+    });
+
+    socket.on("lobbyData", (data) => {
+      characters = data.characters || characters;
+      renderCharacters();
+      renderLobbies(data.lobbies || []);
+      renderLeaderboard(data.leaderboard || [], leaderboardDiv);
+    });
+
+    socket.on("enteredLobby", (data) => {
+      myRole = data.role;
+      showGame();
+    });
+
+    socket.on("leftLobby", () => {
+      myRole = "menu";
+      currentGameState = null;
+      showMenu();
+    });
+
+    socket.on("gameState", (state) => {
+      currentGameState = state;
+      renderGameText();
+      renderLeaderboard(state.leaderboard || [], leaderboardInGame);
+      drawGame();
+    });
+
+    saveNameBtn.addEventListener("click", () => {
+      socket.emit("setName", nameInput.value);
+    });
 
     nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") join();
-    });
-
-    socket.on("state", (newState) => {
-      const oldRound = state?.round?.number;
-      state = newState;
-
-      if (oldRound !== state.round.number) {
-        myVote = null;
+      if (e.key === "Enter") {
+        socket.emit("setName", nameInput.value);
       }
-
-      render();
     });
 
-    socket.on("privateClue", (clue) => {
-      privateClue = clue;
-      renderClue();
+    createLobbyBtn.addEventListener("click", () => {
+      socket.emit("setName", nameInput.value);
+      socket.emit("setCharacter", selectedCharacter);
+      socket.emit("createLobby", lobbyName.value);
     });
 
-    function render() {
-      if (!state) return;
+    leaveBtn.addEventListener("click", () => {
+      socket.emit("leaveLobby");
+    });
 
-      renderPlayers();
-      renderDoors();
-      renderChat();
-      renderClue();
-      renderOutcome();
+    backToLobbyBtn.addEventListener("click", () => {
+      socket.emit("leaveLobby");
+    });
 
-      roundTitle.textContent = `Round ${state.round.number}`;
+    function showMenu() {
+      menuScreen.classList.add("active");
+      gameScreen.classList.remove("active");
     }
 
-    function renderPlayers() {
-      playersDiv.innerHTML = "";
+    function showGame() {
+      menuScreen.classList.remove("active");
+      gameScreen.classList.add("active");
+    }
 
-      for (const id in state.players) {
-        const player = state.players[id];
-        const hasVoted = state.round.votes[id] !== undefined;
+    function renderCharacters() {
+      characterGrid.innerHTML = "";
+
+      for (const key in characters) {
+        const ch = characters[key];
 
         const div = document.createElement("div");
-        div.className = "player";
+        div.className = "characterCard";
+        if (key === selectedCharacter) div.classList.add("selected");
+
+        div.innerHTML = `
+          <div class="characterName">${escapeHtml(ch.name)}</div>
+          <div class="stats">
+            HP ${ch.maxHp} · Speed ${ch.speed} · Jump ${ch.jump}<br>
+            Light ${ch.lightDamage} · Heavy ${ch.heavyDamage} · Special ${ch.specialDamage}
+          </div>
+        `;
+
+        div.addEventListener("click", () => {
+          selectedCharacter = key;
+          socket.emit("setCharacter", selectedCharacter);
+          renderCharacters();
+        });
+
+        characterGrid.appendChild(div);
+      }
+    }
+
+    function renderLobbies(lobbies) {
+      lobbyList.innerHTML = "";
+
+      if (lobbies.length === 0) {
+        lobbyList.innerHTML = `<p style="color:#aaa;">No lobbies yet. Create one.</p>`;
+        return;
+      }
+
+      for (const lobby of lobbies) {
+        const div = document.createElement("div");
+        div.className = "lobbyItem";
+
+        const statusClass = lobby.status;
 
         div.innerHTML = `
           <div>
-            <div class="playerName" style="color:${player.color}">
-              ${escapeHtml(player.name)}
+            <div class="lobbyTitle">${escapeHtml(lobby.name)}</div>
+            <div class="lobbyMeta">
+              Host: ${escapeHtml(lobby.hostName)}
+              <br>
+              Red: ${escapeHtml(lobby.p1Name || "waiting")}
+              · Blue: ${escapeHtml(lobby.p2Name || "waiting")}
+              · Watching: ${lobby.spectatorCount}
+              <br>
+              Status: <span class="${statusClass}">${escapeHtml(lobby.status)}</span>
             </div>
-            <div class="small">${hasVoted ? "chosen" : "thinking"}</div>
           </div>
-          <div class="score">${player.score}</div>
         `;
 
-        playersDiv.appendChild(div);
-      }
-    }
-
-    function renderDoors() {
-      doorsDiv.innerHTML = "";
-
-      for (const artifact of state.round.artifacts) {
-        const door = document.createElement("div");
-        door.className = "door";
-
-        if (myVote === artifact.index) {
-          door.classList.add("voted");
-        }
-
-        door.innerHTML = `
-          <div class="doorNumber">Door ${artifact.index + 1}</div>
-          <div class="doorColor">${escapeHtml(artifact.color)}</div>
-          <div class="doorShape">${escapeHtml(artifact.shape)}</div>
-          <div class="doorWord">${escapeHtml(artifact.word)}</div>
-          <div class="doorTone">feels ${escapeHtml(artifact.tone)}</div>
-        `;
-
-        door.addEventListener("click", () => {
-          if (state.round.phase !== "playing") return;
-
-          myVote = artifact.index;
-          socket.emit("vote", artifact.index);
-          renderDoors();
-        });
-
-        doorsDiv.appendChild(door);
-      }
-    }
-
-    function renderClue() {
-      if (!privateClue) {
-        signalDiv.textContent = "NO SIGNAL";
-        signalDiv.className = "";
-        clueText.textContent = "Waiting for your clue...";
-        return;
-      }
-
-      signalDiv.textContent = privateClue.signal;
-      signalDiv.className = "";
-
-      if (privateClue.signal === "CLEAR") {
-        signalDiv.classList.add("clear");
-      } else if (privateClue.signal === "HAZY") {
-        signalDiv.classList.add("hazy");
-      } else {
-        signalDiv.classList.add("fractured");
-      }
-
-      clueText.textContent = privateClue.text;
-    }
-
-    function renderChat() {
-      chatLog.innerHTML = "";
-
-      for (const msg of state.chatLog) {
-        const div = document.createElement("div");
-        div.className = "chatMessage";
-
-        if (msg.system) {
-          div.classList.add("system");
-          div.textContent = msg.text;
+        if (lobby.status === "waiting") {
+          const join = document.createElement("button");
+          join.textContent = "Join";
+          join.addEventListener("click", () => {
+            socket.emit("setName", nameInput.value);
+            socket.emit("setCharacter", selectedCharacter);
+            socket.emit("joinLobby", lobby.id);
+          });
+          div.appendChild(join);
         } else {
-          div.innerHTML = `
-            <strong style="color:${msg.color}">
-              ${escapeHtml(msg.name)}:
-            </strong>
-            ${escapeHtml(msg.text)}
-          `;
+          const spacer = document.createElement("div");
+          div.appendChild(spacer);
         }
 
-        chatLog.appendChild(div);
-      }
+        const watch = document.createElement("button");
+        watch.textContent = "Watch";
+        watch.addEventListener("click", () => {
+          socket.emit("setName", nameInput.value);
+          socket.emit("watchLobby", lobby.id);
+        });
+        div.appendChild(watch);
 
-      chatLog.scrollTop = chatLog.scrollHeight;
+        lobbyList.appendChild(div);
+      }
     }
 
-    function renderOutcome() {
-      const outcome = state.lastOutcome;
+    function renderLeaderboard(rows, target) {
+      target.innerHTML = "";
 
-      if (!outcome) {
-        outcomeDiv.style.display = "none";
-        outcomeDiv.innerHTML = "";
-        outcomeDiv.className = "";
+      if (!rows.length) {
+        target.innerHTML = `<p style="color:#aaa;">No wins yet.</p>`;
         return;
       }
 
-      outcomeDiv.style.display = "block";
-      outcomeDiv.className = outcome.correct ? "good" : "bad";
-
-      const correctDoor = outcome.correctDoor;
-      const chosenDoor = outcome.chosenDoor;
-
-      let html = `
-        <h3>${outcome.correct ? "The room opened." : "The room stayed shut."}</h3>
-        <p>
-          The group chose <strong>Door ${chosenDoor.index + 1}</strong>.
-          The correct answer was <strong>Door ${correctDoor.index + 1}</strong>:
-          ${escapeHtml(correctDoor.color)} /
-          ${escapeHtml(correctDoor.shape)} /
-          ${escapeHtml(correctDoor.word)}.
-        </p>
-        <h4>Revealed Clues</h4>
-      `;
-
-      for (const id in outcome.clues) {
-        const clue = outcome.clues[id];
-
-        html += `
-          <div class="revealedClue">
-            <strong>${escapeHtml(clue.name)}</strong>
-            had a <strong>${escapeHtml(clue.signal)}</strong> clue:
-            “${escapeHtml(clue.text)}”
-            <br>
-            <span class="small">
-              This clue was ${clue.reliable ? "reliable" : "false"}.
-            </span>
-          </div>
+      rows.forEach((row, i) => {
+        const div = document.createElement("div");
+        div.className = "leaderboardRow";
+        div.innerHTML = `
+          <span>${i + 1}. ${escapeHtml(row.name)}</span>
+          <strong>${row.score}</strong>
         `;
-      }
-
-      outcomeDiv.innerHTML = html;
+        target.appendChild(div);
+      });
     }
 
-    chatForm.addEventListener("submit", (e) => {
-      e.preventDefault();
+    function renderGameText() {
+      if (!currentGameState) return;
 
-      const text = chatInput.value.trim();
-      if (!text) return;
+      const lobby = currentGameState.lobby;
 
-      socket.emit("chat", text);
-      chatInput.value = "";
+      gameTitle.textContent = `${lobby.name || "Fight"} — ${myRole.toUpperCase()}`;
+      gameMessage.textContent = lobby.message || "";
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.repeat) return;
+
+      if (e.key === "a" || e.key === "A") keys.left = true;
+      if (e.key === "d" || e.key === "D") keys.right = true;
+      if (e.key === "w" || e.key === "W") keys.jump = true;
+      if (e.key === "s" || e.key === "S") keys.block = true;
+      if (e.key === "j" || e.key === "J") keys.light = true;
+      if (e.key === "k" || e.key === "K") keys.heavy = true;
+      if (e.key === "l" || e.key === "L") keys.special = true;
+
+      sendInput();
     });
 
-    newRoundBtn.addEventListener("click", () => {
-      socket.emit("forceNewRound");
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "a" || e.key === "A") keys.left = false;
+      if (e.key === "d" || e.key === "D") keys.right = false;
+      if (e.key === "w" || e.key === "W") keys.jump = false;
+      if (e.key === "s" || e.key === "S") keys.block = false;
+      if (e.key === "j" || e.key === "J") keys.light = false;
+      if (e.key === "k" || e.key === "K") keys.heavy = false;
+      if (e.key === "l" || e.key === "L") keys.special = false;
+
+      sendInput();
     });
+
+    function sendInput() {
+      if (myRole === "p1" || myRole === "p2") {
+        socket.emit("input", keys);
+      }
+    }
+
+    setInterval(sendInput, 1000 / 30);
+
+    function drawGame() {
+      if (!currentGameState || !currentGameState.game) {
+        drawWaitingScreen();
+        return;
+      }
+
+      const game = currentGameState.game;
+      const red = game.fighters.red;
+      const blue = game.fighters.blue;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBackground(game);
+      drawHealthBars(red, blue);
+      drawFighter(red);
+      drawFighter(blue);
+
+      if (red.attack) drawAttackBox(red);
+      if (blue.attack) drawAttackBox(blue);
+
+      if (game.roundOver) {
+        drawCenterText(currentGameState.lobby.message || "Round over");
+      }
+    }
+
+    function drawWaitingScreen() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground({ floorY: 430 });
+      drawCenterText(currentGameState?.lobby?.message || "Waiting...");
+    }
+
+    function drawBackground(game) {
+      ctx.fillStyle = "#1a1b2f";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#25294a";
+      for (let i = 0; i < 8; i++) {
+        ctx.fillRect(i * 140 - 20, 120 + (i % 2) * 30, 80, 280);
+      }
+
+      ctx.fillStyle = "#292018";
+      ctx.fillRect(0, game.floorY, canvas.width, canvas.height - game.floorY);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, game.floorY);
+      ctx.lineTo(canvas.width, game.floorY);
+      ctx.stroke();
+    }
+
+    function drawHealthBars(red, blue) {
+      drawOneHealthBar(30, 28, 360, red, "RED");
+      drawOneHealthBar(570, 28, 360, blue, "BLUE");
+    }
+
+    function drawOneHealthBar(x, y, w, f, label) {
+      const pct = Math.max(0, f.hp / f.maxHp);
+
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(x, y, w, 26);
+
+      ctx.fillStyle = f.side === "red" ? "#ff3e3e" : "#3e89ff";
+      ctx.fillRect(x, y, w * pct, 26);
+
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, 26);
+
+      ctx.fillStyle = "white";
+      ctx.font = "16px Arial";
+      ctx.fillText(`${label}: ${f.name} / ${f.characterName}`, x, y - 7);
+    }
+
+    function drawFighter(f) {
+      ctx.save();
+
+      const blink = f.hurtTimer > 0 && Math.floor(f.hurtTimer / 3) % 2 === 0;
+
+      ctx.fillStyle = blink ? "#ffffff" : f.color;
+      ctx.fillRect(f.x, f.y, f.width, f.height);
+
+      ctx.fillStyle = "#111";
+      const eyeX = f.facing === 1 ? f.x + f.width - 14 : f.x + 8;
+      ctx.fillRect(eyeX, f.y + 22, 7, 7);
+
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.fillRect(f.x + 8, f.y + 8, f.width - 16, 14);
+
+      if (f.blocking) {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 5;
+        const shieldX = f.facing === 1 ? f.x + f.width + 8 : f.x - 18;
+        ctx.beginPath();
+        ctx.arc(shieldX, f.y + f.height / 2, 24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      if (f.attack) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Arial";
+        ctx.fillText(f.attack.toUpperCase(), f.x - 5, f.y - 10);
+      }
+
+      ctx.restore();
+    }
+
+    function drawAttackBox(f) {
+      const box = getAttackBox(f);
+
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = f.attack === "special" ? "#ffff66" : "#ffffff";
+      ctx.fillRect(box.x, box.y, box.width, box.height);
+      ctx.restore();
+    }
+
+    function getAttackBox(f) {
+      const range = f.attack === "heavy" ? f.reach + 22 : f.reach;
+      const height = f.attack === "special" ? f.height * 0.75 : f.height * 0.55;
+
+      if (f.facing === 1) {
+        return {
+          x: f.x + f.width,
+          y: f.y + 18,
+          width: range,
+          height
+        };
+      }
+
+      return {
+        x: f.x - range,
+        y: f.y + 18,
+        width: range,
+        height
+      };
+    }
+
+    function drawCenterText(text) {
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(210, 210, 540, 90);
+
+      ctx.fillStyle = "white";
+      ctx.font = "34px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(text, canvas.width / 2, 265);
+      ctx.textAlign = "left";
+    }
 
     function escapeHtml(text) {
       return String(text)
@@ -588,6 +686,13 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+
+    function animationLoop() {
+      drawGame();
+      requestAnimationFrame(animationLoop);
+    }
+
+    animationLoop();
   </script>
 </body>
 </html>
