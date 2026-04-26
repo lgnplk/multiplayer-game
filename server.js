@@ -17,6 +17,9 @@ const FLOOR_Y = 430;
 const GRAVITY = 0.78;
 const ROUNDS_TO_WIN = 3;
 
+const LEFT_WALL = 20;
+const RIGHT_WALL = WIDTH - 20;
+
 const players = {};
 const lobbies = {};
 const leaderboard = {};
@@ -26,9 +29,9 @@ let nextLobbyId = 1;
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Balanced royal fighter",
-    maxHp: 180,
-    speed: 4.7,
+    title: "Balanced royal fighter. Strong block and space-control special.",
+    maxHp: 190,
+    speed: 4.6,
     jump: 14,
     width: 60,
     height: 110,
@@ -39,9 +42,9 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Fast aerial fighter",
-    maxHp: 155,
-    speed: 6.1,
+    title: "Fast aerial fighter. Great wall jumps and diving attacks.",
+    maxHp: 160,
+    speed: 6.3,
     jump: 17,
     width: 58,
     height: 106,
@@ -52,22 +55,22 @@ const CHARACTERS = {
   },
   bishop: {
     name: "Bishop",
-    title: "Long diagonal striker",
-    maxHp: 160,
+    title: "Long diagonal striker. Controls space from awkward angles.",
+    maxHp: 165,
     speed: 5.2,
     jump: 15,
     width: 56,
     height: 110,
-    reach: 74,
+    reach: 78,
     lightDamage: 4,
     heavyDamage: 10,
     specialDamage: 12
   },
   rook: {
     name: "Rook",
-    title: "Slow wall with huge health",
-    maxHp: 220,
-    speed: 3.7,
+    title: "Armored wall. Slow, heavy, and terrifying near corners.",
+    maxHp: 235,
+    speed: 3.6,
     jump: 12,
     width: 70,
     height: 118,
@@ -78,8 +81,8 @@ const CHARACTERS = {
   },
   pawn: {
     name: "Pawn",
-    title: "Promotes into a queen over time",
-    maxHp: 145,
+    title: "Weak early, but promotes into a queen over time.",
+    maxHp: 155,
     speed: 4.9,
     jump: 14,
     width: 52,
@@ -101,6 +104,14 @@ function cleanName(name) {
 
 function getCharacter(key) {
   return CHARACTERS[key] || CHARACTERS.king;
+}
+
+function roomName(lobbyId) {
+  return `lobby:${lobbyId}`;
+}
+
+function getSocket(socketId) {
+  return io.sockets.sockets.get(socketId);
 }
 
 function publicLobbyList() {
@@ -128,19 +139,6 @@ function sendLobbyData() {
     leaderboard: publicLeaderboard(),
     characters: CHARACTERS
   });
-}
-
-function roomName(lobbyId) {
-  return `lobby:${lobbyId}`;
-}
-
-function getSocket(socketId) {
-  return io.sockets.sockets.get(socketId);
-}
-
-function pieceDisplayName(f) {
-  if (f.characterKey === "pawn" && f.promoted) return "Queen";
-  return f.characterName;
 }
 
 function createFighter(socketId, side, characterKey) {
@@ -189,7 +187,16 @@ function createFighter(socketId, side, characterKey) {
     heavyCooldown: 0,
     specialCooldown: 0,
 
-    hurtTimer: 0
+    hurtTimer: 0,
+    armorTimer: 0,
+
+    jumpWasDown: false,
+    wallSide: 0,
+    wallJumpLock: 0,
+    wallBounceWindow: 0,
+    wallBouncePower: 0,
+    wallBounceTimer: 0,
+    lastWallBounceSide: 0
   };
 }
 
@@ -248,6 +255,10 @@ function sendGameState(lobby) {
   });
 }
 
+function joinSocketRoom(socket, lobbyId) {
+  socket.join(roomName(lobbyId));
+}
+
 function leaveCurrentLobby(socketId) {
   const player = players[socketId];
   if (!player || !player.lobbyId) return;
@@ -293,10 +304,6 @@ function leaveCurrentLobby(socketId) {
   player.role = "menu";
 }
 
-function joinSocketRoom(socket, lobbyId) {
-  socket.join(roomName(lobbyId));
-}
-
 function rectsOverlap(a, b) {
   return (
     a.x < b.x + b.width &&
@@ -304,6 +311,157 @@ function rectsOverlap(a, b) {
     a.y < b.y + b.height &&
     a.y + a.height > b.y
   );
+}
+
+function effectivePiece(f) {
+  if (f.characterKey === "pawn" && f.promoted) return "queen";
+  return f.characterKey;
+}
+
+function getMoveProfile(f, attackType = f.attack) {
+  const piece = effectivePiece(f);
+
+  const profile = {
+    damageMul: 1,
+    knockbackMul: 1,
+    rangeBonus: 0,
+    armorBreak: false,
+    wallBounce: 5,
+    lift: -2.5,
+    selfVX: 0,
+    selfVY: 0
+  };
+
+  if (piece === "king") {
+    if (attackType === "special") {
+      profile.damageMul = 0.9;
+      profile.knockbackMul = 1.65;
+      profile.rangeBonus = 42;
+      profile.wallBounce = 9;
+    }
+
+    if (attackType === "heavy") {
+      profile.knockbackMul = 1.25;
+      profile.wallBounce = 8;
+    }
+  }
+
+  if (piece === "knight") {
+    if (attackType === "special") {
+      profile.damageMul = 0.95;
+      profile.knockbackMul = 1.25;
+      profile.rangeBonus = 18;
+      profile.lift = -9;
+    }
+
+    if (attackType === "airSpecial") {
+      profile.damageMul = 1.25;
+      profile.knockbackMul = 1.65;
+      profile.rangeBonus = 28;
+      profile.wallBounce = 11;
+      profile.lift = 6;
+    }
+
+    if (attackType === "airHeavy") {
+      profile.damageMul = 1.18;
+      profile.knockbackMul = 1.35;
+      profile.wallBounce = 9;
+    }
+  }
+
+  if (piece === "bishop") {
+    if (attackType === "light") {
+      profile.rangeBonus = 15;
+    }
+
+    if (attackType === "heavy") {
+      profile.rangeBonus = 30;
+      profile.knockbackMul = 1.1;
+    }
+
+    if (attackType === "special") {
+      profile.rangeBonus = 65;
+      profile.damageMul = 1.05;
+      profile.knockbackMul = 1.15;
+      profile.wallBounce = 8;
+    }
+
+    if (attackType === "airSpecial") {
+      profile.rangeBonus = 55;
+      profile.damageMul = 1.15;
+      profile.knockbackMul = 1.25;
+    }
+  }
+
+  if (piece === "rook") {
+    if (attackType === "light") {
+      profile.knockbackMul = 1.15;
+      profile.wallBounce = 7;
+    }
+
+    if (attackType === "heavy") {
+      profile.damageMul = 1.1;
+      profile.knockbackMul = 1.65;
+      profile.wallBounce = 13;
+      profile.armorBreak = true;
+    }
+
+    if (attackType === "special") {
+      profile.damageMul = 1.05;
+      profile.knockbackMul = 2.05;
+      profile.rangeBonus = 35;
+      profile.wallBounce = 16;
+      profile.armorBreak = true;
+    }
+
+    if (attackType === "crouchHeavy") {
+      profile.knockbackMul = 1.7;
+      profile.wallBounce = 14;
+    }
+  }
+
+  if (piece === "pawn") {
+    if (attackType === "light" || attackType === "crouchLight") {
+      profile.damageMul = 0.9;
+      profile.knockbackMul = 0.9;
+    }
+
+    if (attackType === "special") {
+      profile.damageMul = 0.9;
+      profile.knockbackMul = 1.35;
+      profile.wallBounce = 7;
+    }
+
+    if (attackType === "airHeavy") {
+      profile.damageMul = 1.15;
+      profile.knockbackMul = 1.2;
+      profile.wallBounce = 7;
+    }
+  }
+
+  if (piece === "queen") {
+    profile.damageMul = 1.18;
+    profile.knockbackMul = 1.25;
+    profile.rangeBonus = 20;
+    profile.wallBounce = 9;
+
+    if (attackType === "special") {
+      profile.damageMul = 1.25;
+      profile.knockbackMul = 1.7;
+      profile.rangeBonus = 70;
+      profile.wallBounce = 14;
+      profile.armorBreak = true;
+    }
+
+    if (attackType === "airSpecial") {
+      profile.damageMul = 1.3;
+      profile.knockbackMul = 1.6;
+      profile.rangeBonus = 50;
+      profile.wallBounce = 12;
+    }
+  }
+
+  return profile;
 }
 
 function getAttackDuration(type) {
@@ -321,7 +479,9 @@ function getAttackDuration(type) {
   return durations[type] || 20;
 }
 
-function getCooldown(type) {
+function getCooldown(type, f) {
+  const piece = effectivePiece(f);
+
   const cooldowns = {
     light: 20,
     heavy: 50,
@@ -333,7 +493,13 @@ function getCooldown(type) {
     airSpecial: 110
   };
 
-  return cooldowns[type] || 30;
+  let cd = cooldowns[type] || 30;
+
+  if (piece === "knight" && type.startsWith("air")) cd *= 0.82;
+  if (piece === "rook" && type === "special") cd *= 1.2;
+  if (piece === "queen") cd *= 0.85;
+
+  return Math.ceil(cd);
 }
 
 function startAttack(f, baseType) {
@@ -350,7 +516,7 @@ function startAttack(f, baseType) {
     if (baseType === "heavy") type = "crouchHeavy";
   }
 
-  const cooldown = getCooldown(type);
+  const cooldown = getCooldown(type, f);
 
   if (baseType === "light" && f.lightCooldown > 0) return;
   if (baseType === "heavy" && f.heavyCooldown > 0) return;
@@ -364,27 +530,60 @@ function startAttack(f, baseType) {
   if (baseType === "heavy") f.heavyCooldown = cooldown;
   if (baseType === "special") f.specialCooldown = cooldown;
 
-  if (type === "airSpecial") {
-    f.vx += f.facing * 7;
-    f.vy += 2;
+  const piece = effectivePiece(f);
+
+  if (piece === "rook" && type === "special") {
+    f.vx += f.facing * 10;
+    f.armorTimer = 34;
+  }
+
+  if (piece === "rook" && type === "heavy") {
+    f.armorTimer = 18;
+  }
+
+  if (piece === "king" && type === "special") {
+    f.armorTimer = 22;
+    f.vx *= 0.2;
+  }
+
+  if (piece === "knight" && type === "special") {
+    f.vx += f.facing * 5;
+    f.vy = -11;
+    f.grounded = false;
+  }
+
+  if (piece === "knight" && type === "airSpecial") {
+    f.vx += f.facing * 10;
+    f.vy += 6;
+  }
+
+  if (piece === "bishop" && type === "special") {
+    f.vx -= f.facing * 3;
+  }
+
+  if (piece === "queen" && type === "special") {
+    f.armorTimer = 12;
+  }
+
+  if (f.characterKey === "pawn" && type === "special") {
+    chargePawn(f, 7);
   }
 
   if (type === "crouchHeavy") {
     f.vx += f.facing * 2.5;
   }
-
-  if (type === "special" && f.characterKey === "rook") {
-    f.vx += f.facing * 8;
-  }
-
-  if (type === "special" && f.characterKey === "knight") {
-    f.vy = -10;
-    f.grounded = false;
-  }
 }
 
 function getDamage(f) {
-  const multipliers = {
+  let base = f.lightDamage;
+
+  if (f.attack === "heavy" || f.attack === "crouchHeavy" || f.attack === "airHeavy") {
+    base = f.heavyDamage;
+  } else if (f.attack === "special" || f.attack === "airSpecial") {
+    base = f.specialDamage;
+  }
+
+  const typeMultipliers = {
     light: 1,
     heavy: 1,
     special: 1,
@@ -395,15 +594,8 @@ function getDamage(f) {
     airSpecial: 1.25
   };
 
-  let base = f.lightDamage;
-
-  if (f.attack === "heavy" || f.attack === "crouchHeavy" || f.attack === "airHeavy") {
-    base = f.heavyDamage;
-  } else if (f.attack === "special" || f.attack === "airSpecial") {
-    base = f.specialDamage;
-  }
-
-  return Math.ceil(base * (multipliers[f.attack] || 1));
+  const profile = getMoveProfile(f);
+  return Math.ceil(base * (typeMultipliers[f.attack] || 1) * profile.damageMul);
 }
 
 function getKnockback(f) {
@@ -418,7 +610,8 @@ function getKnockback(f) {
     airSpecial: 15
   };
 
-  return values[f.attack] || 7;
+  const profile = getMoveProfile(f);
+  return (values[f.attack] || 7) * profile.knockbackMul;
 }
 
 function activeWindow(f) {
@@ -426,7 +619,7 @@ function activeWindow(f) {
 
   if (f.attack === "light") return t <= 10 && t >= 4;
   if (f.attack === "heavy") return t <= 17 && t >= 5;
-  if (f.attack === "special") return t <= 24 && t >= 7;
+  if (f.attack === "special") return t <= 25 && t >= 7;
 
   if (f.attack === "crouchLight") return t <= 11 && t >= 4;
   if (f.attack === "crouchHeavy") return t <= 19 && t >= 6;
@@ -441,8 +634,9 @@ function activeWindow(f) {
 function attackBox(f) {
   const low = f.attack === "crouchLight" || f.attack === "crouchHeavy";
   const air = f.attack === "airLight" || f.attack === "airHeavy" || f.attack === "airSpecial";
+  const profile = getMoveProfile(f);
 
-  let range = f.reach;
+  let range = f.reach + profile.rangeBonus;
   let height = f.height * 0.5;
   let y = f.y + 22;
 
@@ -463,6 +657,21 @@ function attackBox(f) {
   if (air) {
     y = f.y + f.height * 0.42;
     height = f.height * 0.45;
+  }
+
+  if (effectivePiece(f) === "bishop" && (f.attack === "special" || f.attack === "airSpecial")) {
+    height *= 1.15;
+    y -= 20;
+  }
+
+  if (effectivePiece(f) === "king" && f.attack === "special") {
+    y = f.y;
+    height = f.height;
+  }
+
+  if (effectivePiece(f) === "queen" && f.attack === "special") {
+    y = f.y - 15;
+    height = f.height + 30;
   }
 
   if (f.facing === 1) {
@@ -488,14 +697,14 @@ function promotePawn(f) {
   f.promoted = true;
   f.promotionMeter = 100;
 
-  f.maxHp += 18;
-  f.hp = Math.min(f.maxHp, f.hp + 18);
-  f.speed += 0.8;
+  f.maxHp += 35;
+  f.hp = Math.min(f.maxHp, f.hp + 35);
+  f.speed += 0.9;
   f.jump += 1.5;
-  f.reach += 22;
+  f.reach += 24;
   f.lightDamage += 2;
-  f.heavyDamage += 3;
-  f.specialDamage += 4;
+  f.heavyDamage += 4;
+  f.specialDamage += 5;
   f.characterName = "Queen";
 }
 
@@ -509,12 +718,82 @@ function chargePawn(f, amount) {
   }
 }
 
+function updateWallState(f) {
+  if (f.x <= LEFT_WALL + 2) {
+    f.wallSide = -1;
+  } else if (f.x + f.width >= RIGHT_WALL - 2) {
+    f.wallSide = 1;
+  } else {
+    f.wallSide = 0;
+  }
+}
+
+function tryWallJump(f, jumpPressed) {
+  if (!jumpPressed) return;
+  if (f.grounded) return;
+  if (!f.wallSide) return;
+  if (f.wallJumpLock > 0) return;
+
+  const piece = effectivePiece(f);
+
+  let strength = 1;
+
+  if (piece === "knight") strength = 1.35;
+  if (piece === "bishop") strength = 1.1;
+  if (piece === "rook") strength = 0.8;
+  if (piece === "queen") strength = 1.2;
+
+  f.vx = -f.wallSide * f.speed * 1.75 * strength;
+  f.vy = -f.jump * 0.92 * strength;
+  f.facing = -f.wallSide;
+  f.wallJumpLock = 18;
+  f.hurtTimer = Math.max(0, f.hurtTimer - 4);
+}
+
+function handleWallBounce(f) {
+  if (f.wallBounceWindow > 0) {
+    f.wallBounceWindow--;
+  }
+
+  if (f.wallBounceTimer > 0) {
+    f.wallBounceTimer--;
+  }
+
+  const hitLeft = f.x <= LEFT_WALL + 1;
+  const hitRight = f.x + f.width >= RIGHT_WALL - 1;
+
+  if (!hitLeft && !hitRight) return;
+  if (f.wallBounceWindow <= 0) return;
+  if (Math.abs(f.vx) < 4.5) return;
+
+  const side = hitLeft ? -1 : 1;
+
+  f.x = hitLeft ? LEFT_WALL : RIGHT_WALL - f.width;
+  f.vx = -side * Math.max(7, Math.abs(f.vx) * 0.55);
+  f.vy = Math.min(f.vy, -7);
+
+  const wallDamage = Math.ceil(f.wallBouncePower * 0.45);
+  f.hp = Math.max(0, f.hp - wallDamage);
+
+  f.hurtTimer = Math.max(f.hurtTimer, 24);
+  f.wallBounceTimer = 20;
+  f.lastWallBounceSide = side;
+  f.wallBounceWindow = 0;
+}
+
 function updateFighter(f, opponent, input) {
   if (f.hurtTimer > 0) f.hurtTimer--;
+  if (f.armorTimer > 0) f.armorTimer--;
+  if (f.wallJumpLock > 0) f.wallJumpLock--;
+
+  const jumpPressed = !!input.jump && !f.jumpWasDown;
 
   if (f.characterKey === "pawn" && !f.promoted) {
-    chargePawn(f, 0.045);
+    chargePawn(f, 0.04);
   }
+
+  updateWallState(f);
+  tryWallJump(f, jumpPressed);
 
   const wantsCrouch = !!input.crouch && f.grounded && !f.attack;
   f.crouching = wantsCrouch;
@@ -537,9 +816,15 @@ function updateFighter(f, opponent, input) {
     f.vx *= 0.84;
   }
 
-  if (input.jump && f.grounded && !f.blocking && !f.attack && !f.crouching) {
+  if (jumpPressed && f.grounded && !f.blocking && !f.attack && !f.crouching) {
     f.vy = -f.jump;
     f.grounded = false;
+  }
+
+  if (!f.grounded && f.wallSide && f.vy > 3.2 && !f.attack) {
+    const piece = effectivePiece(f);
+    const slideLimit = piece === "knight" ? 2.8 : piece === "rook" ? 5.2 : 3.8;
+    f.vy = Math.min(f.vy, slideLimit);
   }
 
   if (input.light) startAttack(f, "light");
@@ -559,7 +844,11 @@ function updateFighter(f, opponent, input) {
     f.grounded = false;
   }
 
-  f.x = Math.max(20, Math.min(WIDTH - f.width - 20, f.x));
+  if (f.x < LEFT_WALL) f.x = LEFT_WALL;
+  if (f.x + f.width > RIGHT_WALL) f.x = RIGHT_WALL - f.width;
+
+  updateWallState(f);
+  handleWallBounce(f);
 
   if (f.x < opponent.x) f.facing = 1;
   else f.facing = -1;
@@ -576,6 +865,8 @@ function updateFighter(f, opponent, input) {
       f.hitThisAttack = false;
     }
   }
+
+  f.jumpWasDown = !!input.jump;
 }
 
 function handleHit(attacker, defender) {
@@ -583,35 +874,44 @@ function handleHit(attacker, defender) {
   if (!activeWindow(attacker)) return;
   if (!rectsOverlap(attackBox(attacker), defender)) return;
 
+  const profile = getMoveProfile(attacker);
+
   let dmg = getDamage(attacker);
   let kb = getKnockback(attacker);
 
   const defenderFacingAttack = defender.facing === -attacker.facing;
+  const defenderArmored = defender.armorTimer > 0 && !profile.armorBreak;
 
   if (defender.blocking && defenderFacingAttack) {
-    dmg = Math.ceil(dmg * 0.25);
-    kb *= 0.35;
+    const blockReduction = effectivePiece(defender) === "king" ? 0.18 : 0.25;
+    dmg = Math.ceil(dmg * blockReduction);
+    kb *= 0.32;
+  } else if (defenderArmored) {
+    dmg = Math.ceil(dmg * 0.55);
+    kb *= 0.45;
   } else {
     defender.hurtTimer = 20;
   }
 
   defender.hp = Math.max(0, defender.hp - dmg);
   defender.vx += attacker.facing * kb;
+  defender.vy += profile.lift;
+
+  defender.wallBounceWindow = 40;
+  defender.wallBouncePower = profile.wallBounce;
 
   if (attacker.attack === "crouchHeavy") {
     defender.vy -= 7;
   } else if (attacker.attack === "airHeavy" || attacker.attack === "airSpecial") {
     defender.vy += 4;
-  } else {
-    defender.vy -= 2.5;
   }
 
   if (attacker.characterKey === "pawn") {
-    chargePawn(attacker, 10);
+    chargePawn(attacker, 9 + dmg * 0.28);
   }
 
   if (defender.characterKey === "pawn") {
-    chargePawn(defender, 4);
+    chargePawn(defender, 3 + dmg * 0.12);
   }
 
   attacker.hitThisAttack = true;
@@ -621,8 +921,10 @@ function determineRoundWinner(white, black) {
   if (white.hp <= 0 && black.hp <= 0) {
     return white.hp >= black.hp ? "white" : "black";
   }
+
   if (white.hp <= 0) return "black";
   if (black.hp <= 0) return "white";
+
   return null;
 }
 
@@ -676,7 +978,10 @@ function updateGame(lobby) {
       lobby.match.blackRounds += 1;
     }
 
-    if (lobby.match.whiteRounds >= lobby.match.roundsToWin || lobby.match.blackRounds >= lobby.match.roundsToWin) {
+    if (
+      lobby.match.whiteRounds >= lobby.match.roundsToWin ||
+      lobby.match.blackRounds >= lobby.match.roundsToWin
+    ) {
       lobby.match.matchWinner = roundWinnerSide;
       lobby.winner = roundWinnerName;
       leaderboard[roundWinnerName] = (leaderboard[roundWinnerName] || 0) + 1;
