@@ -15,6 +15,7 @@ const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR_Y = 430;
 const GRAVITY = 0.78;
+const ROUNDS_TO_WIN = 3;
 
 const players = {};
 const lobbies = {};
@@ -25,55 +26,68 @@ let nextLobbyId = 1;
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Balanced royal bruiser",
-    maxHp: 115,
-    speed: 4.8,
+    title: "Balanced royal fighter",
+    maxHp: 180,
+    speed: 4.7,
     jump: 14,
-    width: 48,
-    height: 98,
-    reach: 64,
-    lightDamage: 7,
-    heavyDamage: 14,
-    specialDamage: 16
+    width: 60,
+    height: 110,
+    reach: 58,
+    lightDamage: 5,
+    heavyDamage: 10,
+    specialDamage: 12
   },
   knight: {
     name: "Knight",
-    title: "Fast aerial attacker",
-    maxHp: 95,
+    title: "Fast aerial fighter",
+    maxHp: 155,
     speed: 6.1,
     jump: 17,
-    width: 44,
-    height: 92,
-    reach: 58,
-    lightDamage: 6,
-    heavyDamage: 12,
-    specialDamage: 15
+    width: 58,
+    height: 106,
+    reach: 54,
+    lightDamage: 4,
+    heavyDamage: 9,
+    specialDamage: 11
   },
   bishop: {
     name: "Bishop",
-    title: "Long diagonal blade",
-    maxHp: 90,
+    title: "Long diagonal striker",
+    maxHp: 160,
     speed: 5.2,
     jump: 15,
-    width: 42,
-    height: 96,
-    reach: 78,
-    lightDamage: 5,
-    heavyDamage: 13,
-    specialDamage: 17
+    width: 56,
+    height: 110,
+    reach: 74,
+    lightDamage: 4,
+    heavyDamage: 10,
+    specialDamage: 12
   },
   rook: {
     name: "Rook",
-    title: "Slow armored wall",
-    maxHp: 140,
+    title: "Slow wall with huge health",
+    maxHp: 220,
     speed: 3.7,
     jump: 12,
-    width: 62,
-    height: 108,
-    reach: 70,
-    lightDamage: 8,
-    heavyDamage: 18,
-    specialDamage: 19
+    width: 70,
+    height: 118,
+    reach: 66,
+    lightDamage: 5,
+    heavyDamage: 12,
+    specialDamage: 13
+  },
+  pawn: {
+    name: "Pawn",
+    title: "Promotes into a queen over time",
+    maxHp: 145,
+    speed: 4.9,
+    jump: 14,
+    width: 52,
+    height: 98,
+    reach: 50,
+    lightDamage: 4,
+    heavyDamage: 8,
+    specialDamage: 9
   }
 };
 
@@ -95,8 +109,8 @@ function publicLobbyList() {
     name: lobby.name,
     status: lobby.status,
     hostName: players[lobby.hostId]?.name || "Unknown",
-    p1Name: players[lobby.p1]?.name || null,
-    p2Name: players[lobby.p2]?.name || null,
+    whiteName: players[lobby.whiteId]?.name || null,
+    blackName: players[lobby.blackId]?.name || null,
     spectatorCount: lobby.spectators.size
   }));
 }
@@ -116,6 +130,19 @@ function sendLobbyData() {
   });
 }
 
+function roomName(lobbyId) {
+  return `lobby:${lobbyId}`;
+}
+
+function getSocket(socketId) {
+  return io.sockets.sockets.get(socketId);
+}
+
+function pieceDisplayName(f) {
+  if (f.characterKey === "pawn" && f.promoted) return "Queen";
+  return f.characterName;
+}
+
 function createFighter(socketId, side, characterKey) {
   const ch = getCharacter(characterKey);
 
@@ -125,16 +152,15 @@ function createFighter(socketId, side, characterKey) {
     side,
     characterKey,
     characterName: ch.name,
-    color: side === "red" ? "#e53935" : "#2f7cff",
 
-    x: side === "red" ? 220 : 700,
+    x: side === "white" ? 220 : 700,
     y: FLOOR_Y - ch.height,
     vx: 0,
     vy: 0,
 
     width: ch.width,
     standingHeight: ch.height,
-    crouchHeight: Math.floor(ch.height * 0.62),
+    crouchHeight: Math.floor(ch.height * 0.64),
     height: ch.height,
 
     maxHp: ch.maxHp,
@@ -143,7 +169,7 @@ function createFighter(socketId, side, characterKey) {
     jump: ch.jump,
     reach: ch.reach,
 
-    facing: side === "red" ? 1 : -1,
+    facing: side === "white" ? 1 : -1,
     grounded: true,
     crouching: false,
     blocking: false,
@@ -151,6 +177,9 @@ function createFighter(socketId, side, characterKey) {
     lightDamage: ch.lightDamage,
     heavyDamage: ch.heavyDamage,
     specialDamage: ch.specialDamage,
+
+    promoted: false,
+    promotionMeter: 0,
 
     attack: null,
     attackTimer: 0,
@@ -164,10 +193,22 @@ function createFighter(socketId, side, characterKey) {
   };
 }
 
-function createGame(lobby) {
+function initMatch(lobby) {
+  lobby.match = {
+    currentRound: 1,
+    whiteRounds: 0,
+    blackRounds: 0,
+    roundsToWin: ROUNDS_TO_WIN,
+    matchWinner: null
+  };
+}
+
+function startRound(lobby) {
+  if (!lobby.match) initMatch(lobby);
+
   lobby.status = "playing";
   lobby.winner = null;
-  lobby.message = "The board is set. Fight.";
+  lobby.message = `Round ${lobby.match.currentRound}. Fight.`;
 
   lobby.game = {
     width: WIDTH,
@@ -175,27 +216,50 @@ function createGame(lobby) {
     floorY: FLOOR_Y,
     roundOver: false,
     roundOverTimer: 0,
+    roundWinner: null,
     fighters: {
-      red: createFighter(lobby.p1, "red", players[lobby.p1].characterKey),
-      blue: createFighter(lobby.p2, "blue", players[lobby.p2].characterKey)
+      white: createFighter(lobby.whiteId, "white", players[lobby.whiteId].characterKey),
+      black: createFighter(lobby.blackId, "black", players[lobby.blackId].characterKey)
     }
   };
 }
 
-function resetLobbyAfterFight(lobby) {
+function finishMatch(lobby) {
   lobby.status = "finished";
   lobby.game = null;
 }
 
-function joinSocketRoom(socket, lobbyId) {
-  socket.join(`lobby:${lobbyId}`);
+function sendGameState(lobby) {
+  if (!lobby) return;
+
+  io.to(roomName(lobby.id)).emit("gameState", {
+    lobby: {
+      id: lobby.id,
+      name: lobby.name,
+      status: lobby.status,
+      whiteName: players[lobby.whiteId]?.name || null,
+      blackName: players[lobby.blackId]?.name || null,
+      winner: lobby.winner,
+      message: lobby.message
+    },
+    match: lobby.match || null,
+    game: lobby.game,
+    leaderboard: publicLeaderboard()
+  });
 }
 
 function leaveCurrentLobby(socketId) {
   const player = players[socketId];
   if (!player || !player.lobbyId) return;
 
-  const lobby = lobbies[player.lobbyId];
+  const lobbyId = player.lobbyId;
+  const lobby = lobbies[lobbyId];
+  const sock = getSocket(socketId);
+
+  if (sock) {
+    sock.leave(roomName(lobbyId));
+  }
+
   if (!lobby) {
     player.lobbyId = null;
     player.role = "menu";
@@ -204,23 +268,24 @@ function leaveCurrentLobby(socketId) {
 
   lobby.spectators.delete(socketId);
 
-  if (lobby.p1 === socketId) lobby.p1 = null;
-  if (lobby.p2 === socketId) lobby.p2 = null;
+  if (lobby.whiteId === socketId) lobby.whiteId = null;
+  if (lobby.blackId === socketId) lobby.blackId = null;
 
-  if (lobby.status === "playing") {
-    const remainingId = lobby.p1 || lobby.p2;
+  if (lobby.status === "playing" && lobby.match && !lobby.match.matchWinner) {
+    const remainingId = lobby.whiteId || lobby.blackId;
 
     if (remainingId && players[remainingId]) {
       const winnerName = players[remainingId].name;
       leaderboard[winnerName] = (leaderboard[winnerName] || 0) + 1;
+      lobby.match.matchWinner = lobby.whiteId ? "white" : "black";
       lobby.winner = winnerName;
-      lobby.message = `${winnerName} wins because the opponent disconnected.`;
+      lobby.message = `${winnerName} wins the board because the opponent disconnected.`;
     }
 
-    resetLobbyAfterFight(lobby);
+    finishMatch(lobby);
   }
 
-  if (!lobby.p1 && !lobby.p2 && lobby.spectators.size === 0) {
+  if (!lobby.whiteId && !lobby.blackId && lobby.spectators.size === 0) {
     delete lobbies[lobby.id];
   }
 
@@ -228,22 +293,8 @@ function leaveCurrentLobby(socketId) {
   player.role = "menu";
 }
 
-function sendGameState(lobby) {
-  if (!lobby) return;
-
-  io.to(`lobby:${lobby.id}`).emit("gameState", {
-    lobby: {
-      id: lobby.id,
-      name: lobby.name,
-      status: lobby.status,
-      p1Name: players[lobby.p1]?.name || null,
-      p2Name: players[lobby.p2]?.name || null,
-      winner: lobby.winner,
-      message: lobby.message
-    },
-    game: lobby.game,
-    leaderboard: publicLeaderboard()
-  });
+function joinSocketRoom(socket, lobbyId) {
+  socket.join(roomName(lobbyId));
 }
 
 function rectsOverlap(a, b) {
@@ -253,6 +304,36 @@ function rectsOverlap(a, b) {
     a.y < b.y + b.height &&
     a.y + a.height > b.y
   );
+}
+
+function getAttackDuration(type) {
+  const durations = {
+    light: 14,
+    heavy: 28,
+    special: 40,
+    crouchLight: 16,
+    crouchHeavy: 32,
+    airLight: 18,
+    airHeavy: 30,
+    airSpecial: 36
+  };
+
+  return durations[type] || 20;
+}
+
+function getCooldown(type) {
+  const cooldowns = {
+    light: 20,
+    heavy: 50,
+    special: 104,
+    crouchLight: 24,
+    crouchHeavy: 60,
+    airLight: 28,
+    airHeavy: 66,
+    airSpecial: 110
+  };
+
+  return cooldowns[type] || 30;
 }
 
 function startAttack(f, baseType) {
@@ -302,71 +383,42 @@ function startAttack(f, baseType) {
   }
 }
 
-function getAttackDuration(type) {
-  const durations = {
-    light: 14,
-    heavy: 28,
-    special: 38,
-    crouchLight: 16,
-    crouchHeavy: 31,
-    airLight: 18,
-    airHeavy: 30,
-    airSpecial: 34
-  };
-
-  return durations[type] || 20;
-}
-
-function getCooldown(type) {
-  const cooldowns = {
-    light: 19,
-    heavy: 48,
-    special: 96,
-    crouchLight: 24,
-    crouchHeavy: 58,
-    airLight: 28,
-    airHeavy: 64,
-    airSpecial: 105
-  };
-
-  return cooldowns[type] || 30;
-}
-
 function getDamage(f) {
   const multipliers = {
     light: 1,
     heavy: 1,
     special: 1,
-    crouchLight: 0.8,
+    crouchLight: 0.85,
     crouchHeavy: 1.15,
-    airLight: 0.9,
-    airHeavy: 1.25,
-    airSpecial: 1.35
+    airLight: 0.95,
+    airHeavy: 1.2,
+    airSpecial: 1.25
   };
 
   let base = f.lightDamage;
 
-  if (f.attack.includes("Heavy")) base = f.heavyDamage;
-  else if (f.attack.includes("Special")) base = f.specialDamage;
-  else if (f.attack === "heavy") base = f.heavyDamage;
-  else if (f.attack === "special") base = f.specialDamage;
+  if (f.attack === "heavy" || f.attack === "crouchHeavy" || f.attack === "airHeavy") {
+    base = f.heavyDamage;
+  } else if (f.attack === "special" || f.attack === "airSpecial") {
+    base = f.specialDamage;
+  }
 
   return Math.ceil(base * (multipliers[f.attack] || 1));
 }
 
 function getKnockback(f) {
   const values = {
-    light: 6,
-    heavy: 13,
-    special: 16,
+    light: 5,
+    heavy: 11,
+    special: 13,
     crouchLight: 4,
-    crouchHeavy: 15,
-    airLight: 7,
-    airHeavy: 13,
-    airSpecial: 18
+    crouchHeavy: 14,
+    airLight: 6,
+    airHeavy: 12,
+    airSpecial: 15
   };
 
-  return values[f.attack] || 8;
+  return values[f.attack] || 7;
 }
 
 function activeWindow(f) {
@@ -430,8 +482,39 @@ function attackBox(f) {
   };
 }
 
+function promotePawn(f) {
+  if (f.characterKey !== "pawn" || f.promoted) return;
+
+  f.promoted = true;
+  f.promotionMeter = 100;
+
+  f.maxHp += 18;
+  f.hp = Math.min(f.maxHp, f.hp + 18);
+  f.speed += 0.8;
+  f.jump += 1.5;
+  f.reach += 22;
+  f.lightDamage += 2;
+  f.heavyDamage += 3;
+  f.specialDamage += 4;
+  f.characterName = "Queen";
+}
+
+function chargePawn(f, amount) {
+  if (f.characterKey !== "pawn" || f.promoted) return;
+
+  f.promotionMeter = Math.min(100, f.promotionMeter + amount);
+
+  if (f.promotionMeter >= 100) {
+    promotePawn(f);
+  }
+}
+
 function updateFighter(f, opponent, input) {
   if (f.hurtTimer > 0) f.hurtTimer--;
+
+  if (f.characterKey === "pawn" && !f.promoted) {
+    chargePawn(f, 0.045);
+  }
 
   const wantsCrouch = !!input.crouch && f.grounded && !f.attack;
   f.crouching = wantsCrouch;
@@ -503,8 +586,7 @@ function handleHit(attacker, defender) {
   let dmg = getDamage(attacker);
   let kb = getKnockback(attacker);
 
-  const defenderFacingAttack =
-    defender.facing === -attacker.facing;
+  const defenderFacingAttack = defender.facing === -attacker.facing;
 
   if (defender.blocking && defenderFacingAttack) {
     dmg = Math.ceil(dmg * 0.25);
@@ -524,48 +606,86 @@ function handleHit(attacker, defender) {
     defender.vy -= 2.5;
   }
 
+  if (attacker.characterKey === "pawn") {
+    chargePawn(attacker, 10);
+  }
+
+  if (defender.characterKey === "pawn") {
+    chargePawn(defender, 4);
+  }
+
   attacker.hitThisAttack = true;
+}
+
+function determineRoundWinner(white, black) {
+  if (white.hp <= 0 && black.hp <= 0) {
+    return white.hp >= black.hp ? "white" : "black";
+  }
+  if (white.hp <= 0) return "black";
+  if (black.hp <= 0) return "white";
+  return null;
 }
 
 function updateGame(lobby) {
   if (!lobby || lobby.status !== "playing" || !lobby.game) return;
 
   const game = lobby.game;
-  const red = game.fighters.red;
-  const blue = game.fighters.blue;
+  const white = game.fighters.white;
+  const black = game.fighters.black;
 
   if (game.roundOver) {
     game.roundOverTimer--;
 
     if (game.roundOverTimer <= 0) {
-      resetLobbyAfterFight(lobby);
-      sendGameState(lobby);
-      sendLobbyData();
+      if (lobby.match.matchWinner) {
+        finishMatch(lobby);
+        sendGameState(lobby);
+        sendLobbyData();
+      } else {
+        lobby.match.currentRound += 1;
+        startRound(lobby);
+        sendGameState(lobby);
+        sendLobbyData();
+      }
     }
 
     return;
   }
 
-  const redInput = players[red.id]?.input || {};
-  const blueInput = players[blue.id]?.input || {};
+  const whiteInput = players[white.id]?.input || {};
+  const blackInput = players[black.id]?.input || {};
 
-  updateFighter(red, blue, redInput);
-  updateFighter(blue, red, blueInput);
+  updateFighter(white, black, whiteInput);
+  updateFighter(black, white, blackInput);
 
-  handleHit(red, blue);
-  handleHit(blue, red);
+  handleHit(white, black);
+  handleHit(black, white);
 
-  if (red.hp <= 0 || blue.hp <= 0) {
+  const roundWinnerSide = determineRoundWinner(white, black);
+
+  if (roundWinnerSide) {
+    const roundWinner = game.fighters[roundWinnerSide];
+    const roundWinnerName = roundWinner.name;
+
     game.roundOver = true;
-    game.roundOverTimer = 180;
+    game.roundWinner = roundWinnerSide;
 
-    const winnerSide = red.hp > blue.hp ? "red" : "blue";
-    const winner = game.fighters[winnerSide];
-    const winnerName = winner.name;
+    if (roundWinnerSide === "white") {
+      lobby.match.whiteRounds += 1;
+    } else {
+      lobby.match.blackRounds += 1;
+    }
 
-    lobby.winner = winnerName;
-    lobby.message = `Checkmate. ${winnerName} wins.`;
-    leaderboard[winnerName] = (leaderboard[winnerName] || 0) + 1;
+    if (lobby.match.whiteRounds >= lobby.match.roundsToWin || lobby.match.blackRounds >= lobby.match.roundsToWin) {
+      lobby.match.matchWinner = roundWinnerSide;
+      lobby.winner = roundWinnerName;
+      leaderboard[roundWinnerName] = (leaderboard[roundWinnerName] || 0) + 1;
+      lobby.message = `Checkmate. ${roundWinnerName} wins the board ${lobby.match.whiteRounds}-${lobby.match.blackRounds}.`;
+      game.roundOverTimer = 260;
+    } else {
+      lobby.message = `${roundWinnerName} wins round ${lobby.match.currentRound}. Next round soon.`;
+      game.roundOverTimer = 170;
+    }
   }
 }
 
@@ -620,21 +740,22 @@ io.on("connection", (socket) => {
       id,
       name: String(lobbyName || `${players[socket.id].name}'s Board`).trim().slice(0, 28),
       hostId: socket.id,
-      p1: socket.id,
-      p2: null,
+      whiteId: socket.id,
+      blackId: null,
       spectators: new Set(),
       status: "waiting",
       game: null,
+      match: null,
       winner: null,
-      message: "Waiting for player 2..."
+      message: "Waiting for black..."
     };
 
     players[socket.id].lobbyId = id;
-    players[socket.id].role = "p1";
+    players[socket.id].role = "white";
 
     joinSocketRoom(socket, id);
 
-    socket.emit("enteredLobby", { lobbyId: id, role: "p1" });
+    socket.emit("enteredLobby", { lobbyId: id, role: "white" });
 
     sendGameState(lobbies[id]);
     sendLobbyData();
@@ -642,22 +763,23 @@ io.on("connection", (socket) => {
 
   socket.on("joinLobby", (lobbyId) => {
     const lobby = lobbies[lobbyId];
-    if (!lobby || lobby.status !== "waiting" || lobby.p2) return;
+    if (!lobby || lobby.status !== "waiting" || lobby.blackId) return;
 
     leaveCurrentLobby(socket.id);
 
-    lobby.p2 = socket.id;
+    lobby.blackId = socket.id;
     lobby.status = "playing";
-    lobby.message = "The board is set. Fight.";
+    lobby.message = "The board is set.";
 
     players[socket.id].lobbyId = lobbyId;
-    players[socket.id].role = "p2";
+    players[socket.id].role = "black";
 
     joinSocketRoom(socket, lobbyId);
 
-    createGame(lobby);
+    initMatch(lobby);
+    startRound(lobby);
 
-    socket.emit("enteredLobby", { lobbyId, role: "p2" });
+    socket.emit("enteredLobby", { lobbyId, role: "black" });
 
     sendGameState(lobby);
     sendLobbyData();
