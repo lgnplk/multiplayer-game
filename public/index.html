@@ -643,7 +643,7 @@
     }
 
     function mat(f) {
-      if (f.side === "black") {
+      if (!f || f.side === "black") {
         return {
           fill: "#080808",
           fill2: "#2a2a2a",
@@ -688,6 +688,7 @@
     }
 
     function ease(x) {
+      x = Number.isFinite(x) ? x : 0;
       return 1 - Math.pow(1 - clamp(x, 0, 1), 3);
     }
 
@@ -968,16 +969,21 @@
         }
 
         if (e.type === "dash") addFx("dash", e.x, e.y, { life: 16, dir: e.dir });
+
         if (e.type === "wallBounce") {
           burst(e.x, e.y, "255,255,255", 18, 5);
           state.shake = Math.max(state.shake, 9);
         }
+
         if (e.type === "queenEnd") addFx("queenEnd", e.x, e.y, { life: 34 });
         if (e.type === "roundWin") addFx("roundWin", e.x, e.y, { life: 64 });
       }
     }
 
     function addParticle(x, y, o = {}) {
+      if (!Number.isFinite(x)) x = 480;
+      if (!Number.isFinite(y)) y = 270;
+
       state.particles.push({
         x,
         y,
@@ -1010,6 +1016,9 @@
     }
 
     function addFx(type, x, y, data = {}) {
+      if (!Number.isFinite(x)) x = 480;
+      if (!Number.isFinite(y)) y = 270;
+
       state.localFx.push({
         type,
         x,
@@ -1044,6 +1053,9 @@
     }
 
     function checker(x, y, w, h, tile, a, b, alpha = 1, ox = 0, oy = 0) {
+      if (![x, y, w, h, tile].every(Number.isFinite)) return;
+      if (tile <= 0 || w <= 0 || h <= 0) return;
+
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.beginPath();
@@ -1112,8 +1124,12 @@
     }
 
     function drawPiece(f, x, y, scale = 1, alpha = 1) {
+      if (!f || !Number.isFinite(x) || !Number.isFinite(y)) return;
+
       const m = mat(f);
       const size = Math.round(f.h * 1.18 * scale);
+
+      if (!Number.isFinite(size) || size <= 0) return;
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -1153,6 +1169,8 @@
     }
 
     function shadow(f) {
+      if (!f) return;
+
       const c = center(f);
       const floor = state.gameState?.game?.floorY || 430;
       const air = clamp((floor - (f.y + f.h)) / 150, 0, 1);
@@ -1179,6 +1197,7 @@
 
       w = Number.isFinite(w) ? Math.max(1, w) : 8;
       alpha = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1;
+      m = m || {};
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -1207,9 +1226,13 @@
       ctx.stroke();
 
       ctx.restore();
-}
+    }
 
     function blade(x, y, angle, len, m, p, width = 10) {
+      if (![x, y, angle, len, p, width].every(Number.isFinite)) return;
+      if (len <= 0) return;
+
+      m = m || {};
       const q = ease(p);
       const tip = {
         x: x + Math.cos(angle) * len * q,
@@ -1225,12 +1248,14 @@
         tip
       ], m, width, clamp(.15 + q, 0, 1));
 
+      if (!Number.isFinite(tip.x) || !Number.isFinite(tip.y)) return;
+
       ctx.save();
       ctx.translate(tip.x, tip.y);
       ctx.rotate(angle);
       ctx.globalAlpha = clamp(q, 0, 1);
-      ctx.fillStyle = m.weapon2;
-      ctx.strokeStyle = m.edge;
+      ctx.fillStyle = m.weapon2 || "#ccc";
+      ctx.strokeStyle = m.edge || "#000";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(20, 0);
@@ -1244,8 +1269,13 @@
     }
 
     function arc(cx, cy, r, a1, a2, m, width, alpha = 1) {
+      if (![cx, cy, r, a1, a2, width, alpha].every(Number.isFinite)) return;
+      if (r <= 0) return;
+
+      m = m || {};
+
       ctx.save();
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = clamp(alpha, 0, 1);
       ctx.lineCap = "round";
 
       ctx.strokeStyle = "rgba(0,0,0,.3)";
@@ -1254,13 +1284,13 @@
       ctx.arc(cx, cy, r, a1, a2);
       ctx.stroke();
 
-      ctx.strokeStyle = m.weapon;
+      ctx.strokeStyle = m.weapon || "#eee";
       ctx.lineWidth = width;
       ctx.beginPath();
       ctx.arc(cx, cy, r, a1, a2);
       ctx.stroke();
 
-      ctx.strokeStyle = m.edge;
+      ctx.strokeStyle = m.edge || "#000";
       ctx.lineWidth = Math.max(2, width * .25);
       ctx.beginPath();
       ctx.arc(cx, cy, r - 2, a1, a2);
@@ -1270,8 +1300,11 @@
     }
 
     function spark(x, y, m, len = 20, rays = 7) {
+      if (![x, y, len, rays].every(Number.isFinite)) return;
+      m = m || {};
+
       ctx.save();
-      ctx.strokeStyle = m.magic;
+      ctx.strokeStyle = m.magic || "rgba(255,255,255,.8)";
       ctx.lineWidth = 2.2;
       ctx.lineCap = "round";
       for (let i = 0; i < rays; i++) {
@@ -1285,8 +1318,11 @@
     }
 
     function dust(x, y, d, m, count = 5) {
+      if (![x, y, d, count].every(Number.isFinite)) return;
+      m = m || {};
+
       ctx.save();
-      ctx.fillStyle = `rgba(${m.dust},.65)`;
+      ctx.fillStyle = `rgba(${m.dust || "200,180,150"},.65)`;
       for (let i = 0; i < count; i++) {
         ctx.beginPath();
         ctx.ellipse(x - d * (i * 16 + 8), y + Math.sin(i) * 3, 14 + i * 2, 6 + i, 0, 0, Math.PI * 2);
@@ -1300,6 +1336,7 @@
     }
 
     function hammer(c, d, m, p) {
+      if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return;
       const q = ease(p);
       const x = c.x + d * (20 + 70 * q);
       const y = c.y - 28 + 40 * q;
@@ -1323,22 +1360,29 @@
     }
 
     function spear(c, d, m, p, len = 126, width = 7, angle = 0) {
+      if (!c) return;
       blade(c.x - d * 6, c.y, d === 1 ? angle : Math.PI - angle, len, m, p, width);
     }
 
     function staff(c, d, m, p, angle, len = 150, width = 10) {
-      blade(c.x - d * 10, c.y + 30, d === 1 ? angle : Math.PI - angle, len, m, p, width);
+      if (!c) return;
+      const finalAngle = d === 1 ? angle : Math.PI - angle;
+
+      blade(c.x - d * 10, c.y + 30, finalAngle, len, m, p, width);
+
       const q = ease(p);
-      const tx = c.x - d * 10 + Math.cos(d === 1 ? angle : Math.PI - angle) * len * q;
-      const ty = c.y + 30 + Math.sin(d === 1 ? angle : Math.PI - angle) * len * q;
+      const tx = c.x - d * 10 + Math.cos(finalAngle) * len * q;
+      const ty = c.y + 30 + Math.sin(finalAngle) * len * q;
       spark(tx, ty, m, 16 * q, 8);
     }
 
     function castleBrick(x, y, m, rot = 0, alpha = 1) {
+      if (![x, y, rot, alpha].every(Number.isFinite)) return;
+
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rot);
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = clamp(alpha, 0, 1);
       ctx.fillStyle = m.weapon;
       ctx.strokeStyle = m.edge;
       ctx.lineWidth = 2;
@@ -1349,7 +1393,9 @@
     }
 
     function cannon(c, d, m, p) {
+      if (!c) return;
       const q = ease(p);
+
       ctx.save();
       ctx.translate(c.x + d * 46, c.y + 10);
       ctx.scale(d, 1);
@@ -1371,10 +1417,12 @@
     }
 
     function lance(c, d, m, p, angle = 0) {
+      if (!c) return;
       blade(c.x - d * 10, c.y + 16, d === 1 ? angle : Math.PI - angle, 142, m, p, 9);
     }
 
     function twin(c, d, m, p) {
+      if (!c) return;
       blade(c.x - d * 16, c.y + 34, d === 1 ? -.48 : Math.PI + .48, 178, m, p, 9);
       blade(c.x - d * 8, c.y - 26, d === 1 ? .35 : Math.PI - .35, 150, m, clamp(p - .12, 0, 1), 8);
     }
@@ -1388,8 +1436,6 @@
       const c = center(f);
       const d = dir(f);
       const e = elapsed(f);
-      const q = progress(f);
-      const wind = clamp(e / 14, 0, 1);
       const swing = clamp((e - 3) / 16, 0, 1);
 
       if (f.attack === "counter") {
@@ -1437,10 +1483,13 @@
           }
           dust(c.x + d * 90, f.y + f.h + 4, d, m, Math.ceil(7 * swing));
         }
-        if (f.attack === "airHeavy") arc(c.x + d * 8, c.y + 10, 64, d === 1 ? -.4 : Math.PI - .9, d === 1 ? -.4 + 1.45 * swing : Math.PI - .9 + 1.45 * swing, m, 12, swing);
+        if (f.attack === "airHeavy") {
+          arc(c.x + d * 8, c.y + 10, 64, d === 1 ? -.4 : Math.PI - .9, d === 1 ? -.4 + 1.45 * swing : Math.PI - .9 + 1.45 * swing, m, 12, swing);
+        }
 
         if (f.attack === "special") {
           if (f.attackAim === "forward") {
+            const wind = clamp(e / 42, 0, 1);
             const fire = clamp((e - 42) / 22, 0, 1);
             cannon(c, d, m, wind);
 
@@ -1507,7 +1556,7 @@
         if (f.attack === "airHeavy") staff(c, d, m, swing, .82, 172, 16);
 
         if (f.attack === "airSpecial") {
-          const trail = f.script?.trail || [];
+          const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
           for (let i = 0; i < trail.length - 1; i++) {
             const a = (i + 1) / trail.length;
             line([trail[i], trail[i + 1]], m, 6 + a * 15, .18 + a * .62);
@@ -1529,7 +1578,7 @@
         if (f.attack === "heavy") lance(c, d, m, swing, -1.08);
         if (f.attack === "crouchHeavy") lance(c, d, m, swing, d === 1 ? -2.78 : -.36);
         if (f.attack === "airHeavy") {
-          const trail = f.script?.trail || [];
+          const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
           if (trail.length > 1) line(trail, m, 14, .85);
           for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
           lance(c, d, m, .9, 0);
@@ -1625,6 +1674,8 @@
     }
 
     function drawFighter(f) {
+      if (!f || !Number.isFinite(f.x) || !Number.isFinite(f.y)) return;
+
       const c = center(f);
       const m = mat(f);
       const bob = Math.sin(state.t * .08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1 : .4);

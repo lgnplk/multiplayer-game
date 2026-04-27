@@ -168,7 +168,8 @@ function makeFighter(id, side, key) {
       light: 0,
       heavy: 0,
       special: 0,
-      counter: 0
+      counter: 0,
+      jump: 0
     }
   };
 }
@@ -201,6 +202,9 @@ function sendLobbyData() {
 
 function fx(game, type, x, y, extra = {}) {
   if (!game) return;
+
+  if (!Number.isFinite(x)) x = W / 2;
+  if (!Number.isFinite(y)) y = H / 2;
 
   game.effects.push({
     id: `${game.tick}:${type}:${game.effects.length}:${Math.random()}`,
@@ -724,50 +728,74 @@ function fixed(vx, vy, t) {
 
 function scriptMove(f) {
   const s = f.script;
-  if (!s) return;
+  if (!s || typeof s !== "object") return;
+
+  if (!Number.isFinite(f.vx)) f.vx = 0;
+  if (!Number.isFinite(f.vy)) f.vy = 0;
 
   if (s.trail) {
-    s.trail.push({ x: f.x + f.w / 2, y: f.y + f.h / 2 });
+    if (!Array.isArray(s.trail)) s.trail = [];
+
+    s.trail.push({
+      x: Number.isFinite(f.x) ? f.x + f.w / 2 : 0,
+      y: Number.isFinite(f.y) ? f.y + f.h / 2 : 0
+    });
+
     if (s.trail.length > 22) s.trail.shift();
   }
 
   if (s.type === "fixed") {
-    f.vx = s.vx;
-    f.vy = s.vy;
-    s.t--;
+    f.vx = Number.isFinite(s.vx) ? s.vx : 0;
+    f.vy = Number.isFinite(s.vy) ? s.vy : 0;
+    s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+
     if (s.t <= 0) f.script = null;
+    return;
   }
 
   if (s.type === "knightL") {
+    if (!s.primary || !s.secondary) {
+      f.script = null;
+      return;
+    }
+
     if (s.phase === 1) {
-      f.vx = s.primary.x * s.s1;
-      f.vy = s.primary.y * s.s1;
-      s.t--;
+      f.vx = (s.primary.x || 0) * (s.s1 || 0);
+      f.vy = (s.primary.y || 0) * (s.s1 || 0);
+      s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+
       if (s.t <= 0) {
         s.phase = 2;
-        s.t = s.t2;
+        s.t = s.t2 || 6;
       }
     } else {
-      f.vx = s.secondary.x * s.s2;
-      f.vy = s.secondary.y * s.s2;
-      s.t--;
+      f.vx = (s.secondary.x || 0) * (s.s2 || 0);
+      f.vy = (s.secondary.y || 0) * (s.s2 || 0);
+      s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+
       if (s.t <= 0) f.script = null;
     }
+
+    return;
   }
 
   if (s.type === "bishopZigzag") {
-    f.vx = s.dir * s.sx;
-    f.vy = s.yDir * s.sy;
+    f.vx = (s.dir || f.facing || 1) * (s.sx || 0);
+    f.vy = (s.yDir || -1) * (s.sy || 0);
 
-    s.t--;
+    s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+
     if (s.t <= 0) {
-      s.phase++;
+      s.phase = (s.phase || 0) + 1;
       s.t = 8;
-      s.yDir *= -1;
+      s.yDir = -(s.yDir || -1);
     }
 
     if (s.phase >= 4) f.script = null;
+    return;
   }
+
+  f.script = null;
 }
 
 function startAttack(f, base, input, game) {
@@ -1028,7 +1056,7 @@ function applyGrab(attacker, defender, m, game, b) {
   defender.stun = Math.max(defender.stun, 18);
   defender.x = attacker.x + attacker.w / 2 + d * 55 - defender.w / 2;
   defender.y = Math.min(defender.y, attacker.y + attacker.h * 0.12);
-  defender.vx = d * m.throwPower * GLOBAL_KNOCKBACK_MULT;
+  defender.vx = d * m.throwPower * 1.52;
   defender.vy = -14;
   defender.hp = Math.max(0, defender.hp - m.dmg);
   defender.wallBounceTimer = 50;
@@ -1080,8 +1108,8 @@ function handleHit(attacker, defender, game) {
   }
 
   let damage = m.dmg;
-  let knock = m.kb * GLOBAL_KNOCKBACK_MULT;
-  let lift = m.lift * GLOBAL_LIFT_MULT;
+  let knock = m.kb * 1.52;
+  let lift = m.lift * 1.2;
 
   if (m.multi) {
     damage = Math.max(2, Math.ceil(damage * 0.55));
@@ -1132,6 +1160,13 @@ function updateFighter(f, enemy, input, game) {
   if (f.dashCd > 0) f.dashCd--;
   if (f.staminaDelay > 0) f.staminaDelay--;
   if (f.multiHitWait > 0) f.multiHitWait--;
+
+  if (!Number.isFinite(f.x)) f.x = f.side === "white" ? 220 : 690;
+  if (!Number.isFinite(f.y)) f.y = FLOOR - f.standH;
+  if (!Number.isFinite(f.vx)) f.vx = 0;
+  if (!Number.isFinite(f.vy)) f.vy = 0;
+  if (!Number.isFinite(f.hp)) f.hp = Math.max(1, f.maxHp || 500);
+  if (!Number.isFinite(f.stamina)) f.stamina = 50;
 
   if (f.promoted) {
     f.queenTimer--;
@@ -1213,83 +1248,66 @@ function updateFighter(f, enemy, input, game) {
     if (input.specialPressed) startAttack(f, "special", input, game);
   }
 
+  scriptMove(f);
+
+  f.x += f.vx;
+  f.y += f.vy;
+  f.vy += GRAVITY;
+
   if (!Number.isFinite(f.x)) f.x = f.side === "white" ? 220 : 690;
   if (!Number.isFinite(f.y)) f.y = FLOOR - f.standH;
   if (!Number.isFinite(f.vx)) f.vx = 0;
   if (!Number.isFinite(f.vy)) f.vy = 0;
-  if (!Number.isFinite(f.hp)) f.hp = Math.max(1, f.maxHp || 500);
 
-  function scriptMove(f) {
-  const s = f.script;
-  if (!s || typeof s !== "object") return;
+  if (f.y + f.h >= FLOOR) {
+    f.y = FLOOR - f.h;
+    f.vy = 0;
+    f.grounded = true;
 
-  if (!Number.isFinite(f.vx)) f.vx = 0;
-  if (!Number.isFinite(f.vy)) f.vy = 0;
-
-  if (s.trail) {
-    if (!Array.isArray(s.trail)) s.trail = [];
-
-    s.trail.push({
-      x: Number.isFinite(f.x) ? f.x + f.w / 2 : 0,
-      y: Number.isFinite(f.y) ? f.y + f.h / 2 : 0
-    });
-
-    if (s.trail.length > 22) s.trail.shift();
+    if (f.script && f.script.type === "fixed" && f.script.vy > 0) f.script = null;
+  } else {
+    f.grounded = false;
   }
 
-  if (s.type === "fixed") {
-    f.vx = Number.isFinite(s.vx) ? s.vx : 0;
-    f.vy = Number.isFinite(s.vy) ? s.vy : 0;
-    s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+  if (f.x < LEFT) f.x = LEFT;
+  if (f.x + f.w > RIGHT) f.x = RIGHT - f.w;
 
-    if (s.t <= 0) f.script = null;
-    return;
+  if (!f.attack) {
+    f.facing = f.x < enemy.x ? 1 : -1;
+    f.attackFacing = f.facing;
   }
 
-  if (s.type === "knightL") {
-    if (!s.primary || !s.secondary) {
+  if (f.attack) {
+    f.attackTimer--;
+    if (f.attackTimer <= 0) {
+      f.attack = null;
+      f.attackAim = "forward";
+      f.hitDone = false;
+      f.multiHitWait = 0;
       f.script = null;
-      return;
     }
-
-    if (s.phase === 1) {
-      f.vx = (s.primary.x || 0) * (s.s1 || 0);
-      f.vy = (s.primary.y || 0) * (s.s1 || 0);
-      s.t--;
-
-      if (s.t <= 0) {
-        s.phase = 2;
-        s.t = s.t2 || 6;
-      }
-    } else {
-      f.vx = (s.secondary.x || 0) * (s.s2 || 0);
-      f.vy = (s.secondary.y || 0) * (s.s2 || 0);
-      s.t--;
-
-      if (s.t <= 0) f.script = null;
-    }
-
-    return;
   }
 
-  if (s.type === "bishopZigzag") {
-    f.vx = (s.dir || f.facing || 1) * (s.sx || 0);
-    f.vy = (s.yDir || -1) * (s.sy || 0);
+  if (f.wallBounceTimer > 0) {
+    f.wallBounceTimer--;
 
-    s.t--;
+    const hitL = f.x <= LEFT + 1;
+    const hitR = f.x + f.w >= RIGHT - 1;
 
-    if (s.t <= 0) {
-      s.phase = (s.phase || 0) + 1;
-      s.t = 8;
-      s.yDir = -(s.yDir || -1);
+    if ((hitL || hitR) && Math.abs(f.vx) > 4.2) {
+      const side = hitL ? -1 : 1;
+      f.x = hitL ? LEFT : RIGHT - f.w;
+      f.vx = -side * Math.max(7, Math.abs(f.vx) * 0.52);
+      f.vy = Math.min(f.vy, -7);
+
+      const damage = Math.ceil(f.wallBouncePower * 0.76);
+      f.hp = Math.max(0, f.hp - damage);
+      f.hurt = Math.max(f.hurt, 18);
+      f.wallBounceTimer = 0;
+
+      fx(game, "wallBounce", f.x + f.w / 2, f.y + f.h / 2, { timer: 18 });
     }
-
-    if (s.phase >= 4) f.script = null;
-    return;
   }
-
-  f.script = null;
-}
 }
 
 function prepInput(player) {
