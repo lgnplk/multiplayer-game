@@ -14,9 +14,10 @@ const TICK_RATE = 60;
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR_Y = 430;
-const GRAVITY = 0.78;
+const GRAVITY = 0.92;
 const ROUNDS_TO_WIN = 3;
 const PROMOTION_MAX = 100;
+const QUEEN_DURATION = 60 * 12; // 12 seconds at 60 ticks per second
 
 const LEFT_WALL = 20;
 const RIGHT_WALL = WIDTH - 20;
@@ -31,7 +32,7 @@ const CHARACTERS = {
   king: {
     name: "King",
     title: "Strong standalone fighter. Defensive, stable, and hard to bully.",
-    maxHp: 205,
+    maxHp: 615,
     speed: 4.45,
     jump: 13.7,
     width: 62,
@@ -44,7 +45,7 @@ const CHARACTERS = {
   rook: {
     name: "Rook",
     title: "Slow fortress. Long rays, armor, range, and wall pressure.",
-    maxHp: 235,
+    maxHp: 705,
     speed: 3.35,
     jump: 11.5,
     width: 74,
@@ -57,7 +58,7 @@ const CHARACTERS = {
   bishop: {
     name: "Bishop",
     title: "Diagonal range monster. Controls strange angles from far away.",
-    maxHp: 170,
+    maxHp: 510,
     speed: 4.85,
     jump: 15.2,
     width: 56,
@@ -70,7 +71,7 @@ const CHARACTERS = {
   knight: {
     name: "Knight",
     title: "Tricky and evasive. Hops, angles, wall jumps, and fakeouts.",
-    maxHp: 170,
+    maxHp: 510,
     speed: 4.55,
     jump: 17.5,
     width: 58,
@@ -83,7 +84,7 @@ const CHARACTERS = {
   pawn: {
     name: "Pawn",
     title: "Playable underdog. Builds promotion by surviving and landing hits.",
-    maxHp: 175,
+    maxHp: 525,
     speed: 4.75,
     jump: 14,
     width: 52,
@@ -169,8 +170,8 @@ function createFighter(socketId, side, characterKey) {
 
     maxHp: ch.maxHp,
     hp: ch.maxHp,
-    speed: ch.speed,
-    jump: ch.jump,
+    speed: ch.speed * 1.32,
+    jump: ch.jump * 1.12,
     reach: ch.reach,
 
     facing: side === "white" ? 1 : -1,
@@ -184,6 +185,8 @@ function createFighter(socketId, side, characterKey) {
 
     promoted: false,
     promotionMeter: 0,
+    queenTimer: 0,
+    preQueenStats: null,
 
     attack: null,
     attackTimer: 0,
@@ -1174,18 +1177,75 @@ function attackBox(f) {
   return forwardBox(0, 60, f.y + 20, f.height * 0.4);
 }
 
+function revertQueen(f) {
+  if (f.characterKey !== "pawn" || !f.promoted || !f.preQueenStats) return;
+
+  const hpRatio = f.maxHp > 0 ? f.hp / f.maxHp : 0;
+
+  f.promoted = false;
+  f.queenTimer = 0;
+  f.promotionMeter = 0;
+
+  f.maxHp = f.preQueenStats.maxHp;
+  f.speed = f.preQueenStats.speed;
+  f.jump = f.preQueenStats.jump;
+  f.reach = f.preQueenStats.reach;
+
+  f.lightDamage = f.preQueenStats.lightDamage;
+  f.heavyDamage = f.preQueenStats.heavyDamage;
+  f.specialDamage = f.preQueenStats.specialDamage;
+
+  f.width = f.preQueenStats.width;
+  f.standingHeight = f.preQueenStats.standingHeight;
+  f.crouchHeight = f.preQueenStats.crouchHeight;
+  f.height = f.crouching ? f.crouchHeight : f.standingHeight;
+
+  f.characterName = "Pawn";
+  f.preQueenStats = null;
+
+  f.hp = Math.max(1, Math.ceil(f.maxHp * hpRatio));
+
+  if (f.y + f.height > FLOOR_Y) {
+    f.y = FLOOR_Y - f.height;
+  }
+
+  if (f.attack) {
+    f.attack = null;
+    f.attackAim = "forward";
+    f.attackTimer = 0;
+    f.hitThisAttack = false;
+    f.multiHitCooldown = 0;
+  }
+}
+
 function promotePawn(f) {
   if (f.characterKey !== "pawn" || f.promoted) return;
 
+  f.preQueenStats = {
+    maxHp: f.maxHp,
+    speed: f.speed,
+    jump: f.jump,
+    reach: f.reach,
+    lightDamage: f.lightDamage,
+    heavyDamage: f.heavyDamage,
+    specialDamage: f.specialDamage,
+    width: f.width,
+    standingHeight: f.standingHeight,
+    crouchHeight: f.crouchHeight
+  };
+
+  const hpRatio = f.maxHp > 0 ? f.hp / f.maxHp : 1;
+
   f.promoted = true;
+  f.queenTimer = QUEEN_DURATION;
   f.promotionMeter = PROMOTION_MAX;
 
-  f.maxHp += 55;
-  f.hp = Math.min(f.maxHp, f.hp + 55);
+  f.maxHp *= 2;
+  f.hp = Math.max(1, Math.ceil(f.maxHp * hpRatio));
 
-  f.speed += 1.0;
-  f.jump += 2.0;
-  f.reach += 42;
+  f.speed *= 1.5;
+  f.jump *= 1.5;
+  f.reach *= 1.5;
 
   f.lightDamage += 4;
   f.heavyDamage += 6;
@@ -1195,6 +1255,10 @@ function promotePawn(f) {
   f.standingHeight += 16;
   f.crouchHeight = Math.floor(f.standingHeight * 0.64);
   f.height = f.standingHeight;
+
+  if (f.y + f.height > FLOOR_Y) {
+    f.y = FLOOR_Y - f.height;
+  }
 
   f.characterName = "Queen";
   f.armorTimer = 45;
@@ -1300,6 +1364,14 @@ function updateFighter(f, opponent, input) {
   if (f.armorTimer > 0) f.armorTimer--;
   if (f.wallJumpLock > 0) f.wallJumpLock--;
   if (f.multiHitCooldown > 0) f.multiHitCooldown--;
+
+  if (f.promoted && f.characterKey === "pawn") {
+    f.queenTimer--;
+
+    if (f.queenTimer <= 0) {
+      revertQueen(f);
+    }
+  }
 
   const jumpPressed = !!input.jump && !f.jumpWasDown;
 
