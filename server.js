@@ -23,10 +23,12 @@ const ROUNDS_TO_WIN = 3;
 const PROMOTION_MAX = 190;
 const QUEEN_TIME = 6 * FPS;
 
+const ULTIMATE_MAX = 100;
+
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Hammer bruiser. Slow pressure, huge counter throws, and armor swings.",
+    title: "Hammer bruiser. Ultimate: Checkmate Throne.",
     hp: 780,
     speed: 5.8,
     jump: 14,
@@ -35,7 +37,7 @@ const CHARACTERS = {
   },
   rook: {
     name: "Rook",
-    title: "Siege weapon. Cannon bursts, brick waves, and the giant castle beam.",
+    title: "Siege weapon. Ultimate: Boardwide Castle Barrage.",
     hp: 750,
     speed: 5.4,
     jump: 12.8,
@@ -44,7 +46,7 @@ const CHARACTERS = {
   },
   bishop: {
     name: "Bishop",
-    title: "Diagonal caster. Staff cuts, diagonal charges, and aerial zigzag flight.",
+    title: "Diagonal caster. Ultimate: Cathedral Cross.",
     hp: 650,
     speed: 7.8,
     jump: 18.2,
@@ -53,7 +55,7 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Lance assassin. Fast air-heavy L movement and brutal jousting counters.",
+    title: "Lance assassin. Ultimate: Grandmaster Fork.",
     hp: 660,
     speed: 7.6,
     jump: 20.5,
@@ -62,7 +64,7 @@ const CHARACTERS = {
   },
   pawn: {
     name: "Pawn",
-    title: "Spear soldier. Higher health, simple reach, and hard-earned queen promotion.",
+    title: "Spear soldier. Ultimate: Forced Promotion.",
     hp: 590,
     speed: 7.2,
     jump: 15,
@@ -132,16 +134,21 @@ function makeFighter(id, side, key) {
     attackAim: "forward",
     attackId: 0,
     hitDone: false,
+    hitList: [],
     multiHitWait: 0,
 
     lightCd: 0,
     heavyCd: 0,
     specialCd: 0,
     counterCd: 0,
+    ultimateCd: 0,
 
     stamina: 100,
     maxStamina: 100,
     staminaDelay: 0,
+
+    ultimate: 0,
+    ultimateMax: ULTIMATE_MAX,
 
     hurt: 0,
     armor: 0,
@@ -169,6 +176,7 @@ function makeFighter(id, side, key) {
       heavy: 0,
       special: 0,
       counter: 0,
+      ultimate: 0,
       jump: 0
     }
   };
@@ -215,8 +223,8 @@ function fx(game, type, x, y, extra = {}) {
     ...extra
   });
 
-  if (game.effects.length > 220) {
-    game.effects.splice(0, game.effects.length - 220);
+  if (game.effects.length > 260) {
+    game.effects.splice(0, game.effects.length - 260);
   }
 }
 
@@ -332,6 +340,7 @@ function aimFromInput(input) {
 
 function moveName(base, f) {
   if (base === "counter") return "counter";
+  if (base === "ultimate") return "ultimate";
 
   if (!f.grounded) {
     if (base === "light") return "airLight";
@@ -366,8 +375,116 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     wall: 15,
     grab: false,
     throwPower: 0,
-    counterWindow: 0
+    counterWindow: 0,
+    ultimate: false,
+    pierceOnce: false
   };
+
+  if (attack === "ultimate") {
+    Object.assign(m, {
+      ultimate: true,
+      duration: 118,
+      activeA: 42,
+      activeB: 82,
+      dmg: 24,
+      kb: 46,
+      lift: -14,
+      stamina: 0,
+      cd: 360,
+      armor: 80,
+      breakArmor: true,
+      multi: true,
+      interval: 12,
+      wall: 70,
+      pierceOnce: true
+    });
+
+    if (p === "king") {
+      Object.assign(m, {
+        duration: 116,
+        activeA: 46,
+        activeB: 68,
+        dmg: 32,
+        kb: 58,
+        lift: -18,
+        multi: false,
+        wall: 86,
+        grab: true,
+        throwPower: 48
+      });
+    }
+
+    if (p === "rook") {
+      Object.assign(m, {
+        duration: 132,
+        activeA: 54,
+        activeB: 94,
+        dmg: 18,
+        kb: 48,
+        lift: -7,
+        multi: true,
+        interval: 10,
+        wall: 82
+      });
+    }
+
+    if (p === "bishop") {
+      Object.assign(m, {
+        duration: 120,
+        activeA: 36,
+        activeB: 96,
+        dmg: 16,
+        kb: 34,
+        lift: -26,
+        multi: true,
+        interval: 12,
+        wall: 56
+      });
+    }
+
+    if (p === "knight") {
+      Object.assign(m, {
+        duration: 112,
+        activeA: 38,
+        activeB: 86,
+        dmg: 17,
+        kb: 44,
+        lift: -20,
+        multi: true,
+        interval: 16,
+        wall: 72
+      });
+    }
+
+    if (p === "pawn") {
+      Object.assign(m, {
+        duration: 96,
+        activeA: 34,
+        activeB: 62,
+        dmg: 22,
+        kb: 42,
+        lift: -18,
+        multi: false,
+        wall: 64
+      });
+    }
+
+    if (p === "queen") {
+      Object.assign(m, {
+        duration: 125,
+        activeA: 38,
+        activeB: 96,
+        dmg: 20,
+        kb: 50,
+        lift: -28,
+        multi: true,
+        interval: 11,
+        wall: 90
+      });
+    }
+
+    return m;
+  }
 
   if (attack === "counter") {
     Object.assign(m, {
@@ -531,6 +648,15 @@ function box(f) {
     };
   }
 
+  if (a === "ultimate") {
+    if (p === "king") return body(310, 185, -32, d * 48);
+    if (p === "rook") return { x: LEFT, y: f.y + 4, w: RIGHT - LEFT, h: 150 };
+    if (p === "bishop") return body(900, 170, -96, 0);
+    if (p === "knight") return body(420, 250, -72, d * 60);
+    if (p === "pawn") return forward(250, 96, 12);
+    if (p === "queen") return body(640, 280, -86, 0);
+  }
+
   if (a === "counter") {
     if (p === "king") return forward(120, 96, 18);
     if (p === "rook") return body(200, 120, 4, 0);
@@ -676,6 +802,17 @@ function charge(f, n) {
   if (f.promotion >= PROMOTION_MAX) promote(f);
 }
 
+function chargeUltimate(f, n) {
+  if (!f || f.attack === "ultimate") return;
+  f.ultimate = clamp((f.ultimate || 0) + n, 0, f.ultimateMax || ULTIMATE_MAX);
+}
+
+function spendUltimate(f) {
+  if ((f.ultimate || 0) < (f.ultimateMax || ULTIMATE_MAX)) return false;
+  f.ultimate = 0;
+  return true;
+}
+
 function knightPattern(f, input) {
   let primary;
 
@@ -722,6 +859,42 @@ function bishopZigzag(f, input) {
   };
 }
 
+function ultimateScript(f, input) {
+  const p = pieceOf(f);
+  const d = f.facing || 1;
+
+  if (p === "knight") {
+    return {
+      type: "ultimateKnight",
+      t: 74,
+      phase: 0,
+      dir: d,
+      trail: []
+    };
+  }
+
+  if (p === "bishop") {
+    return {
+      type: "ultimateBishop",
+      t: 86,
+      phase: 0,
+      dir: d,
+      trail: []
+    };
+  }
+
+  if (p === "pawn") {
+    return {
+      type: "ultimatePawn",
+      t: 52,
+      dir: d,
+      trail: []
+    };
+  }
+
+  return null;
+}
+
 function fixed(vx, vy, t) {
   return { type: "fixed", vx, vy, t, trail: [] };
 }
@@ -741,7 +914,7 @@ function scriptMove(f) {
       y: Number.isFinite(f.y) ? f.y + f.h / 2 : 0
     });
 
-    if (s.trail.length > 22) s.trail.shift();
+    if (s.trail.length > 28) s.trail.shift();
   }
 
   if (s.type === "fixed") {
@@ -795,11 +968,48 @@ function scriptMove(f) {
     return;
   }
 
+  if (s.type === "ultimateKnight") {
+    const phase = Math.floor((74 - s.t) / 14);
+    const cx = phase % 2 === 0 ? s.dir : 0;
+    const cy = phase % 2 === 1 ? -1 : 0;
+    f.vx = cx * 16;
+    f.vy = cy * 13;
+    if (phase >= 3) {
+      f.vx = s.dir * 18;
+      f.vy = 10;
+    }
+    s.t--;
+    if (s.t <= 0) f.script = null;
+    return;
+  }
+
+  if (s.type === "ultimateBishop") {
+    const phase = Math.floor((86 - s.t) / 18);
+    const yDir = phase % 2 === 0 ? -1 : 1;
+    f.vx = s.dir * 11.5;
+    f.vy = yDir * 9;
+    s.t--;
+    if (s.t <= 0) f.script = null;
+    return;
+  }
+
+  if (s.type === "ultimatePawn") {
+    f.vx = s.dir * 13.5;
+    f.vy = Math.min(f.vy, -2);
+    s.t--;
+    if (s.t <= 0) f.script = null;
+    return;
+  }
+
   f.script = null;
 }
-
 function startAttack(f, base, input, game) {
   if (f.attack || f.hurt > 8 || f.stun > 0) return;
+
+  if (base === "ultimate") {
+    if (f.ultimateCd > 0) return;
+    if (!spendUltimate(f)) return;
+  }
 
   const attack = moveName(base, f);
   const aim = base === "special" ? aimFromInput(input) : "forward";
@@ -809,10 +1019,16 @@ function startAttack(f, base, input, game) {
   if (base === "heavy" && f.heavyCd > 0) return;
   if (base === "special" && f.specialCd > 0) return;
   if (base === "counter" && f.counterCd > 0) return;
-  if (f.stamina < m.stamina) return;
+  if (base !== "ultimate" && f.stamina < m.stamina) return;
 
-  f.stamina -= m.stamina;
-  f.staminaDelay = base === "special" ? 45 : base === "counter" ? 35 : base === "heavy" ? 24 : 12;
+  if (base !== "ultimate") {
+    f.stamina -= m.stamina;
+    f.staminaDelay =
+      base === "special" ? 45 :
+      base === "counter" ? 35 :
+      base === "heavy" ? 24 :
+      12;
+  }
 
   f.attack = attack;
   f.attackAim = aim;
@@ -820,6 +1036,7 @@ function startAttack(f, base, input, game) {
   f.attackTimer = m.duration;
   f.attackDuration = m.duration;
   f.hitDone = false;
+  f.hitList = [];
   f.multiHitWait = 0;
   f.attackId++;
   f.script = null;
@@ -828,11 +1045,63 @@ function startAttack(f, base, input, game) {
   if (base === "heavy") f.heavyCd = m.cd;
   if (base === "special") f.specialCd = m.cd;
   if (base === "counter") f.counterCd = m.cd;
+  if (base === "ultimate") f.ultimateCd = m.cd;
 
   if (m.armor) f.armor = Math.max(f.armor, m.armor);
   if (base === "counter") f.invuln = Math.max(f.invuln, m.counterWindow);
+  if (base === "ultimate") f.invuln = Math.max(f.invuln, 42);
 
   const p = pieceOf(f);
+
+  if (base === "ultimate") {
+    f.script = ultimateScript(f, input);
+
+    if (p === "king") {
+      f.vx *= 0.15;
+      f.armor = Math.max(f.armor, 96);
+    }
+
+    if (p === "rook") {
+      f.vx *= 0.05;
+      f.armor = Math.max(f.armor, 110);
+    }
+
+    if (p === "bishop") {
+      f.grounded = false;
+      f.vy = -8;
+      f.vx = f.facing * 7;
+    }
+
+    if (p === "knight") {
+      f.grounded = false;
+      f.vy = -10;
+      f.vx = f.facing * 9;
+    }
+
+    if (p === "pawn") {
+      promote(f);
+      f.vx = f.facing * 12;
+      f.vy = -4;
+      f.grounded = false;
+      f.armor = Math.max(f.armor, 56);
+    }
+
+    if (p === "queen") {
+      f.vx *= 0.25;
+      f.vy = Math.min(f.vy, -4);
+      f.grounded = false;
+      f.armor = Math.max(f.armor, 90);
+    }
+
+    fx(game, "ultimateStart", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: p,
+      dir: f.attackFacing,
+      timer: 80
+    });
+
+    game.shake = Math.max(game.shake, 14);
+    return;
+  }
 
   if (base === "counter") {
     if (p === "king") f.vx -= f.facing * 2;
@@ -1063,6 +1332,7 @@ function applyGrab(attacker, defender, m, game, b) {
   defender.wallBouncePower = m.wall;
 
   attacker.hitDone = true;
+  attacker.hitList.push(defender.side);
 
   game.hitstop = Math.max(game.hitstop, 12);
   game.shake = Math.max(game.shake, 13);
@@ -1088,19 +1358,23 @@ function handleHit(attacker, defender, game) {
 
   if (m.multi) {
     if (attacker.multiHitWait > 0) return;
-  } else if (attacker.hitDone) return;
+  } else if (attacker.hitDone) {
+    return;
+  }
+
+  if (m.pierceOnce && attacker.hitList.includes(defender.side) && !m.multi) return;
 
   const b = box(attacker);
   const defRect = { x: defender.x, y: defender.y, w: defender.w, h: defender.h };
 
   if (!rect(b, defRect)) return;
 
-  if (counterWindow(defender)) {
+  if (!m.ultimate && counterWindow(defender)) {
     triggerCounter(defender, attacker, game);
     return;
   }
 
-  if (defender.invuln > 0) return;
+  if (defender.invuln > 0 && !m.ultimate) return;
 
   if (m.grab) {
     applyGrab(attacker, defender, m, game, b);
@@ -1113,7 +1387,7 @@ function handleHit(attacker, defender, game) {
 
   if (m.multi) {
     damage = Math.max(2, Math.ceil(damage * 0.55));
-    knock *= 0.6;
+    knock *= 0.64;
   }
 
   if (defender.armor > 0 && !m.breakArmor) {
@@ -1130,19 +1404,28 @@ function handleHit(attacker, defender, game) {
   defender.wallBounceTimer = 42;
   defender.wallBouncePower = m.wall;
 
+  chargeUltimate(attacker, m.ultimate ? 0 : damage * 1.15 + 2);
+  chargeUltimate(defender, damage * 0.38 + 1);
+
   if (attacker.characterKey === "pawn" && !attacker.promoted) charge(attacker, 4.5 + damage * 0.28);
   if (defender.characterKey === "pawn" && !defender.promoted) charge(defender, 1.8 + damage * 0.08);
 
-  game.hitstop = Math.max(game.hitstop, m.multi ? 3 : damage >= 12 ? 9 : damage >= 8 ? 6 : 4);
-  game.shake = Math.max(game.shake, damage >= 12 ? 10 : damage >= 8 ? 7 : 4);
+  game.hitstop = Math.max(
+    game.hitstop,
+    m.ultimate ? 10 : m.multi ? 3 : damage >= 12 ? 9 : damage >= 8 ? 6 : 4
+  );
+  game.shake = Math.max(game.shake, m.ultimate ? 16 : damage >= 12 ? 10 : damage >= 8 ? 7 : 4);
 
   fx(game, "hit", clamp(b.x + b.w / 2, defender.x, defender.x + defender.w), clamp(b.y + b.h / 2, defender.y, defender.y + defender.h), {
     piece: pieceOf(attacker),
     attack: attacker.attack,
     dir: attacker.attackFacing,
     damage,
+    ultimate: m.ultimate,
     timer: m.multi ? 8 : 18
   });
+
+  attacker.hitList.push(defender.side);
 
   if (m.multi) attacker.multiHitWait = m.interval;
   else attacker.hitDone = true;
@@ -1153,6 +1436,7 @@ function updateFighter(f, enemy, input, game) {
   if (f.heavyCd > 0) f.heavyCd--;
   if (f.specialCd > 0) f.specialCd--;
   if (f.counterCd > 0) f.counterCd--;
+  if (f.ultimateCd > 0) f.ultimateCd--;
   if (f.hurt > 0) f.hurt--;
   if (f.armor > 0) f.armor--;
   if (f.invuln > 0) f.invuln--;
@@ -1167,16 +1451,19 @@ function updateFighter(f, enemy, input, game) {
   if (!Number.isFinite(f.vy)) f.vy = 0;
   if (!Number.isFinite(f.hp)) f.hp = Math.max(1, f.maxHp || 500);
   if (!Number.isFinite(f.stamina)) f.stamina = 50;
+  if (!Number.isFinite(f.ultimate)) f.ultimate = 0;
 
   if (f.promoted) {
     f.queenTimer--;
-    if (f.queenTimer <= 0) {
+    if (f.queenTimer <= 0 && f.attack !== "ultimate") {
       unpromote(f);
       fx(game, "queenEnd", f.x + f.w / 2, f.y + f.h / 2, { timer: 34 });
     }
   } else if (f.characterKey === "pawn") {
     charge(f, f.hp < f.maxHp * 0.3 ? 0.018 : 0.008);
   }
+
+  chargeUltimate(f, 0.006);
 
   if (input.jumpPressed) f.jumpBuffer = 8;
   else if (f.jumpBuffer > 0) f.jumpBuffer--;
@@ -1243,6 +1530,7 @@ function updateFighter(f, enemy, input, game) {
   }
 
   if (!stunned) {
+    if (input.ultimatePressed) startAttack(f, "ultimate", input, game);
     if (input.lightPressed) startAttack(f, "light", input, game);
     if (input.heavyPressed) startAttack(f, "heavy", input, game);
     if (input.specialPressed) startAttack(f, "special", input, game);
@@ -1283,6 +1571,7 @@ function updateFighter(f, enemy, input, game) {
       f.attack = null;
       f.attackAim = "forward";
       f.hitDone = false;
+      f.hitList = [];
       f.multiHitWait = 0;
       f.script = null;
     }
@@ -1323,6 +1612,7 @@ function prepInput(player) {
     heavyPressed: seq.heavy > (player.lastSeq?.heavy || 0),
     specialPressed: seq.special > (player.lastSeq?.special || 0),
     counterPressed: seq.counter > (player.lastSeq?.counter || 0),
+    ultimatePressed: seq.ultimate > (player.lastSeq?.ultimate || 0),
     jumpPressed: seq.jump > (player.lastSeq?.jump || 0)
   };
 
@@ -1331,6 +1621,7 @@ function prepInput(player) {
     heavy: seq.heavy || 0,
     special: seq.special || 0,
     counter: seq.counter || 0,
+    ultimate: seq.ultimate || 0,
     jump: seq.jump || 0
   };
 
@@ -1437,6 +1728,7 @@ io.on("connection", (socket) => {
         heavy: 0,
         special: 0,
         counter: 0,
+        ultimate: 0,
         jump: 0
       }
     },
@@ -1445,6 +1737,7 @@ io.on("connection", (socket) => {
       heavy: 0,
       special: 0,
       counter: 0,
+      ultimate: 0,
       jump: 0
     }
   };
@@ -1552,6 +1845,7 @@ io.on("connection", (socket) => {
         heavy: Number(input.seq?.heavy || 0),
         special: Number(input.seq?.special || 0),
         counter: Number(input.seq?.counter || 0),
+        ultimate: Number(input.seq?.ultimate || 0),
         jump: Number(input.seq?.jump || 0)
       }
     };
