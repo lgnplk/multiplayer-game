@@ -22,6 +22,11 @@ const QUEEN_DURATION = 60 * 12; // 12 seconds at 60 ticks per second
 const LEFT_WALL = 20;
 const RIGHT_WALL = WIDTH - 20;
 
+const ROUND_TIME = 60 * 99;
+const HITSTOP_MAX = 10;
+const MAX_EFFECTS = 90;
+const MAX_LOBBIES = 80;
+
 const players = {};
 const lobbies = {};
 const leaderboard = {};
@@ -116,6 +121,36 @@ function getSocket(socketId) {
   return io.sockets.sockets.get(socketId);
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function makeEffect(game, type, x, y, data = {}) {
+  if (!game || !game.effects) return;
+
+  game.effects.push({
+    id: `${game.tick || 0}:${game.effects.length}:${type}`,
+    type,
+    x: Math.round(x),
+    y: Math.round(y),
+    timer: data.timer ?? 18,
+    ...data
+  });
+
+  if (game.effects.length > MAX_EFFECTS) {
+    game.effects.splice(0, game.effects.length - MAX_EFFECTS);
+  }
+}
+
+function decayEffects(game) {
+  if (!game || !game.effects) return;
+
+  game.effects = game.effects.filter((fx) => {
+    fx.timer = (fx.timer || 0) - 1;
+    return fx.timer > 0;
+  });
+}
+
 function publicLobbyList() {
   return Object.values(lobbies).map((lobby) => ({
     id: lobby.id,
@@ -124,7 +159,8 @@ function publicLobbyList() {
     hostName: players[lobby.hostId]?.name || "Unknown",
     whiteName: players[lobby.whiteId]?.name || null,
     blackName: players[lobby.blackId]?.name || null,
-    spectatorCount: lobby.spectators.size
+    spectatorCount: lobby.spectators.size,
+    round: lobby.match?.currentRound || 0
   }));
 }
 
@@ -207,7 +243,28 @@ function createFighter(socketId, side, characterKey) {
     wallBounceWindow: 0,
     wallBouncePower: 0,
     wallBounceTimer: 0,
-    lastWallBounceSide: 0
+    lastWallBounceSide: 0,
+
+    stamina: 100,
+    maxStamina: 100,
+    staminaRegenDelay: 0,
+    guardBrokenTimer: 0,
+    parryTimer: 0,
+    blockWasDown: false,
+
+    dashTimer: 0,
+    dashCooldown: 0,
+    invulnTimer: 0,
+    airDodged: false,
+
+    jumpBuffer: 0,
+    coyoteTimer: 0,
+
+    comboCount: 0,
+    comboTimer: 0,
+    lastHitBy: null,
+    lastHitTick: -9999,
+    killCredit: null
   };
 }
 
@@ -232,6 +289,11 @@ function startRound(lobby) {
     width: WIDTH,
     height: HEIGHT,
     floorY: FLOOR_Y,
+    tick: 0,
+    roundTime: ROUND_TIME,
+    hitstop: 0,
+    shake: 0,
+    effects: [],
     roundOver: false,
     roundOverTimer: 0,
     roundWinner: null,
@@ -816,6 +878,12 @@ function startAttack(f, baseType, input = {}) {
   if (baseType === "heavy" && f.heavyCooldown > 0) return;
   if (baseType === "special" && f.specialCooldown > 0) return;
 
+  const staminaCost = baseType === "light" ? 3 : baseType === "heavy" ? 9 : 18;
+  if (f.stamina < staminaCost * 0.55) return;
+
+  f.stamina = Math.max(0, f.stamina - staminaCost);
+  f.staminaRegenDelay = baseType === "special" ? 52 : baseType === "heavy" ? 36 : 16;
+
   f.attack = type;
   f.attackTimer = getAttackDuration(type, f);
   f.hitThisAttack = false;
@@ -1359,53 +1427,140 @@ function handleWallBounce(f) {
   f.wallBounceWindow = 0;
 }
 
-function updateFighter(f, opponent, input) {
+function updateFighter(f, opponent, input, game = null) {
   if (f.hurtTimer > 0) f.hurtTimer--;
   if (f.armorTimer > 0) f.armorTimer--;
   if (f.wallJumpLock > 0) f.wallJumpLock--;
   if (f.multiHitCooldown > 0) f.multiHitCooldown--;
+  if (f.guardBrokenTimer > 0) f.guardBrokenTimer--;
+  if (f.parryTimer > 0) f.parryTimer--;
+  if (f.dashCooldown > 0) f.dashCooldown--;
+  if (f.dashTimer > 0) f.dashTimer--;
+  if (f.invulnTimer > 0) f.invulnTimer--;
+  if (f.staminaRegenDelay > 0) f.staminaRegenDelay--;
+  if (f.comboTimer > 0) f.comboTimer--;
+  else f.comboCount = 0;
 
   if (f.promoted && f.characterKey === "pawn") {
     f.queenTimer--;
 
     if (f.queenTimer <= 0) {
       revertQueen(f);
+      if (game) makeEffect(game, "queenEnd", f.x + f.width / 2, f.y + f.height / 2, { timer: 30 });
     }
   }
 
+  if (f.characterKey === "pawn" && !f.promoted) {
+    chargePawn(f, f.hp < f.maxHp * 0.35 ? 0.034 : 0.018);
+  }
+
+  const blockPressed = !!input.block && !f.blockWasDown;
   const jumpPressed = !!input.jump && !f.jumpWasDown;
 
-  if (f.characterKey === "pawn" && !f.promoted) {
-    chargePawn(f, 0.018);
+  if (jumpPressed) f.jumpBuffer = 8;
+  else if (f.jumpBuffer > 0) f.jumpBuffer--;
+
+  if (f.grounded) {
+    f.coyoteTimer = 8;
+    f.airDodged = false;
+  } else if (f.coyoteTimer > 0) {
+    f.coyoteTimer--;
   }
 
   updateWallState(f);
   tryWallJump(f, jumpPressed);
 
-  const wantsCrouch = !!input.crouch && f.grounded && !f.attack;
+  const stunned = f.hurtTimer > 8 || f.guardBrokenTimer > 0;
+  const wantsCrouch = !!input.crouch && f.grounded && !f.attack && !stunned;
   f.crouching = wantsCrouch;
 
   const oldHeight = f.height;
   f.height = f.crouching ? f.crouchHeight : f.standingHeight;
   f.y += oldHeight - f.height;
 
-  f.blocking = !!input.block && f.grounded && !f.attack && !f.crouching;
+  if (blockPressed && f.grounded && !f.attack && !f.crouching && f.stamina >= 18 && f.guardBrokenTimer <= 0) {
+    f.parryTimer = 8;
+    f.stamina = Math.max(0, f.stamina - 6);
+    f.staminaRegenDelay = 18;
+    if (game) makeEffect(game, "parryReady", f.x + f.width / 2, f.y + f.height * 0.45, { timer: 10 });
+  }
 
-  if (!f.attack && f.hurtTimer <= 8 && !f.blocking) {
+  const canBlock = f.grounded && !f.attack && !f.crouching && f.guardBrokenTimer <= 0 && f.stamina > 0;
+  f.blocking = !!input.block && canBlock;
+
+  if (f.blocking) {
+    f.stamina = Math.max(0, f.stamina - 0.42);
+    f.staminaRegenDelay = 28;
+
+    if (f.stamina <= 0) {
+      f.blocking = false;
+      f.guardBrokenTimer = 62;
+      f.hurtTimer = Math.max(f.hurtTimer, 42);
+      f.vx -= f.facing * 5.5;
+      if (game) makeEffect(game, "guardBreak", f.x + f.width / 2, f.y + f.height / 2, { timer: 32 });
+    }
+  } else if (f.staminaRegenDelay <= 0) {
+    const regen = f.grounded ? 0.72 : 0.38;
+    f.stamina = Math.min(f.maxStamina, f.stamina + regen);
+  }
+
+  const dashPressed = blockPressed && !f.grounded && !f.airDodged && f.stamina >= 22 && f.guardBrokenTimer <= 0;
+  if (dashPressed) {
+    const dir = input.left && !input.right ? -1 : input.right && !input.left ? 1 : f.facing;
+    f.vx = dir * (f.speed * 2.15);
+    f.vy *= 0.18;
+    f.dashTimer = 12;
+    f.dashCooldown = 34;
+    f.invulnTimer = 8;
+    f.airDodged = true;
+    f.stamina -= 22;
+    f.staminaRegenDelay = 36;
+    if (game) makeEffect(game, "airDodge", f.x + f.width / 2, f.y + f.height / 2, { timer: 16, dir });
+  }
+
+  const groundDash =
+    blockPressed &&
+    f.grounded &&
+    f.dashCooldown <= 0 &&
+    f.stamina >= 16 &&
+    input.left !== input.right &&
+    !f.attack &&
+    !f.crouching &&
+    f.guardBrokenTimer <= 0;
+
+  if (groundDash) {
+    const dir = input.left ? -1 : 1;
+    f.vx = dir * f.speed * 1.95;
+    f.facing = dir;
+    f.dashTimer = 10;
+    f.dashCooldown = 28;
+    f.invulnTimer = 4;
+    f.stamina -= 16;
+    f.staminaRegenDelay = 32;
+    if (game) makeEffect(game, "dash", f.x + f.width / 2, f.y + f.height * 0.78, { timer: 12, dir });
+  }
+
+  if (!f.attack && !stunned && !f.blocking) {
     if (input.left && !input.right) {
       f.vx = f.crouching ? -f.speed * 0.35 : -f.speed;
     } else if (input.right && !input.left) {
       f.vx = f.crouching ? f.speed * 0.35 : f.speed;
     } else {
-      f.vx *= 0.72;
+      f.vx *= f.grounded ? 0.72 : 0.94;
     }
-  } else {
-    f.vx *= 0.84;
+  } else if (!f.dashTimer) {
+    f.vx *= f.grounded ? 0.84 : 0.96;
   }
 
-  if (jumpPressed && f.grounded && !f.blocking && !f.attack && !f.crouching) {
+  if (f.jumpBuffer > 0 && f.coyoteTimer > 0 && !f.blocking && !f.attack && !f.crouching && f.guardBrokenTimer <= 0) {
     f.vy = -f.jump;
     f.grounded = false;
+    f.jumpBuffer = 0;
+    f.coyoteTimer = 0;
+  }
+
+  if (!f.grounded && input.crouch && f.vy > -2 && !f.attack) {
+    f.vy += 0.58;
   }
 
   if (!f.grounded && f.wallSide && f.vy > 3.2 && !f.attack) {
@@ -1414,9 +1569,11 @@ function updateFighter(f, opponent, input) {
     f.vy = Math.min(f.vy, slideLimit);
   }
 
-  if (input.light) startAttack(f, "light", input);
-  if (input.heavy) startAttack(f, "heavy", input);
-  if (input.special) startAttack(f, "special", input);
+  if (!stunned) {
+    if (input.light) startAttack(f, "light", input);
+    if (input.heavy) startAttack(f, "heavy", input);
+    if (input.special) startAttack(f, "special", input);
+  }
 
   f.x += f.vx;
   f.y += f.vy;
@@ -1437,8 +1594,10 @@ function updateFighter(f, opponent, input) {
   updateWallState(f);
   handleWallBounce(f);
 
-  if (f.x < opponent.x) f.facing = 1;
-  else f.facing = -1;
+  if (!f.attack || f.attack === "special" || f.attack === "airSpecial") {
+    if (f.x < opponent.x) f.facing = 1;
+    else f.facing = -1;
+  }
 
   if (f.lightCooldown > 0) f.lightCooldown--;
   if (f.heavyCooldown > 0) f.heavyCooldown--;
@@ -1456,11 +1615,13 @@ function updateFighter(f, opponent, input) {
   }
 
   f.jumpWasDown = !!input.jump;
+  f.blockWasDown = !!input.block;
 }
 
-function handleHit(attacker, defender) {
+function handleHit(attacker, defender, game = null) {
   if (!attacker.attack) return;
   if (!activeWindow(attacker)) return;
+  if (defender.invulnTimer > 0) return;
 
   const continuous = isContinuousAttack(attacker);
 
@@ -1470,15 +1631,17 @@ function handleHit(attacker, defender) {
     if (attacker.hitThisAttack) return;
   }
 
-  if (!rectsOverlap(attackBox(attacker), defender)) return;
+  const box = attackBox(attacker);
+  if (!rectsOverlap(box, defender)) return;
 
   const profile = mergeProfiles(getMoveProfile(attacker), getAimProfileBonus(attacker));
 
   let dmg = getDamage(attacker);
   let kb = getKnockback(attacker);
 
-  dmg = Math.ceil(dmg * profile.damageMul);
-  kb *= profile.knockbackMul;
+  const comboScale = clamp(1 - defender.comboCount * 0.075, 0.58, 1);
+  dmg = Math.ceil(dmg * profile.damageMul * comboScale);
+  kb *= profile.knockbackMul * clamp(1 - defender.comboCount * 0.035, 0.72, 1);
 
   const defenderFacingAttack = defender.facing === -attacker.facing;
   const defenderArmored = defender.armorTimer > 0 && !profile.armorBreak;
@@ -1488,38 +1651,86 @@ function handleHit(attacker, defender) {
     kb *= 0.45;
   }
 
+  if (defender.parryTimer > 0 && defenderFacingAttack) {
+    defender.parryTimer = 0;
+    defender.stamina = Math.min(defender.maxStamina, defender.stamina + 18);
+    defender.hurtTimer = 0;
+    defender.invulnTimer = 12;
+    defender.vx -= defender.facing * 2.2;
+
+    attacker.hurtTimer = Math.max(attacker.hurtTimer, 24);
+    attacker.vx -= attacker.facing * 6.8;
+    attacker.vy = Math.min(attacker.vy, -3.2);
+    attacker.attack = null;
+    attacker.attackTimer = 0;
+    attacker.hitThisAttack = false;
+
+    if (game) {
+      game.hitstop = Math.max(game.hitstop || 0, 8);
+      game.shake = Math.max(game.shake || 0, 8);
+      makeEffect(game, "parry", defender.x + defender.width / 2, defender.y + defender.height * 0.45, { timer: 24 });
+    }
+
+    return;
+  }
+
   if (defender.blocking && defenderFacingAttack) {
     const defenderPiece = effectivePiece(defender);
 
     let blockReduction = 0.25;
     let blockKnockback = 0.32;
+    let staminaDamage = 14 + dmg * 1.35;
 
     if (defenderPiece === "king") {
       blockReduction = 0.14;
       blockKnockback = 0.22;
+      staminaDamage *= 0.72;
     }
 
     if (defenderPiece === "rook") {
       blockReduction = 0.18;
       blockKnockback = 0.25;
+      staminaDamage *= 0.82;
     }
 
     if (defenderPiece === "pawn" && !defender.promoted) {
       blockReduction = 0.22;
       blockKnockback = 0.28;
-      chargePawn(defender, 3.5);
+      chargePawn(defender, 4.5);
     }
 
     if (defenderPiece === "queen") {
       blockReduction = 0.12;
       blockKnockback = 0.2;
+      staminaDamage *= 0.68;
     }
 
     dmg = Math.ceil(dmg * blockReduction);
     kb *= blockKnockback;
+
+    defender.stamina = Math.max(0, defender.stamina - staminaDamage);
+    defender.staminaRegenDelay = 48;
+
+    if (defender.stamina <= 0 || profile.armorBreak) {
+      defender.blocking = false;
+      defender.guardBrokenTimer = 76;
+      defender.hurtTimer = Math.max(defender.hurtTimer, 48);
+      dmg = Math.max(dmg, Math.ceil(getDamage(attacker) * 0.8));
+      kb *= 2.2;
+
+      if (game) {
+        makeEffect(game, "guardBreak", defender.x + defender.width / 2, defender.y + defender.height / 2, { timer: 34 });
+      }
+    } else if (game) {
+      makeEffect(game, "block", defender.x + defender.width / 2, defender.y + defender.height * 0.5, { timer: 12 });
+    }
   } else if (defenderArmored) {
     dmg = Math.ceil(dmg * 0.5);
     kb *= 0.38;
+
+    if (game) {
+      makeEffect(game, "armor", defender.x + defender.width / 2, defender.y + defender.height * 0.5, { timer: 14 });
+    }
   } else {
     defender.hurtTimer = continuous ? 8 : 20;
   }
@@ -1527,6 +1738,11 @@ function handleHit(attacker, defender) {
   defender.hp = Math.max(0, defender.hp - dmg);
   defender.vx += attacker.facing * kb;
   defender.vy += profile.lift;
+  defender.lastHitBy = attacker.side;
+  defender.lastHitTick = game?.tick ?? 0;
+  defender.comboCount += 1;
+  defender.comboTimer = 90;
+  attacker.killCredit = defender.side;
 
   defender.wallBounceWindow = 40;
   defender.wallBouncePower = profile.wallBounce;
@@ -1537,12 +1753,36 @@ function handleHit(attacker, defender) {
     defender.vy += 4;
   }
 
+  const centerX = clamp(box.x + box.width / 2, defender.x, defender.x + defender.width);
+  const centerY = clamp(box.y + box.height / 2, defender.y, defender.y + defender.height);
+
+  if (game) {
+    const stop =
+      continuous
+        ? 3
+        : attacker.attack === "heavy" || attacker.attack === "airHeavy"
+          ? 7
+          : attacker.attack === "special" || attacker.attack === "airSpecial"
+            ? 9
+            : 5;
+
+    game.hitstop = Math.max(game.hitstop || 0, Math.min(HITSTOP_MAX, stop));
+    game.shake = Math.max(game.shake || 0, continuous ? 4 : 8);
+
+    makeEffect(game, "hit", centerX, centerY, {
+      timer: continuous ? 8 : 18,
+      damage: dmg,
+      attack: attacker.attack,
+      combo: defender.comboCount
+    });
+  }
+
   if (attacker.characterKey === "pawn" && !attacker.promoted) {
-    chargePawn(attacker, 7 + dmg * 0.42);
+    chargePawn(attacker, 8 + dmg * 0.48);
   }
 
   if (defender.characterKey === "pawn" && !defender.promoted) {
-    chargePawn(defender, 2.5 + dmg * 0.14);
+    chargePawn(defender, 3 + dmg * 0.18);
   }
 
   if (continuous) {
@@ -1552,13 +1792,18 @@ function handleHit(attacker, defender) {
   }
 }
 
-function determineRoundWinner(white, black) {
+function determineRoundWinner(white, black, game = null) {
   if (white.hp <= 0 && black.hp <= 0) {
     return white.hp >= black.hp ? "white" : "black";
   }
 
   if (white.hp <= 0) return "black";
   if (black.hp <= 0) return "white";
+
+  if (game && game.roundTime <= 0) {
+    if (white.hp === black.hp) return null;
+    return white.hp > black.hp ? "white" : "black";
+  }
 
   return null;
 }
@@ -1569,6 +1814,12 @@ function updateGame(lobby) {
   const game = lobby.game;
   const white = game.fighters.white;
   const black = game.fighters.black;
+
+  game.tick++;
+
+  if (game.shake > 0) game.shake--;
+
+  decayEffects(game);
 
   if (game.roundOver) {
     game.roundOverTimer--;
@@ -1589,16 +1840,29 @@ function updateGame(lobby) {
     return;
   }
 
+  if (game.hitstop > 0) {
+    game.hitstop--;
+    return;
+  }
+
+  game.roundTime = Math.max(0, game.roundTime - 1);
+
   const whiteInput = players[white.id]?.input || {};
   const blackInput = players[black.id]?.input || {};
 
-  updateFighter(white, black, whiteInput);
-  updateFighter(black, white, blackInput);
+  updateFighter(white, black, whiteInput, game);
+  updateFighter(black, white, blackInput, game);
 
-  handleHit(white, black);
-  handleHit(black, white);
+  handleHit(white, black, game);
+  handleHit(black, white, game);
 
-  const roundWinnerSide = determineRoundWinner(white, black);
+  if (game.roundTime === 0 && white.hp === black.hp) {
+    white.hp = Math.max(0, white.hp - 1);
+    black.hp = Math.max(0, black.hp - 1);
+    makeEffect(game, "drawBurn", WIDTH / 2, FLOOR_Y - 80, { timer: 20 });
+  }
+
+  const roundWinnerSide = determineRoundWinner(white, black, game);
 
   if (roundWinnerSide) {
     const roundWinner = game.fighters[roundWinnerSide];
@@ -1606,6 +1870,11 @@ function updateGame(lobby) {
 
     game.roundOver = true;
     game.roundWinner = roundWinnerSide;
+
+    makeEffect(game, "roundWin", roundWinner.x + roundWinner.width / 2, roundWinner.y + roundWinner.height / 2, {
+      timer: 90,
+      side: roundWinnerSide
+    });
 
     if (roundWinnerSide === "white") {
       lobby.match.whiteRounds += 1;
@@ -1667,11 +1936,17 @@ io.on("connection", (socket) => {
 
   socket.on("setCharacter", (characterKey) => {
     if (!CHARACTERS[characterKey]) return;
+
     players[socket.id].characterKey = characterKey;
     sendLobbyData();
   });
 
   socket.on("createLobby", (lobbyName) => {
+    if (Object.keys(lobbies).length >= MAX_LOBBIES) {
+      socket.emit("serverMessage", "Too many open boards right now. Join one or wait for one to close.");
+      return;
+    }
+
     leaveCurrentLobby(socket.id);
 
     const id = makeId();
@@ -1703,6 +1978,7 @@ io.on("connection", (socket) => {
 
   socket.on("joinLobby", (lobbyId) => {
     const lobby = lobbies[lobbyId];
+
     if (!lobby || lobby.status !== "waiting" || lobby.blackId) return;
 
     leaveCurrentLobby(socket.id);
@@ -1727,6 +2003,7 @@ io.on("connection", (socket) => {
 
   socket.on("watchLobby", (lobbyId) => {
     const lobby = lobbies[lobbyId];
+
     if (!lobby) return;
 
     leaveCurrentLobby(socket.id);
@@ -1752,7 +2029,8 @@ io.on("connection", (socket) => {
 
   socket.on("input", (input) => {
     const p = players[socket.id];
-    if (!p) return;
+
+    if (!p || !input || typeof input !== "object") return;
 
     p.input = {
       left: !!input.left,
