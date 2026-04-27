@@ -14,7 +14,6 @@ const TICK_RATE = 60;
 const WIDTH = 960;
 const HEIGHT = 540;
 const FLOOR_Y = 430;
-
 const LEFT_WALL = 22;
 const RIGHT_WALL = WIDTH - 22;
 
@@ -22,17 +21,17 @@ const GRAVITY = 0.92;
 const ROUND_TIME = 99 * 60;
 const ROUNDS_TO_WIN = 3;
 
-const PROMOTION_MAX = 100;
-const QUEEN_DURATION = 12 * 60;
+const PROMOTION_MAX = 180;
+const QUEEN_DURATION = 4 * 60;
 
-const MAX_EFFECTS = 120;
+const MOVE_SPEED_MULT = 1.55;
+const JUMP_MULT = 1.14;
+const GLOBAL_KNOCKBACK_MULT = 1.52;
+const GLOBAL_LIFT_MULT = 1.2;
+const WALL_BOUNCE_DAMAGE_MULT = 0.76;
+
+const MAX_EFFECTS = 160;
 const MAX_LOBBIES = 80;
-
-const MOVE_SPEED_MULT = 1.58;
-const JUMP_MULT = 1.18;
-const GLOBAL_KNOCKBACK_MULT = 1.42;
-const GLOBAL_LIFT_MULT = 1.18;
-const WALL_BOUNCE_DAMAGE_MULT = 0.72;
 
 const players = {};
 const lobbies = {};
@@ -42,48 +41,48 @@ let nextLobbyId = 1;
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Heavy royal bruiser. Uses a scepter, shoulder checks, and command slams.",
-    maxHp: 625,
-    speed: 4.55,
-    jump: 13.5,
+    title: "True bruiser. Heavy armor, command grabs, shoulder checks, and brutal royal slams.",
+    maxHp: 760,
+    speed: 4.15,
+    jump: 12.4,
     width: 72,
     height: 124
   },
   rook: {
     name: "Rook",
-    title: "Fortress grappler. Rams, shoves, wall-bounces, and crushes space.",
-    maxHp: 740,
-    speed: 3.8,
-    jump: 11.6,
+    title: "Fortress ram. Huge shove power, armor, wall pressure, and brutal horizontal control.",
+    maxHp: 735,
+    speed: 3.9,
+    jump: 11.4,
     width: 84,
     height: 132
   },
   bishop: {
     name: "Bishop",
-    title: "Fast diagonal duelist. Uses blade-like mitre cuts and angled lunges.",
-    maxHp: 540,
-    speed: 5.15,
-    jump: 15.2,
+    title: "Mobile diagonal duelist. More health, better air control, and sharp angled rushes.",
+    maxHp: 635,
+    speed: 5.45,
+    jump: 16.4,
     width: 64,
     height: 122
   },
   knight: {
     name: "Knight",
-    title: "Explosive jumper. Kicks, hooks, tramples, and launches in L-patterns.",
-    maxHp: 535,
-    speed: 5.0,
-    jump: 18.2,
+    title: "Fast disruptor. More health, better jumping, L-shaped burst movement, and launch tools.",
+    maxHp: 640,
+    speed: 5.35,
+    jump: 19.1,
     width: 66,
     height: 116
   },
   pawn: {
     name: "Pawn",
-    title: "Fast lancer. Spear pokes, brave charges, and dangerous promotion pressure.",
-    maxHp: 545,
-    speed: 5.1,
-    jump: 14.2,
-    width: 58,
-    height: 108
+    title: "Weaker lancer. Must survive longer to promote, and queen time is brief.",
+    maxHp: 470,
+    speed: 5.0,
+    jump: 13.6,
+    width: 56,
+    height: 106
   }
 };
 
@@ -157,7 +156,6 @@ function pushEffect(game, type, x, y, extra = {}) {
 
 function decayEffects(game) {
   if (!game) return;
-
   game.effects = game.effects.filter((fx) => {
     fx.timer -= 1;
     return fx.timer > 0;
@@ -195,6 +193,8 @@ function createFighter(socketId, side, characterKey) {
     jump: ch.jump * JUMP_MULT,
 
     facing: side === "white" ? 1 : -1,
+    attackFacing: side === "white" ? 1 : -1,
+
     grounded: true,
     crouching: false,
     blocking: false,
@@ -203,7 +203,6 @@ function createFighter(socketId, side, characterKey) {
     attackTimer: 0,
     attackDuration: 0,
     attackAim: "forward",
-    attackFacing: side === "white" ? 1 : -1,
     hitThisAttack: false,
     multiHitCooldown: 0,
 
@@ -370,18 +369,18 @@ function getSpecialAim(input) {
 }
 
 function moveKey(baseType, f) {
-  let type = baseType;
-
   if (!f.grounded) {
-    if (baseType === "light") type = "airLight";
-    if (baseType === "heavy") type = "airHeavy";
-    if (baseType === "special") type = "airSpecial";
-  } else if (f.crouching) {
-    if (baseType === "light") type = "crouchLight";
-    if (baseType === "heavy") type = "crouchHeavy";
+    if (baseType === "light") return "airLight";
+    if (baseType === "heavy") return "airHeavy";
+    if (baseType === "special") return "airSpecial";
   }
 
-  return type;
+  if (f.crouching) {
+    if (baseType === "light") return "crouchLight";
+    if (baseType === "heavy") return "crouchHeavy";
+  }
+
+  return baseType;
 }
 
 function attackDir(f) {
@@ -392,145 +391,137 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
   const piece = effectivePiece(f);
 
   const m = {
-    duration: 20,
-    activeStart: 5,
-    activeEnd: 12,
-    damage: 5,
+    duration: 18,
+    activeStart: 4,
+    activeEnd: 10,
+    damage: 4,
     kb: 9,
-    lift: -3,
-    range: 60,
-    width: 80,
-    height: 40,
-    cooldown: 20,
-    stamina: 4,
+    lift: -2,
+    cooldown: 16,
+    stamina: 3,
     armorBreak: false,
     continuous: false,
     hitInterval: 8,
     wallBounce: 10,
-    blockDrain: 14,
-    armorOnStart: 0
+    blockDrain: 12,
+    armorOnStart: 0,
+    grab: false,
+    throwPower: 0
   };
 
   if (piece === "king") {
     if (attack === "light") {
       Object.assign(m, {
-        duration: 15,
+        duration: 16,
         activeStart: 4,
         activeEnd: 9,
         damage: 5,
-        kb: 11,
+        kb: 13,
         lift: -3,
-        width: 92,
-        height: 48,
         cooldown: 15,
         stamina: 4,
-        wallBounce: 11
+        wallBounce: 14
       });
     }
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 28,
-        activeStart: 8,
-        activeEnd: 16,
-        damage: 10,
-        kb: 20,
+        duration: 31,
+        activeStart: 9,
+        activeEnd: 17,
+        damage: 12,
+        kb: 26,
         lift: -8,
-        width: 132,
-        height: 80,
-        cooldown: 42,
-        stamina: 10,
-        armorOnStart: 15,
-        wallBounce: 22,
-        blockDrain: 22
+        cooldown: 44,
+        stamina: 12,
+        armorOnStart: 19,
+        armorBreak: true,
+        wallBounce: 34,
+        blockDrain: 34
       });
     }
 
     if (attack === "crouchHeavy") {
       Object.assign(m, {
-        duration: 29,
-        activeStart: 8,
-        activeEnd: 15,
-        damage: 9,
-        kb: 18,
-        lift: -12,
-        width: 128,
-        height: 54,
-        cooldown: 42,
-        stamina: 9,
-        wallBounce: 18
+        duration: 32,
+        activeStart: 9,
+        activeEnd: 16,
+        damage: 11,
+        kb: 25,
+        lift: -14,
+        cooldown: 44,
+        stamina: 11,
+        armorOnStart: 12,
+        wallBounce: 30,
+        blockDrain: 26
       });
     }
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 27,
-        activeStart: 7,
-        activeEnd: 15,
-        damage: 9,
-        kb: 16,
-        lift: 10,
-        width: 124,
-        height: 100,
+        duration: 29,
+        activeStart: 8,
+        activeEnd: 16,
+        damage: 10,
+        kb: 22,
+        lift: 13,
         cooldown: 42,
-        stamina: 9,
-        wallBounce: 19
+        stamina: 10,
+        wallBounce: 30
       });
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 42,
+          duration: 44,
           activeStart: 10,
-          activeEnd: 20,
-          damage: 11,
-          kb: 27,
-          lift: -7,
-          width: 210,
-          height: 126,
-          cooldown: 90,
-          stamina: 18,
+          activeEnd: 22,
+          damage: 13,
+          kb: 34,
+          lift: -8,
+          cooldown: 94,
+          stamina: 20,
+          armorOnStart: 28,
           armorBreak: true,
-          armorOnStart: 26,
-          wallBounce: 28,
-          blockDrain: 30
+          wallBounce: 44,
+          blockDrain: 42
         });
       }
 
       if (aim === "up") {
         Object.assign(m, {
-          duration: 38,
+          duration: 40,
           activeStart: 9,
-          activeEnd: 17,
-          damage: 9,
-          kb: 15,
-          lift: -25,
-          width: 120,
-          height: 225,
+          activeEnd: 18,
+          damage: 11,
+          kb: 19,
+          lift: -34,
           cooldown: 88,
           stamina: 18,
           armorOnStart: 18,
-          wallBounce: 18
+          armorBreak: true,
+          wallBounce: 28,
+          blockDrain: 30
         });
       }
 
       if (aim === "down") {
         Object.assign(m, {
-          duration: 40,
-          activeStart: 11,
-          activeEnd: 18,
-          damage: 12,
-          kb: 25,
-          lift: -4,
-          width: 180,
-          height: 80,
-          cooldown: 92,
-          stamina: 18,
-          armorBreak: true,
+          duration: 42,
+          activeStart: 8,
+          activeEnd: 19,
+          damage: 7,
+          kb: 0,
+          lift: 0,
+          cooldown: 98,
+          stamina: 22,
           armorOnStart: 24,
-          wallBounce: 28,
-          blockDrain: 34
+          armorBreak: true,
+          wallBounce: 50,
+          blockDrain: 44,
+          grab: true,
+          throwPower: 36
         });
       }
     }
@@ -543,48 +534,42 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
         activeStart: 5,
         activeEnd: 11,
         damage: 5,
-        kb: 15,
+        kb: 16,
         lift: -2,
-        width: 138,
-        height: 46,
-        cooldown: 18,
+        cooldown: 17,
         stamina: 4,
-        wallBounce: 16
+        wallBounce: 18
       });
     }
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 31,
+        duration: 32,
         activeStart: 9,
         activeEnd: 17,
         damage: 11,
-        kb: 28,
+        kb: 31,
         lift: -6,
-        width: 190,
-        height: 88,
-        cooldown: 50,
-        stamina: 11,
+        cooldown: 52,
+        stamina: 12,
         armorBreak: true,
-        armorOnStart: 22,
-        wallBounce: 34,
-        blockDrain: 34
+        armorOnStart: 23,
+        wallBounce: 40,
+        blockDrain: 36
       });
     }
 
     if (attack === "crouchHeavy") {
       Object.assign(m, {
-        duration: 30,
+        duration: 31,
         activeStart: 9,
         activeEnd: 16,
         damage: 10,
-        kb: 26,
+        kb: 29,
         lift: -10,
-        width: 165,
-        height: 50,
         cooldown: 50,
         stamina: 10,
-        wallBounce: 32
+        wallBounce: 38
       });
     }
 
@@ -594,52 +579,46 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
         activeStart: 8,
         activeEnd: 16,
         damage: 10,
-        kb: 21,
+        kb: 24,
         lift: 12,
-        width: 120,
-        height: 96,
         cooldown: 48,
         stamina: 10,
-        wallBounce: 28
+        wallBounce: 32
       });
     }
 
     if (attack === "special") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 58,
+          duration: 56,
           activeStart: 12,
-          activeEnd: 22,
+          activeEnd: 24,
           damage: 13,
-          kb: 36,
+          kb: 38,
           lift: -3,
-          width: 260,
-          height: 92,
-          cooldown: 105,
+          cooldown: 106,
           stamina: 22,
           armorBreak: true,
           armorOnStart: 42,
-          wallBounce: 42,
-          blockDrain: 40
+          wallBounce: 46,
+          blockDrain: 42
         });
       }
 
       if (aim === "up") {
         Object.assign(m, {
-          duration: 54,
-          activeStart: 12,
+          duration: 50,
+          activeStart: 11,
           activeEnd: 24,
           damage: 8,
-          kb: 18,
-          lift: -28,
-          width: 96,
-          height: 305,
+          kb: 19,
+          lift: -31,
           cooldown: 100,
-          stamina: 22,
+          stamina: 20,
           continuous: true,
           hitInterval: 10,
-          armorOnStart: 38,
-          wallBounce: 24
+          armorOnStart: 36,
+          wallBounce: 28
         });
       }
 
@@ -647,18 +626,16 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
         Object.assign(m, {
           duration: 48,
           activeStart: 10,
-          activeEnd: 18,
+          activeEnd: 19,
           damage: 12,
-          kb: 34,
-          lift: -5,
-          width: 250,
-          height: 60,
+          kb: 36,
+          lift: -4,
           cooldown: 100,
           stamina: 22,
           armorBreak: true,
           armorOnStart: 36,
-          wallBounce: 40,
-          blockDrain: 38
+          wallBounce: 44,
+          blockDrain: 40
         });
       }
     }
@@ -667,116 +644,116 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
   if (piece === "bishop") {
     if (attack === "light") {
       Object.assign(m, {
-        duration: 15,
-        activeStart: 4,
-        activeEnd: 9,
-        damage: 4,
-        kb: 12,
-        lift: -6,
-        width: 120,
-        height: 78,
-        cooldown: 15,
-        stamina: 4,
-        wallBounce: 12
+        duration: 14,
+        activeStart: 3,
+        activeEnd: 8,
+        damage: 5,
+        kb: 13,
+        lift: -7,
+        cooldown: 13,
+        stamina: 3,
+        wallBounce: 14
       });
     }
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 25,
+        duration: 24,
         activeStart: 7,
         activeEnd: 14,
         damage: 9,
-        kb: 19,
-        lift: -11,
-        width: 162,
-        height: 106,
-        cooldown: 36,
-        stamina: 9,
-        wallBounce: 20
+        kb: 22,
+        lift: -13,
+        cooldown: 34,
+        stamina: 8,
+        wallBounce: 24
       });
     }
 
     if (attack === "crouchLight") {
       Object.assign(m, {
-        duration: 14,
-        activeStart: 4,
+        duration: 13,
+        activeStart: 3,
         activeEnd: 8,
         damage: 4,
-        kb: 10,
+        kb: 11,
         lift: -2,
-        width: 112,
-        height: 32,
-        cooldown: 14,
+        cooldown: 13,
         stamina: 3,
-        wallBounce: 10
+        wallBounce: 12
+      });
+    }
+
+    if (attack === "crouchHeavy") {
+      Object.assign(m, {
+        duration: 25,
+        activeStart: 7,
+        activeEnd: 14,
+        damage: 8,
+        kb: 20,
+        lift: -12,
+        cooldown: 34,
+        stamina: 8,
+        wallBounce: 24
       });
     }
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 26,
+        duration: 25,
         activeStart: 7,
         activeEnd: 14,
         damage: 9,
-        kb: 18,
-        lift: 9,
-        width: 125,
-        height: 104,
-        cooldown: 36,
-        stamina: 9,
-        wallBounce: 20
+        kb: 21,
+        lift: 10,
+        cooldown: 34,
+        stamina: 8,
+        wallBounce: 24
       });
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 36,
-          activeStart: 8,
+          duration: 34,
+          activeStart: 7,
           activeEnd: 16,
           damage: 10,
-          kb: 23,
-          lift: -10,
-          width: 215,
-          height: 136,
-          cooldown: 78,
-          stamina: 17,
-          wallBounce: 24
+          kb: 27,
+          lift: -12,
+          cooldown: 70,
+          stamina: 15,
+          wallBounce: 30
         });
       }
 
       if (aim === "up") {
         Object.assign(m, {
-          duration: 36,
-          activeStart: 8,
+          duration: 34,
+          activeStart: 7,
           activeEnd: 16,
           damage: 9,
-          kb: 18,
-          lift: -27,
-          width: 180,
-          height: 170,
-          cooldown: 78,
-          stamina: 17,
-          wallBounce: 20
+          kb: 20,
+          lift: -33,
+          cooldown: 70,
+          stamina: 15,
+          wallBounce: 26
         });
       }
 
       if (aim === "down") {
         Object.assign(m, {
-          duration: 36,
-          activeStart: 8,
+          duration: 34,
+          activeStart: 7,
           activeEnd: 16,
           damage: 10,
-          kb: 24,
-          lift: 10,
-          width: 180,
-          height: 170,
-          cooldown: 78,
-          stamina: 17,
+          kb: 28,
+          lift: 12,
+          cooldown: 70,
+          stamina: 15,
           armorBreak: true,
-          wallBounce: 26,
-          blockDrain: 28
+          wallBounce: 32,
+          blockDrain: 30
         });
       }
     }
@@ -788,95 +765,83 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
         duration: 13,
         activeStart: 3,
         activeEnd: 8,
-        damage: 4,
-        kb: 11,
-        lift: -4,
-        width: 68,
-        height: 50,
-        cooldown: 13,
+        damage: 5,
+        kb: 12,
+        lift: -5,
+        cooldown: 12,
         stamina: 3,
-        wallBounce: 12
+        wallBounce: 14
       });
     }
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 25,
+        duration: 24,
         activeStart: 7,
         activeEnd: 13,
         damage: 8,
-        kb: 18,
-        lift: -18,
-        width: 94,
-        height: 92,
-        cooldown: 32,
+        kb: 21,
+        lift: -22,
+        cooldown: 30,
         stamina: 8,
-        wallBounce: 20
+        wallBounce: 26
       });
     }
 
     if (attack === "crouchHeavy") {
       Object.assign(m, {
-        duration: 23,
-        activeStart: 7,
+        duration: 22,
+        activeStart: 6,
         activeEnd: 12,
         damage: 8,
-        kb: 18,
-        lift: -14,
-        width: 90,
-        height: 66,
-        cooldown: 32,
+        kb: 20,
+        lift: -16,
+        cooldown: 30,
         stamina: 8,
-        wallBounce: 18
+        wallBounce: 24
       });
     }
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 26,
+        duration: 25,
         activeStart: 7,
         activeEnd: 14,
         damage: 9,
-        kb: 21,
-        lift: 14,
-        width: 104,
-        height: 104,
-        cooldown: 34,
+        kb: 24,
+        lift: 15,
+        cooldown: 32,
         stamina: 8,
-        wallBounce: 24
+        wallBounce: 30
       });
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 32,
+          duration: 31,
           activeStart: 6,
           activeEnd: 14,
           damage: 10,
-          kb: 25,
-          lift: -16,
-          width: 122,
-          height: 100,
-          cooldown: 66,
-          stamina: 15,
-          wallBounce: 30
+          kb: 29,
+          lift: -18,
+          cooldown: 60,
+          stamina: 14,
+          wallBounce: 36
         });
       }
 
       if (aim === "up") {
         Object.assign(m, {
-          duration: 32,
+          duration: 31,
           activeStart: 6,
           activeEnd: 14,
           damage: 9,
-          kb: 17,
-          lift: -30,
-          width: 108,
-          height: 140,
-          cooldown: 66,
-          stamina: 15,
-          wallBounce: 20
+          kb: 19,
+          lift: -36,
+          cooldown: 60,
+          stamina: 14,
+          wallBounce: 26
         });
       }
 
@@ -884,17 +849,15 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
         Object.assign(m, {
           duration: 30,
           activeStart: 6,
-          activeEnd: 13,
+          activeEnd: 14,
           damage: 11,
-          kb: 28,
-          lift: 16,
-          width: 128,
-          height: 100,
-          cooldown: 66,
+          kb: 32,
+          lift: 18,
+          cooldown: 62,
           stamina: 15,
           armorBreak: true,
-          wallBounce: 32,
-          blockDrain: 28
+          wallBounce: 38,
+          blockDrain: 30
         });
       }
     }
@@ -903,98 +866,86 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
   if (piece === "pawn") {
     if (attack === "light") {
       Object.assign(m, {
-        duration: 13,
-        activeStart: 3,
+        duration: 14,
+        activeStart: 4,
         activeEnd: 8,
-        damage: 4,
-        kb: 12,
-        lift: -2,
-        width: 96,
-        height: 30,
-        cooldown: 13,
-        stamina: 3,
-        wallBounce: 12
-      });
-    }
-
-    if (attack === "heavy") {
-      Object.assign(m, {
-        duration: 22,
-        activeStart: 6,
-        activeEnd: 13,
-        damage: 8,
-        kb: 18,
-        lift: -6,
-        width: 128,
-        height: 60,
-        cooldown: 28,
-        stamina: 7,
-        wallBounce: 18
-      });
-    }
-
-    if (attack === "crouchLight") {
-      Object.assign(m, {
-        duration: 13,
-        activeStart: 3,
-        activeEnd: 8,
-        damage: 4,
+        damage: 3,
         kb: 10,
-        lift: -1,
-        width: 92,
-        height: 24,
-        cooldown: 13,
+        lift: -2,
+        cooldown: 14,
         stamina: 3,
         wallBounce: 10
       });
     }
 
-    if (attack === "crouchHeavy") {
+    if (attack === "heavy") {
       Object.assign(m, {
-        duration: 23,
+        duration: 24,
         activeStart: 7,
         activeEnd: 13,
-        damage: 8,
-        kb: 20,
-        lift: -14,
-        width: 110,
-        height: 56,
+        damage: 6,
+        kb: 16,
+        lift: -5,
         cooldown: 32,
         stamina: 8,
-        wallBounce: 22
+        wallBounce: 15
+      });
+    }
+
+    if (attack === "crouchLight") {
+      Object.assign(m, {
+        duration: 14,
+        activeStart: 4,
+        activeEnd: 8,
+        damage: 3,
+        kb: 9,
+        lift: -1,
+        cooldown: 14,
+        stamina: 3,
+        wallBounce: 9
+      });
+    }
+
+    if (attack === "crouchHeavy") {
+      Object.assign(m, {
+        duration: 24,
+        activeStart: 7,
+        activeEnd: 13,
+        damage: 6,
+        kb: 17,
+        lift: -11,
+        cooldown: 34,
+        stamina: 8,
+        wallBounce: 17
       });
     }
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 23,
+        duration: 24,
         activeStart: 7,
         activeEnd: 13,
-        damage: 8,
-        kb: 18,
-        lift: 12,
-        width: 100,
-        height: 82,
-        cooldown: 30,
+        damage: 6,
+        kb: 16,
+        lift: 10,
+        cooldown: 32,
         stamina: 8,
-        wallBounce: 20
+        wallBounce: 17
       });
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 28,
-          activeStart: 5,
+          duration: 29,
+          activeStart: 6,
           activeEnd: 13,
-          damage: 9,
-          kb: 24,
-          lift: -5,
-          width: 148,
-          height: 48,
-          cooldown: 58,
-          stamina: 13,
-          wallBounce: 26
+          damage: 7,
+          kb: 21,
+          lift: -4,
+          cooldown: 66,
+          stamina: 14,
+          wallBounce: 20
         });
       }
 
@@ -1003,31 +954,27 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
           duration: 30,
           activeStart: 7,
           activeEnd: 14,
-          damage: 8,
-          kb: 15,
-          lift: -26,
-          width: 88,
-          height: 140,
-          cooldown: 58,
-          stamina: 13,
-          wallBounce: 18
+          damage: 6,
+          kb: 14,
+          lift: -24,
+          cooldown: 66,
+          stamina: 14,
+          wallBounce: 16
         });
       }
 
       if (aim === "down") {
         Object.assign(m, {
-          duration: 28,
+          duration: 30,
           activeStart: 7,
           activeEnd: 13,
-          damage: 9,
-          kb: 24,
+          damage: 7,
+          kb: 21,
           lift: -2,
-          width: 128,
-          height: 56,
-          cooldown: 58,
-          stamina: 13,
+          cooldown: 66,
+          stamina: 14,
           armorBreak: true,
-          wallBounce: 28,
+          wallBounce: 22,
           blockDrain: 28
         });
       }
@@ -1037,124 +984,110 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
   if (piece === "queen") {
     if (attack === "light") {
       Object.assign(m, {
-        duration: 14,
+        duration: 13,
         activeStart: 3,
         activeEnd: 9,
         damage: 7,
-        kb: 15,
+        kb: 17,
         lift: -5,
-        width: 150,
-        height: 78,
         cooldown: 13,
         stamina: 3,
-        wallBounce: 18
+        wallBounce: 20
       });
     }
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 27,
+        duration: 26,
         activeStart: 7,
         activeEnd: 15,
         damage: 12,
-        kb: 26,
-        lift: -10,
-        width: 210,
-        height: 122,
-        cooldown: 34,
-        stamina: 8,
+        kb: 30,
+        lift: -11,
+        cooldown: 36,
+        stamina: 9,
         armorBreak: true,
         armorOnStart: 12,
-        wallBounce: 32,
+        wallBounce: 36,
         blockDrain: 34
       });
     }
 
     if (attack === "crouchHeavy") {
       Object.assign(m, {
-        duration: 28,
+        duration: 27,
         activeStart: 7,
         activeEnd: 15,
         damage: 11,
-        kb: 24,
-        lift: -16,
-        width: 170,
-        height: 62,
-        cooldown: 36,
-        stamina: 8,
-        wallBounce: 30
+        kb: 27,
+        lift: -17,
+        cooldown: 38,
+        stamina: 9,
+        wallBounce: 34
       });
     }
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 27,
+        duration: 26,
         activeStart: 7,
         activeEnd: 14,
         damage: 11,
-        kb: 22,
-        lift: 15,
-        width: 150,
-        height: 120,
-        cooldown: 36,
-        stamina: 8,
-        wallBounce: 30
+        kb: 25,
+        lift: 16,
+        cooldown: 38,
+        stamina: 9,
+        wallBounce: 34
       });
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
         Object.assign(m, {
-          duration: 48,
+          duration: 46,
           activeStart: 9,
           activeEnd: 21,
           damage: 14,
-          kb: 34,
+          kb: 38,
           lift: -8,
-          width: 320,
-          height: 170,
-          cooldown: 86,
+          cooldown: 88,
           stamina: 18,
           armorBreak: true,
           armorOnStart: 22,
-          wallBounce: 42,
+          wallBounce: 48,
           blockDrain: 42
         });
       }
 
       if (aim === "up") {
         Object.assign(m, {
-          duration: 46,
+          duration: 44,
           activeStart: 9,
           activeEnd: 20,
           damage: 12,
-          kb: 20,
-          lift: -34,
-          width: 170,
-          height: 270,
-          cooldown: 86,
+          kb: 22,
+          lift: -38,
+          cooldown: 88,
           stamina: 18,
           armorBreak: true,
           armorOnStart: 20,
-          wallBounce: 28
+          wallBounce: 32
         });
       }
 
       if (aim === "down") {
         Object.assign(m, {
-          duration: 46,
+          duration: 44,
           activeStart: 9,
           activeEnd: 20,
           damage: 13,
-          kb: 32,
-          lift: 12,
-          width: 280,
-          height: 100,
-          cooldown: 86,
+          kb: 35,
+          lift: 14,
+          cooldown: 88,
           stamina: 18,
           armorBreak: true,
           armorOnStart: 20,
-          wallBounce: 40,
+          wallBounce: 46,
           blockDrain: 40
         });
       }
@@ -1181,15 +1114,6 @@ function bodyForwardBox(f, width, height, yOffset = 0, forwardOffset = 0) {
   };
 }
 
-function centeredBox(f, width, height, yOffset = 0) {
-  return {
-    x: f.x + f.width / 2 - width / 2,
-    y: f.y + yOffset,
-    width,
-    height
-  };
-}
-
 function upBox(f, width, height, xOffset = 0) {
   const dir = attackDir(f);
   return {
@@ -1203,9 +1127,10 @@ function upBox(f, width, height, xOffset = 0) {
 function diagonalBox(f, width, height, yOffset = 0, forwardOffset = 0) {
   const dir = attackDir(f);
   return {
-    x: dir === 1
-      ? f.x + f.width * 0.45 + forwardOffset
-      : f.x + f.width * 0.55 - width - forwardOffset,
+    x:
+      dir === 1
+        ? f.x + f.width * 0.45 + forwardOffset
+        : f.x + f.width * 0.55 - width - forwardOffset,
     y: f.y + yOffset,
     width,
     height
@@ -1218,81 +1143,82 @@ function attackBox(f) {
   const aim = f.attackAim || "forward";
 
   if (piece === "king") {
-    if (attack === "light") return forwardBox(f, 92, 48, 30);
-    if (attack === "heavy") return forwardBox(f, 132, 80, 18);
-    if (attack === "crouchHeavy") return forwardBox(f, 128, 54, f.height * 0.52);
-    if (attack === "airHeavy") return bodyForwardBox(f, 124, 100, 24, 18);
+    if (attack === "light") return forwardBox(f, 94, 50, 30);
+    if (attack === "heavy") return forwardBox(f, 142, 88, 16);
+    if (attack === "crouchHeavy") return forwardBox(f, 132, 58, f.height * 0.52);
+    if (attack === "airHeavy") return bodyForwardBox(f, 126, 104, 24, 22);
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") return upBox(f, 120, 225, 0);
-      if (aim === "down") return bodyForwardBox(f, 180, 80, f.height * 0.52, 24);
-      return bodyForwardBox(f, 210, 126, -4, 44);
+      if (aim === "up") return upBox(f, 126, 236, 0);
+      if (aim === "down") return forwardBox(f, 88, 92, 22);
+      return bodyForwardBox(f, 226, 132, -4, 54);
     }
   }
 
   if (piece === "rook") {
-    if (attack === "light") return forwardBox(f, 138, 46, 40);
-    if (attack === "heavy") return forwardBox(f, 190, 88, 24);
-    if (attack === "crouchHeavy") return forwardBox(f, 165, 50, f.height * 0.55);
-    if (attack === "airHeavy") return forwardBox(f, 120, 96, 20);
+    if (attack === "light") return forwardBox(f, 140, 48, 40);
+    if (attack === "heavy") return forwardBox(f, 198, 90, 24);
+    if (attack === "crouchHeavy") return forwardBox(f, 170, 52, f.height * 0.55);
+    if (attack === "airHeavy") return forwardBox(f, 126, 98, 20);
 
     if (attack === "special") {
-      if (aim === "up") return upBox(f, 96, 305, 0);
-      if (aim === "down") return forwardBox(f, 250, 60, f.height * 0.62);
-      return forwardBox(f, 260, 92, 24);
+      if (aim === "up") return upBox(f, 100, 308, 0);
+      if (aim === "down") return forwardBox(f, 260, 64, f.height * 0.62);
+      return forwardBox(f, 275, 96, 22);
     }
   }
 
   if (piece === "bishop") {
-    if (attack === "light") return forwardBox(f, 120, 78, 16);
-    if (attack === "heavy") return forwardBox(f, 162, 106, 6);
-    if (attack === "crouchLight") return forwardBox(f, 112, 32, f.height * 0.65);
-    if (attack === "airHeavy") return forwardBox(f, 125, 104, 12);
+    if (attack === "light") return forwardBox(f, 126, 80, 16);
+    if (attack === "heavy") return forwardBox(f, 170, 110, 4);
+    if (attack === "crouchLight") return forwardBox(f, 116, 34, f.height * 0.65);
+    if (attack === "crouchHeavy") return forwardBox(f, 145, 62, f.height * 0.45);
+    if (attack === "airHeavy") return forwardBox(f, 132, 108, 10);
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") return diagonalBox(f, 180, 170, -138, 28);
-      if (aim === "down") return diagonalBox(f, 180, 170, 42, 28);
-      return diagonalBox(f, 215, 136, -12, 24);
+      if (aim === "up") return diagonalBox(f, 190, 178, -145, 30);
+      if (aim === "down") return diagonalBox(f, 190, 178, 42, 30);
+      return diagonalBox(f, 226, 142, -12, 28);
     }
   }
 
   if (piece === "knight") {
-    if (attack === "light") return forwardBox(f, 68, 50, 30);
-    if (attack === "heavy") return bodyForwardBox(f, 94, 92, -8, 24);
-    if (attack === "crouchHeavy") return forwardBox(f, 90, 66, f.height * 0.44);
-    if (attack === "airHeavy") return forwardBox(f, 104, 104, 18);
+    if (attack === "light") return forwardBox(f, 74, 54, 30);
+    if (attack === "heavy") return bodyForwardBox(f, 104, 100, -12, 28);
+    if (attack === "crouchHeavy") return forwardBox(f, 96, 70, f.height * 0.43);
+    if (attack === "airHeavy") return forwardBox(f, 112, 110, 14);
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") return upBox(f, 108, 140, 8);
-      if (aim === "down") return bodyForwardBox(f, 128, 100, f.height * 0.32, 38);
-      return bodyForwardBox(f, 122, 100, 2, 45);
+      if (aim === "up") return upBox(f, 116, 150, 10);
+      if (aim === "down") return bodyForwardBox(f, 136, 108, f.height * 0.3, 42);
+      return bodyForwardBox(f, 134, 106, 0, 50);
     }
   }
 
   if (piece === "pawn") {
-    if (attack === "light") return forwardBox(f, 96, 30, 40);
-    if (attack === "heavy") return forwardBox(f, 128, 60, 26);
-    if (attack === "crouchLight") return forwardBox(f, 92, 24, f.height * 0.66);
-    if (attack === "crouchHeavy") return forwardBox(f, 110, 56, f.height * 0.46);
-    if (attack === "airHeavy") return forwardBox(f, 100, 82, 16);
+    if (attack === "light") return forwardBox(f, 88, 28, 40);
+    if (attack === "heavy") return forwardBox(f, 116, 56, 26);
+    if (attack === "crouchLight") return forwardBox(f, 84, 22, f.height * 0.66);
+    if (attack === "crouchHeavy") return forwardBox(f, 100, 54, f.height * 0.46);
+    if (attack === "airHeavy") return forwardBox(f, 94, 78, 16);
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") return upBox(f, 88, 140, 8);
-      if (aim === "down") return forwardBox(f, 128, 56, f.height * 0.58);
-      return forwardBox(f, 148, 48, 30);
+      if (aim === "up") return upBox(f, 80, 132, 8);
+      if (aim === "down") return forwardBox(f, 116, 52, f.height * 0.58);
+      return forwardBox(f, 132, 46, 30);
     }
   }
 
   if (piece === "queen") {
     if (attack === "light") return forwardBox(f, 150, 78, 18);
-    if (attack === "heavy") return forwardBox(f, 210, 122, -6);
-    if (attack === "crouchHeavy") return forwardBox(f, 170, 62, f.height * 0.46);
-    if (attack === "airHeavy") return forwardBox(f, 150, 120, 8);
+    if (attack === "heavy") return forwardBox(f, 214, 124, -6);
+    if (attack === "crouchHeavy") return forwardBox(f, 172, 64, f.height * 0.46);
+    if (attack === "airHeavy") return forwardBox(f, 152, 122, 8);
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") return upBox(f, 170, 270, 0);
-      if (aim === "down") return forwardBox(f, 280, 100, f.height * 0.34);
-      return bodyForwardBox(f, 320, 170, -18, 48);
+      if (aim === "up") return upBox(f, 174, 274, 0);
+      if (aim === "down") return forwardBox(f, 286, 104, f.height * 0.34);
+      return bodyForwardBox(f, 330, 176, -18, 50);
     }
   }
 
@@ -1327,16 +1253,16 @@ function promotePawn(f) {
   f.queenTimer = QUEEN_DURATION;
   f.promotionMeter = PROMOTION_MAX;
 
-  f.maxHp = Math.round(f.maxHp * 1.65);
+  f.maxHp = Math.round(f.maxHp * 1.45);
   f.hp = Math.max(1, Math.ceil(f.maxHp * hpRatio));
-  f.speed *= 1.18;
-  f.jump *= 1.12;
+  f.speed *= 1.12;
+  f.jump *= 1.08;
   f.width += 8;
-  f.standingHeight += 18;
+  f.standingHeight += 16;
   f.crouchHeight = Math.floor(f.standingHeight * 0.72);
   f.height = f.standingHeight;
   f.characterName = "Queen";
-  f.armorTimer = 28;
+  f.armorTimer = 24;
 }
 
 function revertQueen(f) {
@@ -1366,7 +1292,6 @@ function revertQueen(f) {
 
 function chargePawn(f, amount) {
   if (f.characterKey !== "pawn" || f.promoted) return;
-
   f.promotionMeter = clamp(f.promotionMeter + amount, 0, PROMOTION_MAX);
 
   if (f.promotionMeter >= PROMOTION_MAX) {
@@ -1388,22 +1313,27 @@ function tryWallJump(f, jumpPressed) {
   const piece = effectivePiece(f);
 
   if (piece === "knight") {
-    jumpMul = 1.35;
-    xMul = 1.9;
+    jumpMul = 1.45;
+    xMul = 2.08;
+  }
+
+  if (piece === "bishop") {
+    jumpMul = 1.26;
+    xMul = 2.0;
   }
 
   if (piece === "rook") {
     jumpMul = 0.75;
-    xMul = 1.35;
+    xMul = 1.34;
   }
 
-  if (piece === "bishop") {
-    jumpMul = 1.1;
-    xMul = 1.8;
+  if (piece === "king") {
+    jumpMul = 0.82;
+    xMul = 1.42;
   }
 
   if (piece === "queen") {
-    jumpMul = 1.2;
+    jumpMul = 1.18;
     xMul = 1.9;
   }
 
@@ -1450,9 +1380,9 @@ function startAttack(f, baseType, input, game) {
   const piece = effectivePiece(f);
 
   if (piece === "king") {
-    if (attack === "light") f.vx += f.facing * 1.7;
-    if (attack === "heavy") f.vx += f.facing * 3.4;
-    if (attack === "crouchHeavy") f.vx += f.facing * 2.9;
+    if (attack === "light") f.vx += f.facing * 1.6;
+    if (attack === "heavy") f.vx += f.facing * 3.8;
+    if (attack === "crouchHeavy") f.vx += f.facing * 3.2;
 
     if (attack === "airHeavy") {
       f.vy += 4.3;
@@ -1460,20 +1390,20 @@ function startAttack(f, baseType, input, game) {
     }
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "forward") f.vx += f.facing * 3.2;
+      if (aim === "forward") f.vx += f.facing * 4.6;
 
       if (aim === "up") {
-        f.vy = Math.min(f.vy, -7.6);
+        f.vy = Math.min(f.vy, -8.2);
         f.grounded = false;
       }
 
-      if (aim === "down") f.vx += f.facing * 3.8;
+      if (aim === "down") f.vx += f.facing * 2.2;
     }
   }
 
   if (piece === "rook") {
     if (attack === "light") f.vx += f.facing * 1.4;
-    if (attack === "heavy") f.vx += f.facing * 4.1;
+    if (attack === "heavy") f.vx += f.facing * 4.2;
     if (attack === "crouchHeavy") f.vx += f.facing * 3.2;
 
     if (attack === "airHeavy") {
@@ -1482,109 +1412,109 @@ function startAttack(f, baseType, input, game) {
     }
 
     if (attack === "special") {
-      if (aim === "forward") f.vx += f.facing * 5.8;
+      if (aim === "forward") f.vx += f.facing * 6.2;
 
       if (aim === "up") {
         f.vx *= 0.08;
         f.vy = Math.min(f.vy, -2.2);
       }
 
-      if (aim === "down") f.vx += f.facing * 7.2;
+      if (aim === "down") f.vx += f.facing * 7.4;
     }
   }
 
   if (piece === "bishop") {
-    if (attack === "light") f.vx += f.facing * 1.6;
-    if (attack === "heavy") f.vx += f.facing * 2.4;
-    if (attack === "airHeavy") f.vx += f.facing * 2.1;
+    if (attack === "light") f.vx += f.facing * 1.8;
+    if (attack === "heavy") f.vx += f.facing * 2.8;
+    if (attack === "airHeavy") f.vx += f.facing * 2.6;
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
-        f.vx += f.facing * 8.2;
-        f.vy = -4.4;
+        f.vx += f.facing * 9.4;
+        f.vy = -4.8;
         f.grounded = false;
       }
 
       if (aim === "up") {
-        f.vx += f.facing * 4.4;
-        f.vy = -12.6;
+        f.vx += f.facing * 5.0;
+        f.vy = -13.8;
         f.grounded = false;
       }
 
       if (aim === "down") {
-        f.vx += f.facing * 6.6;
-        f.vy += 7.8;
+        f.vx += f.facing * 7.2;
+        f.vy += 8.4;
       }
     }
   }
 
   if (piece === "knight") {
-    if (attack === "light") f.vx += f.facing * 1.5;
+    if (attack === "light") f.vx += f.facing * 1.7;
 
     if (attack === "heavy") {
-      f.vx += f.facing * 1.3;
-      f.vy = Math.min(f.vy, -10.2);
+      f.vx += f.facing * 1.6;
+      f.vy = Math.min(f.vy, -11.2);
       f.grounded = false;
     }
 
     if (attack === "crouchHeavy") {
-      f.vx -= f.facing * 1.8;
-      f.vy = Math.min(f.vy, -5.5);
+      f.vx -= f.facing * 2.0;
+      f.vy = Math.min(f.vy, -6.2);
       f.grounded = false;
     }
 
     if (attack === "airHeavy") {
-      f.vx += f.facing * 2.8;
-      f.vy += 3.2;
+      f.vx += f.facing * 3.2;
+      f.vy += 3.6;
     }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
-        f.vx += f.facing * 10.6;
-        f.vy = -12.0;
+        f.vx += f.facing * 11.8;
+        f.vy = -12.8;
         f.grounded = false;
       }
 
       if (aim === "up") {
-        f.vx -= f.facing * 3.4;
-        f.vy = -17.2;
+        f.vx -= f.facing * 3.8;
+        f.vy = -18.6;
         f.grounded = false;
       }
 
       if (aim === "down") {
-        f.vx += f.facing * 11.2;
-        f.vy += 10.8;
+        f.vx += f.facing * 12.0;
+        f.vy += 11.4;
       }
     }
   }
 
   if (piece === "pawn") {
-    if (attack === "light") f.vx += f.facing * 1.8;
-    if (attack === "heavy") f.vx += f.facing * 3.3;
+    if (attack === "light") f.vx += f.facing * 1.4;
+    if (attack === "heavy") f.vx += f.facing * 2.7;
 
     if (attack === "crouchHeavy") {
-      f.vx += f.facing * 4.1;
-      f.vy = Math.min(f.vy, -5.4);
+      f.vx += f.facing * 3.4;
+      f.vy = Math.min(f.vy, -4.8);
       f.grounded = false;
     }
 
-    if (attack === "airHeavy") f.vx += f.facing * 2.5;
+    if (attack === "airHeavy") f.vx += f.facing * 2.0;
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "forward") f.vx += f.facing * 9.4;
+      if (aim === "forward") f.vx += f.facing * 7.5;
 
       if (aim === "up") {
-        f.vx += f.facing * 2.4;
-        f.vy = -12.8;
+        f.vx += f.facing * 1.8;
+        f.vy = -11.4;
         f.grounded = false;
       }
 
       if (aim === "down") {
-        f.vx += f.facing * 6.4;
-        f.vy = Math.min(f.vy, -2.8);
+        f.vx += f.facing * 5.2;
+        f.vy = Math.min(f.vy, -2.3);
       }
 
-      chargePawn(f, 6);
+      chargePawn(f, 3.5);
     }
   }
 
@@ -1640,12 +1570,12 @@ function updateFighter(f, opponent, input, game) {
 
     if (f.queenTimer <= 0) {
       revertQueen(f);
-      pushEffect(game, "queenEnd", f.x + f.width / 2, f.y + f.height / 2, { timer: 36 });
+      pushEffect(game, "queenEnd", f.x + f.width / 2, f.y + f.height / 2, { timer: 34 });
     }
   }
 
   if (f.characterKey === "pawn" && !f.promoted) {
-    chargePawn(f, f.hp < f.maxHp * 0.35 ? 0.035 : 0.018);
+    chargePawn(f, f.hp < f.maxHp * 0.3 ? 0.018 : 0.008);
   }
 
   const jumpPressed = !!input.jump && !f.jumpWasDown;
@@ -1693,7 +1623,7 @@ function updateFighter(f, opponent, input, game) {
       pushEffect(game, "guardBreak", f.x + f.width / 2, f.y + f.height * 0.45, { timer: 30 });
     }
   } else if (f.staminaRegenDelay <= 0) {
-    f.stamina = Math.min(f.maxStamina, f.stamina + (f.grounded ? 0.78 : 0.42));
+    f.stamina = Math.min(f.maxStamina, f.stamina + (f.grounded ? 0.82 : 0.46));
   }
 
   const groundDash =
@@ -1708,7 +1638,7 @@ function updateFighter(f, opponent, input, game) {
 
   if (groundDash) {
     const dir = input.left ? -1 : 1;
-    f.vx = dir * f.speed * 2.15;
+    f.vx = dir * f.speed * 2.2;
     f.facing = dir;
     f.attackFacing = dir;
     f.dashTimer = 10;
@@ -1728,7 +1658,7 @@ function updateFighter(f, opponent, input, game) {
 
   if (airDodge) {
     const dir = input.left && !input.right ? -1 : input.right && !input.left ? 1 : f.facing;
-    f.vx = dir * f.speed * 2;
+    f.vx = dir * f.speed * 2.05;
     f.vy *= 0.18;
     f.dashTimer = 12;
     f.invulnTimer = 8;
@@ -1738,13 +1668,20 @@ function updateFighter(f, opponent, input, game) {
     pushEffect(game, "airDodge", f.x + f.width / 2, f.y + f.height * 0.5, { timer: 16, dir });
   }
 
+  const piece = effectivePiece(f);
+  const airControl =
+    piece === "bishop" ? 1.18 :
+    piece === "knight" ? 1.22 :
+    piece === "queen" ? 1.12 :
+    1.0;
+
   if (!f.attack && !stunned && !f.blocking) {
     if (input.left && !input.right) {
-      f.vx = f.crouching ? -f.speed * 0.38 : -f.speed;
+      f.vx = f.crouching ? -f.speed * 0.38 : f.grounded ? -f.speed : Math.max(f.vx - f.speed * 0.16 * airControl, -f.speed * airControl);
     } else if (input.right && !input.left) {
-      f.vx = f.crouching ? f.speed * 0.38 : f.speed;
+      f.vx = f.crouching ? f.speed * 0.38 : f.grounded ? f.speed : Math.min(f.vx + f.speed * 0.16 * airControl, f.speed * airControl);
     } else {
-      f.vx *= f.grounded ? 0.72 : 0.95;
+      f.vx *= f.grounded ? 0.72 : 0.96;
     }
   } else if (!f.dashTimer) {
     f.vx *= f.grounded ? 0.84 : 0.96;
@@ -1785,7 +1722,7 @@ function updateFighter(f, opponent, input, game) {
   updateWallState(f);
 
   if (!f.grounded && f.wallSide && f.vy > 3.5 && !f.attack) {
-    f.vy = Math.min(f.vy, effectivePiece(f) === "rook" ? 5.2 : 3.8);
+    f.vy = Math.min(f.vy, piece === "rook" || piece === "king" ? 5.4 : 3.7);
   }
 
   if (!f.attack) {
@@ -1831,6 +1768,48 @@ function updateFighter(f, opponent, input, game) {
   f.blockWasDown = !!input.block;
 }
 
+function applyGrab(attacker, defender, meta, game, box) {
+  const dir = attacker.attackFacing || attacker.facing || 1;
+
+  defender.blocking = false;
+  defender.parryTimer = 0;
+  defender.invulnTimer = 0;
+  defender.hurtTimer = 36;
+  defender.guardBrokenTimer = Math.max(defender.guardBrokenTimer, 18);
+
+  defender.x = attacker.x + attacker.width / 2 + dir * 54 - defender.width / 2;
+  defender.y = Math.min(defender.y, attacker.y + attacker.height * 0.1);
+  defender.vx = dir * meta.throwPower * GLOBAL_KNOCKBACK_MULT;
+  defender.vy = -14;
+  defender.hp = Math.max(0, defender.hp - meta.damage);
+
+  defender.wallBounceWindow = 50;
+  defender.wallBouncePower = meta.wallBounce;
+  defender.lastHitBy = attacker.side;
+  defender.comboCount += 1;
+  defender.comboTimer = 100;
+
+  game.hitstop = Math.max(game.hitstop, 12);
+  game.shake = Math.max(game.shake, 13);
+
+  pushEffect(game, "grab", defender.x + defender.width / 2, defender.y + defender.height / 2, {
+    timer: 22,
+    damage: meta.damage,
+    dir,
+    piece: effectivePiece(attacker)
+  });
+
+  pushEffect(game, "hit", box.x + box.width / 2, box.y + box.height / 2, {
+    timer: 18,
+    damage: meta.damage,
+    attack: attacker.attack,
+    piece: effectivePiece(attacker),
+    dir
+  });
+
+  attacker.hitThisAttack = true;
+}
+
 function handleHit(attacker, defender, game) {
   if (!attacker.attack) return;
 
@@ -1847,6 +1826,11 @@ function handleHit(attacker, defender, game) {
 
   const box = attackBox(attacker);
   if (!rectsOverlap(box, defender)) return;
+
+  if (meta.grab) {
+    applyGrab(attacker, defender, meta, game, box);
+    return;
+  }
 
   let damage = meta.damage;
   let kb = meta.kb * GLOBAL_KNOCKBACK_MULT;
@@ -1893,7 +1877,7 @@ function handleHit(attacker, defender, game) {
     if (defenderPiece === "king") {
       blockReduction = 0.18;
       blockKb = 0.24;
-      drain *= 0.75;
+      drain *= 0.72;
     }
 
     if (defenderPiece === "rook") {
@@ -1940,15 +1924,15 @@ function handleHit(attacker, defender, game) {
   defender.comboCount += 1;
   defender.comboTimer = 90;
 
-  defender.wallBounceWindow = 40;
+  defender.wallBounceWindow = 42;
   defender.wallBouncePower = meta.wallBounce;
 
   if (attacker.characterKey === "pawn" && !attacker.promoted) {
-    chargePawn(attacker, 8 + damage * 0.5);
+    chargePawn(attacker, 4.5 + damage * 0.28);
   }
 
   if (defender.characterKey === "pawn" && !defender.promoted) {
-    chargePawn(defender, 3 + damage * 0.18);
+    chargePawn(defender, 1.8 + damage * 0.08);
   }
 
   game.hitstop = Math.max(game.hitstop, meta.continuous ? 3 : meta.damage >= 13 ? 9 : meta.damage >= 9 ? 7 : 5);
@@ -2106,7 +2090,6 @@ io.on("connection", (socket) => {
 
   socket.on("setCharacter", (key) => {
     if (!CHARACTERS[key]) return;
-
     players[socket.id].characterKey = key;
     sendLobbyData();
   });
