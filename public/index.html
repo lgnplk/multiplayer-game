@@ -217,7 +217,7 @@
 <body>
   <div id="menuScreen" class="screen active">
     <h1>CHECKMATE CLASH</h1>
-    <p class="subtitle">Chess pieces as fighters. Wall jumps, wall bounces, promotion, and multiple rounds.</p>
+    <p class="subtitle">Aimable specials, wall jumps, wall bounces, promotion, and multiple rounds.</p>
 
     <div id="menuGrid">
       <div class="panel">
@@ -264,15 +264,15 @@
     <div id="controls">
       <div class="panel">
         <strong>Controls</strong><br>
-        A/D = move, W = jump, S = crouch, Shift = block<br>
+        A/D = move, W = jump/up aim, S = crouch/down aim, Shift = block<br>
         J = light, K = heavy, L = special
       </div>
 
       <div class="panel">
         <strong>Mechanics</strong><br>
-        Crouch + J/K gives low attacks. Jump + J/K/L gives aerial attacks.
-        Touch a wall and press W to wall jump. Strong knockback can bounce pieces off walls.
-        Pawn charges promotion and becomes a queen when full.
+        W + L aims special upward. S + L aims special downward.
+        Touch a wall and press W to wall jump. Strong knockback can wall bounce.
+        Pawn promotes into queen when its bar fills.
       </div>
     </div>
 
@@ -434,9 +434,7 @@
     });
 
     nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        socket.emit("setName", nameInput.value);
-      }
+      if (e.key === "Enter") socket.emit("setName", nameInput.value);
     });
 
     createLobbyBtn.addEventListener("click", () => {
@@ -445,13 +443,8 @@
       socket.emit("createLobby", lobbyName.value);
     });
 
-    leaveBtn.addEventListener("click", () => {
-      socket.emit("leaveLobby");
-    });
-
-    backToLobbyBtn.addEventListener("click", () => {
-      socket.emit("leaveLobby");
-    });
+    leaveBtn.addEventListener("click", () => socket.emit("leaveLobby"));
+    backToLobbyBtn.addEventListener("click", () => socket.emit("leaveLobby"));
 
     function showMenu() {
       menuScreen.classList.add("active");
@@ -739,6 +732,7 @@
       }
 
       ctx.globalAlpha = 1;
+
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -786,6 +780,7 @@
 
     function drawRoundDots(x, y, wins, target, color) {
       ctx.fillStyle = "#000";
+
       for (let i = 0; i < target; i++) {
         ctx.beginPath();
         ctx.arc(x + i * 22 + 10, y, 8, 0, Math.PI * 2);
@@ -869,9 +864,7 @@
       ctx.translate(0, bob);
 
       const blink = f.hurtTimer > 0 && Math.floor(f.hurtTimer / 3) % 2 === 0;
-      if (blink) {
-        ctx.globalAlpha = 0.45;
-      }
+      if (blink) ctx.globalAlpha = 0.45;
 
       drawChessPieceBody(f);
 
@@ -894,8 +887,6 @@
 
       ctx.save();
       ctx.translate(centerX, bottomY);
-
-      // Chess glyphs are mostly symmetrical, so this marker is what makes facing clear.
       ctx.scale(f.facing, 1);
 
       ctx.shadowColor = f.side === "white"
@@ -915,7 +906,6 @@
 
       ctx.shadowBlur = 0;
 
-      // Forward-facing eye/crest marker.
       ctx.fillStyle = marker;
       ctx.beginPath();
       ctx.arc(f.width * 0.16, -f.height * 0.48, 4.5, 0, Math.PI * 2);
@@ -1020,15 +1010,21 @@
 
       const t = f.attackTimer;
 
+      if (renderedPieceKey(f) === "rook" && f.attack === "special") {
+        if (t > 68) return "windup";
+        if (t >= 8) return "active";
+        return "recovery";
+      }
+
       const windows = {
         light: [10, 4],
         heavy: [17, 5],
-        special: [25, 7],
+        special: [30, 7],
         crouchLight: [11, 4],
         crouchHeavy: [19, 6],
         airLight: [13, 4],
         airHeavy: [19, 5],
-        airSpecial: [23, 6]
+        airSpecial: [24, 6]
       };
 
       const w = windows[f.attack];
@@ -1043,11 +1039,12 @@
       const p = fxPalette(f);
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+      const aim = f.attackAim || "forward";
 
       ctx.save();
+
       ctx.strokeStyle = p.main;
       ctx.lineWidth = 3;
-
       ctx.beginPath();
       ctx.arc(cx, cy, 30 + Math.sin(Date.now() / 65) * 4, 0, Math.PI * 2);
       ctx.stroke();
@@ -1055,9 +1052,19 @@
       ctx.strokeStyle = p.accent;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(cx, cy, 42 + Math.sin(Date.now() / 80) * 5, 0, Math.PI * 2);
-      ctx.stroke();
 
+      if (aim === "up") {
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx, cy - 62);
+      } else if (aim === "down") {
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + f.facing * 38, cy + 45);
+      } else {
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + f.facing * 62, cy);
+      }
+
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -1103,10 +1110,41 @@
       ctx.restore();
     }
 
+    function drawRay(x1, y1, x2, y2, width, main, accent) {
+      ctx.save();
+
+      ctx.strokeStyle = main;
+      ctx.globalAlpha = 0.26;
+      ctx.lineWidth = width * 2.2;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = main;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = Math.max(2, width * 0.28);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
     function drawBurst(cx, cy, rays, innerR, outerR, main, accent) {
       ctx.save();
       ctx.strokeStyle = main;
       ctx.lineWidth = 7;
+
       for (let i = 0; i < rays; i++) {
         const a = (Math.PI * 2 * i) / rays;
         ctx.beginPath();
@@ -1120,11 +1158,13 @@
       ctx.beginPath();
       ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
       ctx.stroke();
+
       ctx.restore();
     }
 
     function drawArc(cx, cy, r, start, end, main, accent, mainWidth = 10, accentWidth = 4) {
       ctx.save();
+
       ctx.strokeStyle = main;
       ctx.lineWidth = mainWidth;
       ctx.lineCap = "round";
@@ -1137,11 +1177,13 @@
       ctx.beginPath();
       ctx.arc(cx, cy, r + 8, start, end);
       ctx.stroke();
+
       ctx.restore();
     }
 
     function drawChevron(x, y, dir, w, h, main, accent) {
       ctx.save();
+
       ctx.strokeStyle = main;
       ctx.lineWidth = 8;
       ctx.lineCap = "round";
@@ -1158,14 +1200,33 @@
       ctx.lineTo(x, y);
       ctx.lineTo(x - dir * w * 0.35, y + h * 0.35);
       ctx.stroke();
+
       ctx.restore();
     }
 
     function drawKingFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        if (aim === "up") {
+          drawRay(cx, cy, cx, cy - 150, 16, p.main, p.accent);
+          drawBurst(cx, cy - 52, 8, 12, 45, p.main, p.accent);
+          return;
+        }
+
+        if (aim === "down") {
+          drawBurst(cx + dir * 30, cy + 34, 9, 14, 58, p.main, p.accent);
+          drawLane(cx - 55, cy + 35, 110, 30, p.soft, p.accent);
+          return;
+        }
+
+        drawBurst(cx, cy, 8, 18, 64, p.main, p.accent);
+        return;
+      }
 
       if (f.attack === "light") {
         drawStrokeSlash(cx + dir * 10, cy - 6, cx + dir * 62, cy - 12, p.main, p.accent, 8, 3);
@@ -1184,12 +1245,6 @@
           12,
           4
         );
-        return;
-      }
-
-      if (f.attack === "special" || f.attack === "airSpecial") {
-        drawBurst(cx, cy, 8, 18, 60, p.main, p.accent);
-        drawArc(cx, cy, 38, 0, Math.PI * 2, p.main, p.accent, 5, 2);
         return;
       }
 
@@ -1235,24 +1290,39 @@
     function drawRookFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const frontX = dir === 1 ? f.x + f.width : f.x;
-      const laneX = dir === 1 ? frontX : frontX - 120;
       const cy = f.y + f.height / 2;
+      const cx = f.x + f.width / 2;
+
+      if (f.attack === "special") {
+        const flicker = Math.sin(Date.now() / 28) * 4;
+
+        if (aim === "up") {
+          drawRay(cx, f.y + 20, cx + flicker, 105, 28, p.main, p.accent);
+          drawLane(cx - 36, 110, 72, f.y - 90, p.soft, p.accent);
+          return;
+        }
+
+        if (aim === "down") {
+          drawRay(frontX, f.y + f.height * 0.72, frontX + dir * 150, f.y + f.height * 0.72, 22, p.main, p.accent);
+          drawLane(dir === 1 ? frontX : frontX - 145, f.y + f.height * 0.62, 145, 34, p.soft, p.accent);
+          return;
+        }
+
+        drawRay(frontX, cy, frontX + dir * 310, cy + flicker, 30, p.main, p.accent);
+        drawLane(dir === 1 ? frontX : frontX - 310, cy - 32, 310, 64, p.soft, p.accent);
+        return;
+      }
 
       if (f.attack === "light") {
-        drawLane(laneX, cy - 10, 84, 20, p.soft, p.accent);
+        drawLane(dir === 1 ? frontX : frontX - 120, cy - 10, 120, 20, p.soft, p.accent);
         return;
       }
 
       if (f.attack === "heavy") {
-        drawLane(dir === 1 ? frontX : frontX - 150, f.y + 18, 150, 40, p.soft, p.accent);
-        drawStrokeSlash(frontX + dir * 2, cy, frontX + dir * 150, cy, p.main, p.accent, 9, 3);
-        return;
-      }
-
-      if (f.attack === "special") {
-        drawLane(dir === 1 ? frontX : frontX - 210, f.y + 10, 210, 60, p.soft, p.accent);
-        drawLane(dir === 1 ? frontX + 170 : frontX - 210, f.y + 18, 36, 44, p.soft, p.main);
+        drawLane(dir === 1 ? frontX : frontX - 170, f.y + 18, 170, 42, p.soft, p.accent);
+        drawStrokeSlash(frontX + dir * 2, cy, frontX + dir * 170, cy, p.main, p.accent, 9, 3);
         return;
       }
 
@@ -1262,8 +1332,7 @@
       }
 
       if (f.attack === "crouchHeavy") {
-        drawLane(dir === 1 ? frontX : frontX - 130, f.y + f.height * 0.55, 130, 20, p.soft, p.accent);
-        drawLane(dir === 1 ? frontX + 108 : frontX - 130, f.y + f.height * 0.5, 22, 30, p.soft, p.main);
+        drawLane(dir === 1 ? frontX : frontX - 150, f.y + f.height * 0.55, 150, 20, p.soft, p.accent);
         return;
       }
 
@@ -1280,8 +1349,27 @@
     function drawBishopFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        if (aim === "up") {
+          drawRay(cx, cy + 38, cx + dir * 175, cy - 135, 18, p.main, p.accent);
+          drawStrokeSlash(cx - dir * 18, cy + 42, cx + dir * 128, cy - 112, p.main, p.accent, 5, 2);
+          return;
+        }
+
+        if (aim === "down") {
+          drawRay(cx, cy - 35, cx + dir * 180, cy + 105, 18, p.main, p.accent);
+          drawStrokeSlash(cx - dir * 22, cy - 20, cx + dir * 132, cy + 92, p.main, p.accent, 5, 2);
+          return;
+        }
+
+        drawRay(cx - dir * 18, cy + 56, cx + dir * 190, cy - 96, 18, p.main, p.accent);
+        drawStrokeSlash(cx - dir * 42, cy + 42, cx + dir * 136, cy - 100, p.main, p.accent, 5, 2);
+        return;
+      }
 
       if (f.attack === "light") {
         drawStrokeSlash(cx - dir * 4, cy + 26, cx + dir * 90, cy - 42, p.main, p.accent, 8, 3);
@@ -1290,17 +1378,6 @@
 
       if (f.attack === "heavy") {
         drawStrokeSlash(cx - dir * 10, cy - 32, cx + dir * 112, cy + 36, p.main, p.accent, 10, 4);
-        return;
-      }
-
-      if (f.attack === "special") {
-        drawStrokeSlash(cx - dir * 18, cy + 56, cx + dir * 160, cy - 86, p.main, p.accent, 12, 4);
-        drawStrokeSlash(cx - dir * 42, cy + 42, cx + dir * 136, cy - 100, p.main, p.accent, 5, 2);
-        return;
-      }
-
-      if (f.attack === "airSpecial") {
-        drawStrokeSlash(cx - dir * 6, cy - 48, cx + dir * 146, cy + 84, p.main, p.accent, 12, 4);
         return;
       }
 
@@ -1327,8 +1404,27 @@
     function drawKnightFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        if (aim === "up") {
+          drawStrokeSlash(cx, cy + 26, cx - dir * 28, cy - 72, p.main, p.accent, 10, 3);
+          drawStrokeSlash(cx - dir * 28, cy - 72, cx + dir * 44, cy - 104, p.main, p.accent, 10, 3);
+          return;
+        }
+
+        if (aim === "down") {
+          drawStrokeSlash(cx - dir * 16, cy - 46, cx + dir * 96, cy + 82, p.main, p.accent, 12, 4);
+          drawBurst(cx + dir * 52, cy + 40, 6, 8, 32, p.main, p.accent);
+          return;
+        }
+
+        drawStrokeSlash(cx - dir * 8, cy + 16, cx + dir * 36, cy - 48, p.main, p.accent, 9, 3);
+        drawStrokeSlash(cx + dir * 36, cy - 48, cx + dir * 88, cy - 48, p.main, p.accent, 9, 3);
+        return;
+      }
 
       if (f.attack === "light") {
         drawArc(
@@ -1357,25 +1453,6 @@
           10,
           4
         );
-        return;
-      }
-
-      if (f.attack === "special") {
-        const x1 = cx - dir * 8;
-        const y1 = cy + 16;
-        const x2 = cx + dir * 36;
-        const y2 = cy - 48;
-        const x3 = cx + dir * 88;
-        const y3 = cy - 48;
-
-        drawStrokeSlash(x1, y1, x2, y2, p.main, p.accent, 9, 3);
-        drawStrokeSlash(x2, y2, x3, y3, p.main, p.accent, 9, 3);
-        return;
-      }
-
-      if (f.attack === "airSpecial") {
-        drawStrokeSlash(cx - dir * 12, cy - 38, cx + dir * 92, cy + 72, p.main, p.accent, 11, 4);
-        drawArc(cx + dir * 18, cy + 12, 24, 0, Math.PI * 2, p.main, p.accent, 4, 2);
         return;
       }
 
@@ -1412,8 +1489,27 @@
     function drawPawnFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        if (aim === "up") {
+          drawStrokeSlash(cx, cy + 32, cx + dir * 28, cy - 76, p.main, p.accent, 9, 3);
+          drawChevron(cx + dir * 24, cy - 48, dir, 28, 22, p.main, p.accent);
+          return;
+        }
+
+        if (aim === "down") {
+          drawLane(dir === 1 ? cx + 4 : cx - 76, cy + 24, 80, 18, p.soft, p.accent);
+          drawChevron(cx + dir * 62, cy + 28, dir, 36, 20, p.main, p.accent);
+          return;
+        }
+
+        drawLane(dir === 1 ? cx + 8 : cx - 76, cy - 10, 76, 20, p.soft, p.accent);
+        drawChevron(cx + dir * 62, cy, dir, 36, 20, p.main, p.accent);
+        return;
+      }
 
       if (f.attack === "light") {
         drawStrokeSlash(cx + dir * 2, cy, cx + dir * 56, cy, p.main, p.accent, 7, 3);
@@ -1422,12 +1518,6 @@
 
       if (f.attack === "heavy") {
         drawChevron(cx + dir * 42, cy + 2, dir, 48, 28, p.main, p.accent);
-        return;
-      }
-
-      if (f.attack === "special") {
-        drawLane(dir === 1 ? cx + 8 : cx - 76, cy - 10, 76, 20, p.soft, p.accent);
-        drawChevron(cx + dir * 62, cy, dir, 36, 20, p.main, p.accent);
         return;
       }
 
@@ -1448,19 +1538,33 @@
 
       if (f.attack === "airHeavy") {
         drawChevron(cx + dir * 22, cy + 34, dir, 40, 36, p.main, p.accent);
-        return;
-      }
-
-      if (f.attack === "airSpecial") {
-        drawStrokeSlash(cx, cy - 18, cx + dir * 56, cy + 48, p.main, p.accent, 9, 3);
       }
     }
 
     function drawQueenFX(f) {
       const p = fxPalette(f);
       const dir = f.facing;
+      const aim = f.attackAim || "forward";
       const cx = f.x + f.width / 2;
       const cy = f.y + f.height / 2;
+
+      if (f.attack === "special" || f.attack === "airSpecial") {
+        if (aim === "up") {
+          drawBurst(cx, cy - 42, 10, 16, 94, p.main, p.accent);
+          drawRay(cx, cy + 18, cx, cy - 180, 22, p.main, p.accent);
+          return;
+        }
+
+        if (aim === "down") {
+          drawRay(cx - dir * 20, cy - 30, cx + dir * 155, cy + 90, 22, p.main, p.accent);
+          drawBurst(cx + dir * 78, cy + 44, 8, 16, 62, p.main, p.accent);
+          return;
+        }
+
+        drawBurst(cx, cy, 10, 18, 92, p.main, p.accent);
+        drawRay(cx, cy, cx + dir * 210, cy, 18, p.main, p.accent);
+        return;
+      }
 
       if (f.attack === "light") {
         drawStrokeSlash(cx - dir * 8, cy - 18, cx + dir * 82, cy + 18, p.main, p.accent, 9, 3);
@@ -1481,18 +1585,6 @@
           4
         );
         drawStrokeSlash(cx, cy, cx + dir * 122, cy, p.main, p.accent, 5, 2);
-        return;
-      }
-
-      if (f.attack === "special") {
-        drawBurst(cx, cy, 10, 18, 84, p.main, p.accent);
-        drawArc(cx, cy, 52, 0, Math.PI * 2, p.main, p.accent, 6, 2);
-        return;
-      }
-
-      if (f.attack === "airSpecial") {
-        drawStrokeSlash(cx - dir * 18, cy - 46, cx + dir * 102, cy + 70, p.main, p.accent, 12, 4);
-        drawBurst(cx + dir * 40, cy + 16, 6, 10, 38, p.main, p.accent);
         return;
       }
 
@@ -1529,13 +1621,14 @@
     function getAttackBox(f) {
       const piece = renderedPieceKey(f);
       const attack = f.attack;
-
+      const aim = f.attackAim || "forward";
       const frontEdge = f.facing === 1 ? f.x + f.width : f.x;
 
       function forwardBox(gap, w, y, h) {
         if (f.facing === 1) {
           return { x: frontEdge + gap, y, width: w, height: h };
         }
+
         return { x: frontEdge - gap - w, y, width: w, height: h };
       }
 
@@ -1543,87 +1636,108 @@
         return { x: f.x + xOffset, y, width: w, height: h };
       }
 
+      function upBox(w, h) {
+        return {
+          x: f.x + f.width / 2 - w / 2,
+          y: f.y - h + 12,
+          width: w,
+          height: h
+        };
+      }
+
+      if (attack === "special" || attack === "airSpecial") {
+        if (piece === "rook") {
+          if (aim === "up") return upBox(72, 290);
+          if (aim === "down") return forwardBox(-8, 160, f.y + f.height * 0.55, 36);
+          return forwardBox(-4, 330, f.y + 12, 64);
+        }
+
+        if (piece === "bishop") {
+          if (aim === "up") return forwardBox(0, 210, f.y - 110, f.height * 0.75);
+          if (aim === "down") return forwardBox(0, 210, f.y + f.height * 0.35, f.height * 0.65);
+          return forwardBox(0, 250, f.y - 42, f.height * 1.02);
+        }
+
+        if (piece === "knight") {
+          if (aim === "up") return upBox(74, 145);
+          if (aim === "down") return forwardBox(8, 110, f.y + f.height * 0.45, f.height * 0.48);
+          return forwardBox(10, 96, f.y - 38, f.height * 0.5);
+        }
+
+        if (piece === "king") {
+          if (aim === "up") return upBox(110, 150);
+          if (aim === "down") return centeredBox(-18, f.width + 36, f.y + f.height * 0.42, f.height * 0.46);
+          return centeredBox(-34, f.width + 68, f.y - 8, f.height + 16);
+        }
+
+        if (piece === "pawn") {
+          if (aim === "up") return upBox(54, 110);
+          if (aim === "down") return forwardBox(0, 90, f.y + f.height * 0.58, f.height * 0.28);
+          return forwardBox(0, 90, f.y + 22, f.height * 0.3);
+        }
+
+        if (piece === "queen") {
+          if (aim === "up") return upBox(155, 235);
+          if (aim === "down") return forwardBox(-16, 210, f.y + f.height * 0.32, f.height * 0.58);
+          return centeredBox(-45, f.width + 210, f.y - 34, f.height + 68);
+        }
+      }
+
       if (piece === "king") {
         if (attack === "light") return forwardBox(0, 54, f.y + 26, f.height * 0.34);
         if (attack === "heavy") return forwardBox(0, 78, f.y + 8, f.height * 0.56);
-        if (attack === "special") return centeredBox(-26, f.width + 52, f.y - 8, f.height + 16);
         if (attack === "crouchLight") return forwardBox(0, 36, f.y + f.height * 0.62, f.height * 0.22);
         if (attack === "crouchHeavy") return forwardBox(0, 64, f.y + f.height * 0.5, f.height * 0.34);
         if (attack === "airLight") return forwardBox(0, 48, f.y + f.height * 0.38, f.height * 0.28);
         if (attack === "airHeavy") return forwardBox(0, 72, f.y + f.height * 0.25, f.height * 0.5);
-        if (attack === "airSpecial") return centeredBox(-18, f.width + 36, f.y + f.height * 0.2, f.height * 0.62);
       }
 
       if (piece === "rook") {
         if (attack === "light") return forwardBox(2, 124, f.y + 30, f.height * 0.22);
         if (attack === "heavy") return forwardBox(0, 188, f.y + 18, f.height * 0.42);
-        if (attack === "special") return forwardBox(-4, 258, f.y + 10, f.height * 0.58);
         if (attack === "crouchLight") return forwardBox(0, 52, f.y + f.height * 0.64, f.height * 0.18);
         if (attack === "crouchHeavy") return forwardBox(0, 158, f.y + f.height * 0.54, f.height * 0.24);
         if (attack === "airLight") return forwardBox(0, 44, f.y + f.height * 0.44, f.height * 0.2);
         if (attack === "airHeavy") return forwardBox(0, 98, f.y + f.height * 0.4, f.height * 0.32);
-        if (attack === "airSpecial") return forwardBox(0, 122, f.y + f.height * 0.35, f.height * 0.4);
       }
 
       if (piece === "bishop") {
         if (attack === "light") return forwardBox(0, 106, f.y - 8, f.height * 0.52);
         if (attack === "heavy") return forwardBox(0, 156, f.y + 8, f.height * 0.6);
-        if (attack === "special") return forwardBox(0, 228, f.y - 42, f.height * 1.02);
         if (attack === "crouchLight") return forwardBox(0, 111, f.y + f.height * 0.45, f.height * 0.28);
         if (attack === "crouchHeavy") return forwardBox(0, 124, f.y + f.height * 0.36, f.height * 0.36);
         if (attack === "airLight") return forwardBox(0, 52, f.y + f.height * 0.22, f.height * 0.42);
         if (attack === "airHeavy") return forwardBox(0, 98, f.y + f.height * 0.2, f.height * 0.5);
-        if (attack === "airSpecial") return forwardBox(0, 201, f.y - 16, f.height * 0.9);
       }
 
       if (piece === "knight") {
         if (attack === "light") return forwardBox(0, 38, f.y + 24, f.height * 0.3);
         if (attack === "heavy") return forwardBox(0, 54, f.y - 10, f.height * 0.5);
-        if (attack === "special") return forwardBox(10, 74, f.y - 38, f.height * 0.5);
         if (attack === "crouchLight") return forwardBox(0, 32, f.y + f.height * 0.62, f.height * 0.18);
         if (attack === "crouchHeavy") return forwardBox(6, 54, f.y + f.height * 0.38, f.height * 0.34);
         if (attack === "airLight") return forwardBox(4, 62, f.y + f.height * 0.28, f.height * 0.26);
         if (attack === "airHeavy") return forwardBox(6, 76, f.y + f.height * 0.42, f.height * 0.34);
-        if (attack === "airSpecial") return forwardBox(8, 96, f.y + f.height * 0.46, f.height * 0.42);
       }
 
       if (piece === "pawn") {
         if (attack === "light") return forwardBox(0, 54, f.y + 26, f.height * 0.26);
         if (attack === "heavy") return forwardBox(0, 66, f.y + 20, f.height * 0.32);
-        if (attack === "special") return forwardBox(0, 86, f.y + 22, f.height * 0.3);
         if (attack === "crouchLight") return forwardBox(0, 52, f.y + f.height * 0.64, f.height * 0.18);
         if (attack === "crouchHeavy") return forwardBox(0, 66, f.y + f.height * 0.42, f.height * 0.3);
         if (attack === "airLight") return forwardBox(0, 34, f.y + f.height * 0.34, f.height * 0.22);
         if (attack === "airHeavy") return forwardBox(0, 56, f.y + f.height * 0.48, f.height * 0.32);
-        if (attack === "airSpecial") return forwardBox(0, 72, f.y + f.height * 0.42, f.height * 0.36);
       }
 
       if (piece === "queen") {
         if (attack === "light") return forwardBox(0, 125, f.y + 16, f.height * 0.42);
         if (attack === "heavy") return forwardBox(0, 182, f.y + 4, f.height * 0.6);
-        if (attack === "special") return centeredBox(-34, f.width + 122, f.y - 32, f.height + 64);
         if (attack === "crouchLight") return forwardBox(0, 46, f.y + f.height * 0.56, f.height * 0.22);
         if (attack === "crouchHeavy") return forwardBox(0, 114, f.y + f.height * 0.4, f.height * 0.34);
         if (attack === "airLight") return forwardBox(0, 52, f.y + f.height * 0.28, f.height * 0.24);
         if (attack === "airHeavy") return forwardBox(0, 129, f.y + f.height * 0.26, f.height * 0.38);
-        if (attack === "airSpecial") return forwardBox(0, 188, f.y + f.height * 0.32, f.height * 0.48);
       }
 
-      if (f.facing === 1) {
-        return {
-          x: f.x + f.width,
-          y: f.y + 20,
-          width: 60,
-          height: f.height * 0.4
-        };
-      }
-
-      return {
-        x: f.x - 60,
-        y: f.y + 20,
-        width: 60,
-        height: f.height * 0.4
-      };
+      return forwardBox(0, 60, f.y + 20, f.height * 0.4);
     }
 
     function drawParticles() {
