@@ -1025,7 +1025,11 @@
     }
 
     function rr(x, y, w, h, r) {
+      if (![x, y, w, h, r].every(Number.isFinite)) return;
+      if (w <= 0 || h <= 0) return;
+
       r = Math.min(r, w / 2, h / 2);
+
       ctx.beginPath();
       ctx.moveTo(x + r, y);
       ctx.lineTo(x + w - r, y);
@@ -1163,7 +1167,18 @@
     }
 
     function line(points, m, w = 8, alpha = 1) {
+      if (!points || points.length < 2) return;
+
+      points = points.filter(p =>
+        p &&
+        Number.isFinite(p.x) &&
+        Number.isFinite(p.y)
+      );
+
       if (points.length < 2) return;
+
+      w = Number.isFinite(w) ? Math.max(1, w) : 8;
+      alpha = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1;
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -1177,14 +1192,14 @@
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
 
-      ctx.strokeStyle = m.weapon;
+      ctx.strokeStyle = m.weapon || "#eee";
       ctx.lineWidth = w;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
 
-      ctx.strokeStyle = m.edge;
+      ctx.strokeStyle = m.edge || "#000";
       ctx.lineWidth = Math.max(2, w * .25);
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
@@ -1192,7 +1207,7 @@
       ctx.stroke();
 
       ctx.restore();
-    }
+}
 
     function blade(x, y, angle, len, m, p, width = 10) {
       const q = ease(p);
@@ -1365,7 +1380,8 @@
     }
 
     function drawWeapon(f) {
-      if (!f.attack) return;
+      if (!f || !f.attack) return;
+      if (!Number.isFinite(f.x) || !Number.isFinite(f.y)) return;
 
       const p = pieceOf(f);
       const m = mat(f);

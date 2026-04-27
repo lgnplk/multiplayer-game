@@ -1213,6 +1213,12 @@ function updateFighter(f, enemy, input, game) {
     if (input.specialPressed) startAttack(f, "special", input, game);
   }
 
+  if (!Number.isFinite(f.x)) f.x = f.side === "white" ? 220 : 690;
+  if (!Number.isFinite(f.y)) f.y = FLOOR - f.standH;
+  if (!Number.isFinite(f.vx)) f.vx = 0;
+  if (!Number.isFinite(f.vy)) f.vy = 0;
+  if (!Number.isFinite(f.hp)) f.hp = Math.max(1, f.maxHp || 500);
+
   function scriptMove(f) {
   const s = f.script;
   if (!s || typeof s !== "object") return;
