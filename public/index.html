@@ -11,6 +11,10 @@
       --text: #fff7ed;
       --muted: #ead9c1;
       --gold: #ffd874;
+      --brown-1: #6b4a2d;
+      --brown-2: #432916;
+      --light-square: #f2dfc0;
+      --dark-square: #9f6b3a;
     }
 
     * {
@@ -23,7 +27,7 @@
       background:
         radial-gradient(circle at 15% 10%, rgba(180,130,70,0.24), transparent 34%),
         radial-gradient(circle at 85% 20%, rgba(255,227,160,0.10), transparent 30%),
-        linear-gradient(180deg, #6b4a2d 0%, #432916 100%);
+        linear-gradient(180deg, var(--brown-1) 0%, var(--brown-2) 100%);
       color: var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     }
@@ -98,17 +102,50 @@
     .hero::before {
       content: "";
       position: absolute;
-      inset: -25%;
+      inset: -100%;
       pointer-events: none;
       background:
-        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 22%),
-        radial-gradient(circle at 72% 36%, rgba(255,216,116,0.08), transparent 22%);
-      animation: breathe 6s ease-in-out infinite alternate;
+        linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.08) 75%),
+        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.10) 75%),
+        linear-gradient(45deg, rgba(0,0,0,0.10) 25%, transparent 25%);
+      background-position:
+        0 0,
+        36px 36px,
+        0 0,
+        36px 36px;
+      background-size: 72px 72px;
+      transform: rotate(-12deg);
+      animation: diagonalBoard 18s linear infinite;
+      opacity: 0.75;
     }
 
-    @keyframes breathe {
-      from { transform: translateY(-8px) scale(1); }
-      to { transform: translateY(8px) scale(1.02); }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 28%),
+        linear-gradient(180deg, rgba(70,40,20,0.08), rgba(20,10,4,0.45));
+    }
+
+    @keyframes diagonalBoard {
+      from {
+        background-position:
+          0 0,
+          36px 36px,
+          0 0,
+          36px 36px;
+      }
+
+      to {
+        background-position:
+          144px 144px,
+          180px 180px,
+          144px 144px,
+          180px 180px;
+      }
     }
 
     .hero > * {
@@ -161,6 +198,15 @@
       position: relative;
     }
 
+    .character-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,255,255,0.12), transparent 30%);
+      pointer-events: none;
+    }
+
     .character-card:hover {
       transform: translateY(-3px);
       border-color: rgba(255,255,255,0.32);
@@ -186,6 +232,8 @@
     .character-card h3 {
       margin: 0 0 6px;
       font-size: 17px;
+      position: relative;
+      z-index: 1;
     }
 
     .character-card p {
@@ -193,6 +241,8 @@
       font-size: 12px;
       line-height: 1.28;
       color: var(--muted);
+      position: relative;
+      z-index: 1;
     }
 
     .side-panel {
@@ -433,7 +483,7 @@
     }
 
     #controls {
-      max-width: 700px;
+      max-width: 760px;
       line-height: 1.45;
     }
 
@@ -467,9 +517,8 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            Literal online-board chess piece icons fighting on a classic brown chessboard.
-            The bishop now has real diagonal rushes, the knight has an L-shaped aerial heavy,
-            and pawn promotion lasts longer once earned.
+            A fantasy chessboard fighter. Shift is no longer block or parry — every piece now has its own counterattack.
+            Bishop air special is a true zigzag dash, and rook special is a huge dodgeable castle cannon.
           </p>
         </div>
 
@@ -543,9 +592,9 @@
             <div id="controls">
               <b>Move:</b> A / D · <b>Jump:</b> W · <b>Crouch / Fast Fall:</b> S ·
               <b>Light:</b> J · <b>Heavy:</b> K · <b>Special:</b> L ·
-              <b>Block / Dash / Parry:</b> Shift ·
-              <b>King Grab:</b> S + L ·
-              <b>Knight Air Heavy:</b> Jump, then K with directional input
+              <b>Dash / Unique Counter:</b> Shift ·
+              <b>Bishop Air Special:</b> jump then L ·
+              <b>Knight Air Heavy:</b> jump then K with direction
             </div>
             <button id="leaveBtn" class="danger">Leave</button>
           </div>
@@ -586,31 +635,13 @@
     const timerEl = document.getElementById("timer");
     const messageEl = document.getElementById("message");
 
-    const WHITE_GLYPHS = {
+    const GLYPHS = {
       king: "♔",
       queen: "♕",
       rook: "♖",
       bishop: "♗",
       knight: "♘",
       pawn: "♙"
-    };
-
-    const BLACK_GLYPHS = {
-      king: "♚",
-      queen: "♛",
-      rook: "♜",
-      bishop: "♝",
-      knight: "♞",
-      pawn: "♟"
-    };
-
-    const MENU_GLYPHS = {
-      king: "♔",
-      rook: "♖",
-      bishop: "♗",
-      knight: "♘",
-      pawn: "♙",
-      queen: "♕"
     };
 
     const state = {
@@ -628,7 +659,7 @@
         right: false,
         jump: false,
         crouch: false,
-        block: false,
+        counter: false,
         light: false,
         heavy: false,
         special: false
@@ -659,8 +690,7 @@
     }
 
     function glyphFor(f) {
-      const piece = pieceOf(f);
-      return f.side === "black" ? BLACK_GLYPHS[piece] : WHITE_GLYPHS[piece];
+      return GLYPHS[pieceOf(f)] || "♙";
     }
 
     function visualDir(f) {
@@ -670,14 +700,18 @@
     function materialOf(f) {
       if (f?.side === "black") {
         return {
-          main: "#050505",
-          inner: "#232323",
-          light: "#6f6f6f",
-          stroke: "rgba(255,255,255,0.45)",
+          main: "#060606",
+          inner: "#242424",
+          light: "#777",
+          stroke: "rgba(255,255,255,0.46)",
           shadow: "rgba(0,0,0,0.92)",
           dust: "110,110,110",
-          trail: "rgba(30,30,30,0.96)",
-          sparkle: "rgba(255,255,255,0.7)"
+          trail: "rgba(28,28,28,0.96)",
+          trail2: "rgba(90,90,90,0.78)",
+          sparkle: "rgba(255,255,255,0.7)",
+          magic: "rgba(70,70,70,0.9)",
+          weapon: "#171717",
+          weaponEdge: "#e8e2d3"
         };
       }
 
@@ -689,7 +723,11 @@
         shadow: "rgba(0,0,0,0.7)",
         dust: "210,190,160",
         trail: "rgba(250,239,216,0.96)",
-        sparkle: "rgba(255,255,255,0.95)"
+        trail2: "rgba(255,255,255,0.82)",
+        sparkle: "rgba(255,255,255,0.96)",
+        magic: "rgba(255,238,190,0.9)",
+        weapon: "#efe1c4",
+        weaponEdge: "#55361f"
       };
     }
 
@@ -717,8 +755,8 @@
         shrink: opts.shrink ?? true
       });
 
-      if (state.particles.length > 500) {
-        state.particles.splice(0, state.particles.length - 500);
+      if (state.particles.length > 600) {
+        state.particles.splice(0, state.particles.length - 600);
       }
     }
 
@@ -747,8 +785,8 @@
         ...data
       });
 
-      if (state.localFx.length > 120) {
-        state.localFx.splice(0, state.localFx.length - 120);
+      if (state.localFx.length > 160) {
+        state.localFx.splice(0, state.localFx.length - 160);
       }
     }
 
@@ -760,7 +798,7 @@
         card.className = `character-card ${state.selected === key ? "selected" : ""}`;
 
         card.innerHTML = `
-          <div class="piece-big">${MENU_GLYPHS[key] || "♙"}</div>
+          <div class="piece-big">${GLYPHS[key] || "♙"}</div>
           <h3>${ch.name}</h3>
           <p>${ch.title || ""}</p>
         `;
@@ -912,33 +950,33 @@
 
         state.seenEffects.add(fx.id);
 
-        if (state.seenEffects.size > 600) {
-          state.seenEffects = new Set(Array.from(state.seenEffects).slice(-300));
+        if (state.seenEffects.size > 700) {
+          state.seenEffects = new Set(Array.from(state.seenEffects).slice(-350));
         }
 
         if (fx.type === "hit") {
-          burst(fx.x, fx.y, "235,225,200", 24, 8);
+          burst(fx.x, fx.y, "235,225,200", 26, 8);
           addLocalFx("impactRing", fx.x, fx.y, { life: 18, color: "235,225,200" });
           state.shake = Math.max(state.shake, 8);
-          state.flash = Math.max(state.flash, 0.14);
+          state.flash = Math.max(state.flash, 0.12);
         }
 
         if (fx.type === "grab") {
-          burst(fx.x, fx.y, "255,255,255", 34, 10);
+          burst(fx.x, fx.y, "255,255,255", 36, 10);
           addLocalFx("grab", fx.x, fx.y, { life: 24, dir: fx.dir || 1 });
           state.shake = Math.max(state.shake, 12);
-          state.flash = Math.max(state.flash, 0.18);
+          state.flash = Math.max(state.flash, 0.16);
         }
 
-        if (fx.type === "block") {
-          burst(fx.x, fx.y, "210,210,210", 12, 4);
-          addLocalFx("shield", fx.x, fx.y, { life: 16 });
+        if (fx.type === "counterStart") {
+          addLocalFx("counterStart", fx.x, fx.y, { life: 22, piece: fx.piece, dir: fx.dir || 1 });
+          burst(fx.x, fx.y, "255,242,210", 12, 4);
         }
 
-        if (fx.type === "parry") {
-          burst(fx.x, fx.y, "255,255,255", 34, 9);
-          addLocalFx("parry", fx.x, fx.y, { life: 24 });
-          state.shake = Math.max(state.shake, 10);
+        if (fx.type === "counterSuccess") {
+          addLocalFx("counterSuccess", fx.x, fx.y, { life: 32, piece: fx.piece, dir: fx.dir || 1 });
+          burst(fx.x, fx.y, "255,255,255", 46, 11);
+          state.shake = Math.max(state.shake, 13);
           state.flash = Math.max(state.flash, 0.22);
         }
 
@@ -1017,8 +1055,8 @@
       Space: "jump",
       KeyS: "crouch",
       ArrowDown: "crouch",
-      ShiftLeft: "block",
-      ShiftRight: "block",
+      ShiftLeft: "counter",
+      ShiftRight: "counter",
       KeyJ: "light",
       KeyK: "heavy",
       KeyL: "special"
@@ -1102,7 +1140,7 @@
       const floorY = game?.floorY ?? 430;
 
       const bg = ctx.createLinearGradient(0, 0, 0, 540);
-      bg.addColorStop(0, "#e8d7b9");
+      bg.addColorStop(0, "#ead7b9");
       bg.addColorStop(0.38, "#d0b08b");
       bg.addColorStop(1, "#8d633c");
       ctx.fillStyle = bg;
@@ -1114,17 +1152,24 @@
       ctx.fillRect(0, 0, 18, 540);
       ctx.fillRect(942, 0, 18, 540);
 
-      drawCheckerPattern(46, 42, 868, 242, 64, "#f0dec2", "#a97745", 0.66, 0, state.t * 0.05);
+      drawCheckerPattern(46, 42, 868, 242, 64, "#f0dec2", "#a97745", 0.66, state.t * 0.03, state.t * 0.03);
+
       ctx.strokeStyle = "rgba(89,55,28,0.6)";
       ctx.lineWidth = 10;
       ctx.strokeRect(46, 42, 868, 242);
 
-      ctx.globalAlpha = 0.12;
-      for (let i = 0; i < 14; i++) {
-        ctx.fillStyle = i % 2 === 0 ? "#6a4728" : "#f6e5c9";
-        ctx.fillRect(60 + i * 60, 56, 30, 10);
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.font = "900 46px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#5e351c";
+
+      for (let i = 0; i < 10; i++) {
+        const glyph = ["♔", "♕", "♖", "♗", "♘", "♙"][i % 6];
+        ctx.fillText(glyph, 90 + i * 86, 190 + Math.sin(state.t * 0.02 + i) * 8);
       }
-      ctx.globalAlpha = 1;
+
+      ctx.restore();
 
       const floorTop = floorY - 4;
       drawCheckerPattern(0, floorTop, 960, 540 - floorTop, 60, "#f7e5c9", "#9f6b3a", 1, 0, 0);
@@ -1154,6 +1199,15 @@
         x: f.x + f.width / 2,
         y: f.y + f.height / 2
       };
+    }
+
+    function attackProgress(f) {
+      if (!f.attackDuration) return 0;
+      return clamp((f.attackDuration - f.attackTimer) / f.attackDuration, 0, 1);
+    }
+
+    function attackElapsed(f) {
+      return f.attackDuration - f.attackTimer;
     }
 
     function drawShadow(f) {
@@ -1202,7 +1256,6 @@
 
       drawChessGlyph(f, c.x, c.y + bob, mat, 1 + pulse * 0.018);
 
-      if (f.blocking) drawBlockShell(f, mat);
       if (f.armorTimer > 0) drawArmorShell(f, mat);
       if (f.guardBrokenTimer > 0) drawStunStars(f);
 
@@ -1276,22 +1329,6 @@
       ctx.restore();
     }
 
-    function drawBlockShell(f, mat) {
-      const c = fighterCenter(f);
-
-      ctx.save();
-      ctx.strokeStyle = f.side === "white"
-        ? "rgba(248,244,234,0.9)"
-        : "rgba(18,18,18,0.95)";
-      ctx.shadowColor = "rgba(0,0,0,0.35)";
-      ctx.shadowBlur = 8;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, Math.max(f.width, f.height) * 0.54, -1.2, 1.2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
     function drawArmorShell(f, mat) {
       const c = fighterCenter(f);
 
@@ -1358,17 +1395,17 @@
     function drawCooldownDots(f) {
       const c = fighterCenter(f);
       const y = f.y + f.height + 18;
-      const values = [f.lightCooldown || 0, f.heavyCooldown || 0, f.specialCooldown || 0];
-      const maxes = [20, 50, 108];
+      const values = [f.lightCooldown || 0, f.heavyCooldown || 0, f.specialCooldown || 0, f.counterCooldown || 0];
+      const maxes = [20, 56, 230, 150];
 
       ctx.save();
 
-      for (let i = 0; i < 3; i++) {
-        const x = c.x - 18 + i * 18;
+      for (let i = 0; i < 4; i++) {
+        const x = c.x - 27 + i * 18;
         const ready = values[i] <= 0;
 
         ctx.globalAlpha = ready ? 0.85 : 0.35;
-        ctx.fillStyle = ready ? "#ffffff" : "rgba(255,255,255,0.3)";
+        ctx.fillStyle = i === 3 && ready ? "#ffe6a0" : ready ? "#ffffff" : "rgba(255,255,255,0.3)";
         ctx.beginPath();
         ctx.arc(x, y, 4.5, 0, Math.PI * 2);
         ctx.fill();
@@ -1385,10 +1422,11 @@
       ctx.restore();
     }
 
-    function drawPolyline(points, mat, width = 8) {
+    function drawPolyline(points, mat, width = 8, alpha = 1) {
       if (!points || points.length < 2) return;
 
       ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
@@ -1407,8 +1445,8 @@
       ctx.stroke();
 
       ctx.strokeStyle = mat.sparkle;
-      ctx.globalAlpha = 0.9;
-      ctx.lineWidth = Math.max(2, width * 0.28);
+      ctx.globalAlpha = alpha * 0.88;
+      ctx.lineWidth = Math.max(2, width * 0.26);
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
@@ -1417,8 +1455,9 @@
       ctx.restore();
     }
 
-    function drawArcStroke(cx, cy, r, start, end, mat, width = 10) {
+    function drawArcStroke(cx, cy, r, start, end, mat, width = 10, alpha = 1) {
       ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.lineCap = "round";
 
       ctx.strokeStyle = "rgba(0,0,0,0.28)";
@@ -1434,10 +1473,41 @@
       ctx.stroke();
 
       ctx.strokeStyle = mat.sparkle;
-      ctx.globalAlpha = 0.75;
+      ctx.globalAlpha = alpha * 0.75;
       ctx.lineWidth = Math.max(2, width * 0.25);
       ctx.beginPath();
       ctx.arc(cx, cy, r - 2, start, end);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawBlade(x, y, angle, len, mat, progress = 1, width = 10) {
+      const p = clamp(progress, 0, 1);
+      const l = len * p;
+      const x2 = x + Math.cos(angle) * l;
+      const y2 = y + Math.sin(angle) * l;
+
+      drawPolyline([
+        { x, y },
+        { x: x + Math.cos(angle) * l * 0.54, y: y + Math.sin(angle) * l * 0.54 },
+        { x: x2, y: y2 }
+      ], mat, width, clamp(0.25 + p, 0, 1));
+
+      ctx.save();
+      ctx.translate(x2, y2);
+      ctx.rotate(angle);
+
+      ctx.fillStyle = mat.weapon;
+      ctx.strokeStyle = mat.weaponEdge;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(-8, -7);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-8, 7);
+      ctx.closePath();
+      ctx.fill();
       ctx.stroke();
 
       ctx.restore();
@@ -1488,6 +1558,8 @@
       const attack = f.attack;
       const aim = f.attackAim || "forward";
 
+      if (attack === "counter") return drawCounterVfx(f, mat);
+
       if (piece === "king") drawKingVfx(f, mat, attack, aim);
       else if (piece === "rook") drawRookVfx(f, mat, attack, aim);
       else if (piece === "bishop") drawBishopVfx(f, mat, attack, aim);
@@ -1496,119 +1568,232 @@
       else if (piece === "queen") drawQueenVfx(f, mat, attack, aim);
     }
 
+    function drawCounterVfx(f, mat) {
+      const c = fighterCenter(f);
+      const dir = visualDir(f);
+      const p = attackProgress(f);
+      const e = attackElapsed(f);
+      const piece = pieceOf(f);
+
+      ctx.save();
+
+      if (e < 13) {
+        ctx.globalAlpha = 0.35 + Math.sin(state.t * 0.6) * 0.12;
+        ctx.strokeStyle = mat.sparkle;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 46 + e * 2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.font = "900 34px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillStyle = mat.sparkle;
+        ctx.fillText(GLYPHS[piece], c.x, c.y - 62);
+      } else {
+        const q = clamp((e - 13) / 14, 0, 1);
+
+        if (piece === "king") {
+          drawAfterimage(f, c.x + dir * 34, c.y, 1.08, 0.18);
+          drawBlade(c.x - dir * 6, c.y + 34, dir === 1 ? -0.25 : Math.PI + 0.25, 124, mat, q, 18);
+          drawSparkBurst(c.x + dir * 86, c.y + 18, mat, 26, 9);
+        } else if (piece === "rook") {
+          drawCastleBricks(c.x - dir * 16, c.y - 52, dir, mat, q, 8);
+          drawPolyline([
+            { x: c.x - dir * 48 * q, y: c.y + 20 },
+            { x: c.x + dir * 55 * q, y: c.y + 20 },
+            { x: c.x + dir * 122 * q, y: c.y + 20 }
+          ], mat, 22, q);
+        } else if (piece === "bishop") {
+          drawBlade(c.x - dir * 28, c.y + 46, dir === 1 ? -0.85 : Math.PI + 0.85, 160, mat, q, 14);
+          drawBlade(c.x - dir * 24, c.y - 32, dir === 1 ? 0.7 : Math.PI - 0.7, 116, mat, q * 0.9, 10);
+        } else if (piece === "knight") {
+          const a = [
+            { x: c.x - dir * 48, y: c.y + 34 },
+            { x: c.x + dir * 40 * q, y: c.y + 34 },
+            { x: c.x + dir * 40 * q, y: c.y - 58 * q }
+          ];
+          drawPolyline(a, mat, 16, q);
+          drawAfterimage(f, c.x + dir * 42 * q, c.y - 26 * q, 0.98, 0.2 * q);
+        } else if (piece === "pawn") {
+          drawBlade(c.x - dir * 6, c.y + 8, dir === 1 ? 0 : Math.PI, 120, mat, q, 11);
+        } else {
+          drawArcStroke(c.x + dir * 12, c.y, 110 * q, dir === 1 ? -1.2 : Math.PI + 0.1, dir === 1 ? 0.95 : Math.PI - 0.95, mat, 18, q);
+          drawAfterimage(f, c.x + dir * 52 * q, c.y, 1.1, 0.2 * q);
+        }
+      }
+
+      ctx.restore();
+    }
+
     function drawKingVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const p = attackProgress(f);
+      const e = attackElapsed(f);
 
       if (attack === "light") {
-        drawPolyline([
-          { x: c.x - dir * 10, y: c.y + 2 },
-          { x: c.x + dir * 34, y: c.y - 8 },
-          { x: c.x + dir * 96, y: c.y - 12 }
-        ], mat, 8);
-        drawSparkBurst(c.x + dir * 92, c.y - 12, mat, 14, 6);
+        const q = clamp((e - 2) / 8, 0, 1);
+        drawBlade(c.x - dir * 10, c.y + 2, dir === 1 ? -0.18 : Math.PI + 0.18, 112, mat, q, 8);
       }
 
       if (attack === "heavy") {
-        drawArcStroke(c.x + dir * 20, c.y + 8, 78, dir === 1 ? -1.05 : Math.PI + 0.06, dir === 1 ? 0.68 : Math.PI - 0.68, mat, 14);
-        drawAfterimage(f, c.x + dir * 58, c.y, 1.03, 0.16);
+        const q = clamp((e - 5) / 16, 0, 1);
+        drawAfterimage(f, c.x + dir * 28 * q, c.y, 1.02, 0.14 * q);
+        drawArcStroke(c.x + dir * 20, c.y + 8, 82, dir === 1 ? -1.15 : Math.PI + 0.08, dir === 1 ? -1.15 + 1.9 * q : Math.PI + 0.08 - 1.9 * q, mat, 14, q);
       }
 
       if (attack === "crouchHeavy") {
-        drawPolyline([
-          { x: c.x - dir * 12, y: c.y + 22 },
-          { x: c.x + dir * 28, y: c.y + 32 },
-          { x: c.x + dir * 112, y: c.y + 42 }
-        ], mat, 12);
-        drawImpactDust(c.x + dir * 80, f.y + f.height + 4, dir, mat, 7);
+        const q = clamp((e - 5) / 13, 0, 1);
+        drawBlade(c.x - dir * 12, c.y + 22, dir === 1 ? 0.22 : Math.PI - 0.22, 148, mat, q, 13);
+        drawImpactDust(c.x + dir * 80, f.y + f.height + 4, dir, mat, Math.ceil(7 * q));
       }
 
       if (attack === "airHeavy") {
-        drawArcStroke(c.x, c.y + 10, 58, dir === 1 ? -0.95 : Math.PI + 0.15, dir === 1 ? 1.15 : Math.PI - 1.15, mat, 12);
+        const q = clamp((e - 4) / 13, 0, 1);
+        drawArcStroke(c.x, c.y + 10, 62, dir === 1 ? -1.0 : Math.PI + 0.1, dir === 1 ? -1.0 + 2.0 * q : Math.PI + 0.1 - 2.0 * q, mat, 12, q);
       }
 
       if (attack === "special" || attack === "airSpecial") {
         if (aim === "forward") {
-          drawAfterimage(f, c.x + dir * 36, c.y, 1.02, 0.2);
-          drawAfterimage(f, c.x + dir * 74, c.y, 1.06, 0.12);
-          drawPolyline([
-            { x: c.x - dir * 16, y: c.y + 12 },
-            { x: c.x + dir * 58, y: c.y + 5 },
-            { x: c.x + dir * 140, y: c.y }
-          ], mat, 18);
-          drawImpactDust(c.x + dir * 86, f.y + f.height + 4, dir, mat, 10);
+          const q = clamp((e - 8) / 18, 0, 1);
+          drawAfterimage(f, c.x + dir * 34 * q, c.y, 1.04, 0.18 * q);
+          drawAfterimage(f, c.x + dir * 72 * q, c.y, 1.08, 0.12 * q);
+          drawBlade(c.x - dir * 18, c.y + 12, dir === 1 ? -0.03 : Math.PI + 0.03, 176, mat, q, 20);
+          drawImpactDust(c.x + dir * 86, f.y + f.height + 4, dir, mat, Math.ceil(10 * q));
         }
 
         if (aim === "up") {
-          drawPolyline([
-            { x: c.x, y: c.y + 28 },
-            { x: c.x, y: c.y - 42 },
-            { x: c.x, y: c.y - 194 }
-          ], mat, 16);
-          drawAfterimage({ ...f, characterKey: "king" }, c.x, c.y - 146, 0.58, 0.22);
+          const q = clamp((e - 7) / 18, 0, 1);
+          drawBlade(c.x, c.y + 28, -Math.PI / 2, 220, mat, q, 16);
+          drawAfterimage({ ...f, characterKey: "king" }, c.x, c.y - 146 * q, 0.58, 0.22 * q);
         }
 
         if (aim === "down") {
-          drawArcStroke(c.x + dir * 14, c.y + 8, 48, dir === 1 ? -0.3 : Math.PI - 0.85, dir === 1 ? 1.15 : Math.PI + 0.3, mat, 14);
-          drawSparkBurst(c.x + dir * 46, c.y + 34, mat, 20, 8);
+          const q = clamp((e - 5) / 16, 0, 1);
+          drawArcStroke(c.x + dir * 14, c.y + 8, 54, dir === 1 ? -0.35 : Math.PI - 0.85, dir === 1 ? -0.35 + 1.55 * q : Math.PI - 0.85 + 1.55 * q, mat, 14, q);
+          drawSparkBurst(c.x + dir * 46, c.y + 34, mat, 20 * q, 8);
         }
       }
+    }
+
+    function drawCastleBricks(x, y, dir, mat, q, count = 10) {
+      ctx.save();
+
+      for (let i = 0; i < count; i++) {
+        const bx = x + dir * (i * 42 + state.t * 3) % 420;
+        const by = y + Math.sin(i * 1.7 + state.t * 0.08) * 28;
+        ctx.save();
+        ctx.translate(bx, by);
+        ctx.rotate((i % 2 ? 0.12 : -0.12) * dir);
+        ctx.globalAlpha = q;
+        ctx.fillStyle = mat.weapon;
+        ctx.strokeStyle = mat.weaponEdge;
+        ctx.lineWidth = 2;
+        drawRoundRect(-14, -9, 28, 18, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    function drawMiniRooksInBeam(x1, x2, y, dir, mat, q) {
+      ctx.save();
+      ctx.globalAlpha = q;
+      ctx.font = "900 34px Georgia";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = mat.side === "black" ? "#111" : mat.weapon;
+      ctx.strokeStyle = mat.weaponEdge;
+      ctx.lineWidth = 2;
+
+      const length = Math.abs(x2 - x1);
+      for (let i = 0; i < 12; i++) {
+        const offset = (state.t * 8 + i * 70) % length;
+        const x = dir === 1 ? x1 + offset : x1 - offset;
+        const yy = y + Math.sin(state.t * 0.12 + i) * 26;
+
+        ctx.strokeText("♖", x, yy);
+        ctx.fillText("♖", x, yy);
+      }
+
+      ctx.restore();
     }
 
     function drawRookVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const e = attackElapsed(f);
 
       if (attack === "light") {
-        drawPolyline([
-          { x: c.x + dir * 16, y: c.y + 18 },
-          { x: c.x + dir * 46, y: c.y + 14 },
-          { x: c.x + dir * 118, y: c.y + 14 }
-        ], mat, 12);
+        const q = clamp((e - 3) / 8, 0, 1);
+        drawBlade(c.x + dir * 8, c.y + 18, dir === 1 ? 0 : Math.PI, 132, mat, q, 12);
       }
 
       if (attack === "heavy" || attack === "crouchHeavy") {
+        const q = clamp((e - 6) / 16, 0, 1);
         const y = attack === "crouchHeavy" ? c.y + 32 : c.y + 10;
-        drawAfterimage(f, c.x + dir * 44, c.y + 3, 1.02, 0.14);
-        drawPolyline([
-          { x: c.x + dir * 18, y },
-          { x: c.x + dir * 90, y },
-          { x: c.x + dir * 176, y }
-        ], mat, 18);
-        drawImpactDust(c.x + dir * 90, f.y + f.height + 5, dir, mat, 8);
+        drawAfterimage(f, c.x + dir * 38 * q, c.y + 3, 1.03, 0.14 * q);
+        drawBlade(c.x + dir * 18, y, dir === 1 ? 0 : Math.PI, 192, mat, q, 20);
+        drawImpactDust(c.x + dir * 90, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
       }
 
       if (attack === "airHeavy") {
-        drawArcStroke(c.x + dir * 8, c.y + 10, 60, dir === 1 ? -0.4 : Math.PI - 0.9, dir === 1 ? 1.05 : Math.PI + 0.4, mat, 12);
+        const q = clamp((e - 5) / 15, 0, 1);
+        drawArcStroke(c.x + dir * 8, c.y + 10, 64, dir === 1 ? -0.4 : Math.PI - 0.9, dir === 1 ? -0.4 + 1.45 * q : Math.PI - 0.9 + 1.45 * q, mat, 12, q);
       }
 
       if (attack === "special") {
         if (aim === "forward") {
-          drawAfterimage(f, c.x + dir * 52, c.y + 2, 1.04, 0.18);
-          drawAfterimage(f, c.x + dir * 94, c.y + 2, 1.08, 0.12);
-          drawPolyline([
-            { x: c.x + dir * 20, y: c.y + 18 },
-            { x: c.x + dir * 118, y: c.y + 18 },
-            { x: c.x + dir * 236, y: c.y + 18 }
-          ], mat, 24);
-          drawImpactDust(c.x + dir * 108, f.y + f.height + 5, dir, mat, 12);
+          const wind = clamp(e / 42, 0, 1);
+          const fire = clamp((e - 42) / 20, 0, 1);
+          const endX = dir === 1 ? 938 : 22;
+          const startX = c.x + dir * 46;
+
+          ctx.save();
+          ctx.globalAlpha = 0.22 + wind * 0.35;
+          ctx.strokeStyle = mat.sparkle;
+          ctx.lineWidth = 3 + wind * 8;
+          ctx.beginPath();
+          ctx.moveTo(startX, c.y);
+          ctx.lineTo(startX + dir * 100 * wind, c.y);
+          ctx.stroke();
+          ctx.restore();
+
+          drawCastleBricks(c.x + dir * 40, c.y - 50, dir, mat, wind, 8);
+
+          if (fire > 0) {
+            ctx.save();
+            const beam = ctx.createLinearGradient(startX, c.y, endX, c.y);
+            beam.addColorStop(0, mat.trail2);
+            beam.addColorStop(0.35, mat.trail);
+            beam.addColorStop(1, "rgba(255,255,255,0.15)");
+            ctx.globalAlpha = 0.9 * fire;
+            ctx.fillStyle = beam;
+            drawRoundRect(dir === 1 ? startX : endX, c.y - 48, Math.abs(endX - startX), 96, 14);
+            ctx.fill();
+
+            ctx.strokeStyle = mat.weaponEdge;
+            ctx.lineWidth = 4;
+            drawRoundRect(dir === 1 ? startX : endX, c.y - 48, Math.abs(endX - startX), 96, 14);
+            ctx.stroke();
+            ctx.restore();
+
+            drawMiniRooksInBeam(startX, endX, c.y, dir, mat, fire);
+            drawImpactDust(c.x + dir * 108, f.y + f.height + 5, dir, mat, 12);
+          }
         }
 
         if (aim === "up") {
-          drawPolyline([
-            { x: c.x, y: c.y + 44 },
-            { x: c.x, y: c.y - 50 },
-            { x: c.x, y: c.y - 246 }
-          ], mat, 22);
+          const q = clamp((e - 8) / 24, 0, 1);
+          drawBlade(c.x, c.y + 44, -Math.PI / 2, 292, mat, q, 22);
         }
 
         if (aim === "down") {
-          drawPolyline([
-            { x: c.x + dir * 16, y: c.y + 40 },
-            { x: c.x + dir * 120, y: c.y + 40 },
-            { x: c.x + dir * 240, y: c.y + 40 }
-          ], mat, 22);
-          drawImpactDust(c.x + dir * 110, f.y + f.height + 5, dir, mat, 12);
+          const q = clamp((e - 8) / 20, 0, 1);
+          drawBlade(c.x + dir * 16, c.y + 40, dir === 1 ? 0 : Math.PI, 250, mat, q, 22);
+          drawImpactDust(c.x + dir * 110, f.y + f.height + 5, dir, mat, Math.ceil(12 * q));
         }
       }
     }
@@ -1616,123 +1801,100 @@
     function drawBishopVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const e = attackElapsed(f);
 
       if (attack === "light") {
-        drawPolyline([
-          { x: c.x - dir * 10, y: c.y + 36 },
-          { x: c.x + dir * 48, y: c.y - 4 },
-          { x: c.x + dir * 114, y: c.y - 62 }
-        ], mat, 9);
+        const q = clamp((e - 2) / 8, 0, 1);
+        drawBlade(c.x - dir * 10, c.y + 36, dir === 1 ? -0.72 : Math.PI + 0.72, 132, mat, q, 9);
       }
 
       if (attack === "heavy") {
-        drawAfterimage(f, c.x - dir * 18, c.y + 16, 0.98, 0.16);
-        drawAfterimage(f, c.x + dir * 28, c.y - 12, 1.0, 0.14);
-        drawAfterimage(f, c.x + dir * 72, c.y - 42, 1.04, 0.12);
-        drawPolyline([
-          { x: c.x - dir * 14, y: c.y + 24 },
-          { x: c.x + dir * 44, y: c.y - 12 },
-          { x: c.x + dir * 126, y: c.y - 104 }
-        ], mat, 16);
-        drawSparkBurst(c.x + dir * 128, c.y - 104, mat, 18, 8);
+        const q = clamp((e - 3) / 15, 0, 1);
+        drawAfterimage(f, c.x - dir * 18, c.y + 16, 0.98, 0.16 * q);
+        drawAfterimage(f, c.x + dir * 28, c.y - 12, 1.0, 0.14 * q);
+        drawAfterimage(f, c.x + dir * 72, c.y - 42, 1.04, 0.12 * q);
+        drawBlade(c.x - dir * 14, c.y + 24, dir === 1 ? -0.78 : Math.PI + 0.78, 166, mat, q, 16);
+        drawSparkBurst(c.x + dir * 128, c.y - 104, mat, 18 * q, 8);
       }
 
       if (attack === "crouchLight") {
-        drawPolyline([
-          { x: c.x - dir * 6, y: c.y + 36 },
-          { x: c.x + dir * 48, y: c.y + 24 },
-          { x: c.x + dir * 102, y: c.y + 8 }
-        ], mat, 7);
+        const q = clamp((e - 2) / 8, 0, 1);
+        drawBlade(c.x - dir * 6, c.y + 36, dir === 1 ? -0.18 : Math.PI + 0.18, 106, mat, q, 7);
       }
 
       if (attack === "crouchHeavy") {
-        drawPolyline([
-          { x: c.x - dir * 16, y: c.y + 32 },
-          { x: c.x + dir * 42, y: c.y + 6 },
-          { x: c.x + dir * 128, y: c.y - 52 }
-        ], mat, 11);
+        const q = clamp((e - 5) / 13, 0, 1);
+        drawBlade(c.x - dir * 16, c.y + 32, dir === 1 ? -0.55 : Math.PI + 0.55, 140, mat, q, 11);
       }
 
       if (attack === "airHeavy") {
-        drawAfterimage(f, c.x - dir * 12, c.y - 14, 0.98, 0.16);
-        drawAfterimage(f, c.x + dir * 34, c.y + 18, 1.02, 0.14);
-        drawAfterimage(f, c.x + dir * 80, c.y + 52, 1.05, 0.12);
-        drawPolyline([
-          { x: c.x - dir * 10, y: c.y - 20 },
-          { x: c.x + dir * 56, y: c.y + 24 },
-          { x: c.x + dir * 132, y: c.y + 112 }
-        ], mat, 16);
-        drawSparkBurst(c.x + dir * 132, c.y + 112, mat, 18, 8);
-      }
-
-      if (attack === "special") {
-        if (aim === "forward") {
-          drawPolyline([
-            { x: c.x - dir * 22, y: c.y + 78 },
-            { x: c.x + dir * 38, y: c.y + 26 },
-            { x: c.x + dir * 124, y: c.y - 42 },
-            { x: c.x + dir * 210, y: c.y - 108 }
-          ], mat, 14);
-        }
-
-        if (aim === "up") {
-          drawPolyline([
-            { x: c.x - dir * 10, y: c.y + 32 },
-            { x: c.x + dir * 42, y: c.y - 12 },
-            { x: c.x + dir * 108, y: c.y - 92 },
-            { x: c.x + dir * 146, y: c.y - 168 }
-          ], mat, 14);
-        }
-
-        if (aim === "down") {
-          drawPolyline([
-            { x: c.x - dir * 10, y: c.y - 20 },
-            { x: c.x + dir * 44, y: c.y + 26 },
-            { x: c.x + dir * 112, y: c.y + 78 },
-            { x: c.x + dir * 166, y: c.y + 126 }
-          ], mat, 14);
-          drawImpactDust(c.x + dir * 118, f.y + f.height + 5, dir, mat, 8);
-        }
+        const q = clamp((e - 2) / 15, 0, 1);
+        drawAfterimage(f, c.x - dir * 12, c.y - 14, 0.98, 0.16 * q);
+        drawAfterimage(f, c.x + dir * 34, c.y + 18, 1.02, 0.14 * q);
+        drawAfterimage(f, c.x + dir * 80, c.y + 52, 1.05, 0.12 * q);
+        drawBlade(c.x - dir * 10, c.y - 20, dir === 1 ? 0.82 : Math.PI - 0.82, 166, mat, q, 16);
+        drawSparkBurst(c.x + dir * 132, c.y + 112, mat, 18 * q, 8);
       }
 
       if (attack === "airSpecial") {
-        const pts = [
-          { x: c.x - dir * 8, y: c.y - 32 },
-          { x: c.x + dir * 34, y: c.y - 8 },
-          { x: c.x + dir * 12, y: c.y + 26 },
-          { x: c.x + dir * 68, y: c.y + 50 },
-          { x: c.x + dir * 44, y: c.y + 86 },
-          { x: c.x + dir * 112, y: c.y + 118 }
+        const sm = f.scriptedMove;
+        const pts = sm?.points?.length ? sm.points : [
+          { x: c.x - dir * 70, y: c.y - 40 },
+          { x: c.x - dir * 28, y: c.y + 22 },
+          { x: c.x + dir * 14, y: c.y - 20 },
+          { x: c.x + dir * 62, y: c.y + 40 },
+          { x: c.x + dir * 110, y: c.y - 8 }
         ];
-        drawPolyline(pts, mat, 13);
-        drawAfterimage(f, c.x + dir * 40, c.y + 22, 0.96, 0.14);
-        drawAfterimage(f, c.x + dir * 74, c.y + 70, 1.0, 0.12);
-        drawSparkBurst(c.x + dir * 112, c.y + 118, mat, 18, 8);
+
+        for (let i = 0; i < pts.length - 1; i++) {
+          const alpha = (i + 1) / pts.length;
+          drawPolyline([pts[i], pts[i + 1]], mat, 18 * alpha, 0.22 + alpha * 0.55);
+        }
+
+        for (let i = 0; i < pts.length; i += 3) {
+          drawAfterimage(f, pts[i].x, pts[i].y, 0.92 + i * 0.01, 0.12);
+        }
+
+        drawSparkBurst(c.x, c.y, mat, 18, 8);
+        return;
+      }
+
+      if (attack === "special") {
+        const q = clamp((e - 4) / 18, 0, 1);
+
+        if (aim === "forward") {
+          drawBlade(c.x - dir * 22, c.y + 78, dir === 1 ? -0.68 : Math.PI + 0.68, 255, mat, q, 14);
+        }
+
+        if (aim === "up") {
+          drawBlade(c.x - dir * 10, c.y + 32, dir === 1 ? -0.95 : Math.PI + 0.95, 214, mat, q, 14);
+        }
+
+        if (aim === "down") {
+          drawBlade(c.x - dir * 10, c.y - 20, dir === 1 ? 0.78 : Math.PI - 0.78, 218, mat, q, 14);
+          drawImpactDust(c.x + dir * 118, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
+        }
       }
     }
 
     function drawKnightVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const e = attackElapsed(f);
 
       if (attack === "light") {
-        drawArcStroke(c.x + dir * 20, c.y + 10, 42, dir === 1 ? -0.85 : Math.PI - 0.28, dir === 1 ? 0.45 : Math.PI + 0.85, mat, 9);
+        const q = clamp((e - 2) / 8, 0, 1);
+        drawArcStroke(c.x + dir * 20, c.y + 10, 42, dir === 1 ? -0.85 : Math.PI - 0.28, dir === 1 ? -0.85 + 1.3 * q : Math.PI - 0.28 + 1.3 * q, mat, 9, q);
       }
 
       if (attack === "heavy") {
-        drawPolyline([
-          { x: c.x - dir * 8, y: c.y + 24 },
-          { x: c.x + dir * 20, y: c.y - 16 },
-          { x: c.x + dir * 64, y: c.y - 92 }
-        ], mat, 12);
+        const q = clamp((e - 4) / 13, 0, 1);
+        drawBlade(c.x - dir * 8, c.y + 24, dir === 1 ? -1.08 : Math.PI + 1.08, 130, mat, q, 12);
       }
 
       if (attack === "crouchHeavy") {
-        drawPolyline([
-          { x: c.x + dir * 12, y: c.y + 32 },
-          { x: c.x - dir * 10, y: c.y + 12 },
-          { x: c.x - dir * 42, y: c.y - 4 }
-        ], mat, 10);
+        const q = clamp((e - 4) / 12, 0, 1);
+        drawBlade(c.x + dir * 12, c.y + 32, dir === 1 ? -2.78 : -0.36, 108, mat, q, 10);
       }
 
       if (attack === "airHeavy") {
@@ -1754,34 +1916,37 @@
           drawAfterimage(f, end.x, end.y, 0.98, 0.12);
           drawSparkBurst(end.x, end.y, mat, 16, 7);
         } else {
-          drawArcStroke(c.x + dir * 10, c.y, 54, dir === 1 ? -0.8 : Math.PI - 0.25, dir === 1 ? 1.1 : Math.PI + 0.8, mat, 12);
+          const q = clamp((e - 2) / 16, 0, 1);
+          drawArcStroke(c.x + dir * 10, c.y, 54, dir === 1 ? -0.8 : Math.PI - 0.25, dir === 1 ? -0.8 + 1.9 * q : Math.PI - 0.25 + 1.9 * q, mat, 12, q);
         }
       }
 
       if (attack === "special" || attack === "airSpecial") {
+        const q = clamp((e - 4) / 16, 0, 1);
+
         if (aim === "forward") {
           drawPolyline([
             { x: c.x, y: c.y + 28 },
-            { x: c.x + dir * 90, y: c.y + 28 },
-            { x: c.x + dir * 90, y: c.y - 54 }
-          ], mat, 14);
+            { x: c.x + dir * 90 * q, y: c.y + 28 },
+            { x: c.x + dir * 90 * q, y: c.y - 54 * q }
+          ], mat, 14, q);
         }
 
         if (aim === "up") {
           drawPolyline([
             { x: c.x, y: c.y + 40 },
-            { x: c.x, y: c.y - 104 },
-            { x: c.x + dir * 72, y: c.y - 104 }
-          ], mat, 14);
+            { x: c.x, y: c.y - 104 * q },
+            { x: c.x + dir * 72 * q, y: c.y - 104 * q }
+          ], mat, 14, q);
         }
 
         if (aim === "down") {
           drawPolyline([
             { x: c.x, y: c.y - 28 },
-            { x: c.x + dir * 104, y: c.y - 28 },
-            { x: c.x + dir * 104, y: c.y + 86 }
-          ], mat, 14);
-          drawImpactDust(c.x + dir * 94, f.y + f.height + 5, dir, mat, 8);
+            { x: c.x + dir * 104 * q, y: c.y - 28 },
+            { x: c.x + dir * 104 * q, y: c.y + 86 * q }
+          ], mat, 14, q);
+          drawImpactDust(c.x + dir * 94, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
         }
       }
     }
@@ -1789,104 +1954,85 @@
     function drawPawnVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const e = attackElapsed(f);
 
       if (attack === "light" || attack === "crouchLight") {
+        const q = clamp((e - 2) / 7, 0, 1);
         const y = attack === "crouchLight" ? c.y + 36 : c.y + 10;
-        drawPolyline([
-          { x: c.x - dir * 4, y },
-          { x: c.x + dir * 34, y },
-          { x: c.x + dir * 92, y }
-        ], mat, 7);
+        drawBlade(c.x - dir * 4, y, dir === 1 ? 0 : Math.PI, 96, mat, q, 7);
       }
 
       if (attack === "heavy") {
-        drawPolyline([
-          { x: c.x - dir * 8, y: c.y + 16 },
-          { x: c.x + dir * 44, y: c.y + 2 },
-          { x: c.x + dir * 114, y: c.y - 10 }
-        ], mat, 9);
+        const q = clamp((e - 4) / 11, 0, 1);
+        drawBlade(c.x - dir * 8, c.y + 16, dir === 1 ? -0.18 : Math.PI + 0.18, 122, mat, q, 9);
       }
 
       if (attack === "crouchHeavy") {
-        drawPolyline([
-          { x: c.x, y: c.y + 24 },
-          { x: c.x + dir * 34, y: c.y },
-          { x: c.x + dir * 92, y: c.y - 36 }
-        ], mat, 9);
+        const q = clamp((e - 4) / 11, 0, 1);
+        drawBlade(c.x, c.y + 24, dir === 1 ? -0.7 : Math.PI + 0.7, 108, mat, q, 9);
       }
 
       if (attack === "airHeavy") {
-        drawArcStroke(c.x + dir * 6, c.y + 12, 44, dir === 1 ? -0.8 : Math.PI - 0.35, dir === 1 ? 0.95 : Math.PI + 0.8, mat, 9);
+        const q = clamp((e - 4) / 11, 0, 1);
+        drawArcStroke(c.x + dir * 6, c.y + 12, 44, dir === 1 ? -0.8 : Math.PI - 0.35, dir === 1 ? -0.8 + 1.75 * q : Math.PI - 0.35 + 1.75 * q, mat, 9, q);
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        const pts = [{ x: c.x + dir * 4, y: c.y }];
+        const q = clamp((e - 4) / 14, 0, 1);
+
+        let ang = dir === 1 ? 0 : Math.PI;
+        let len = 150;
 
         if (aim === "up") {
-          pts.push({ x: c.x + dir * 20, y: c.y - 42 });
-          pts.push({ x: c.x + dir * 44, y: c.y - 126 });
+          ang = dir === 1 ? -1.25 : Math.PI + 1.25;
+          len = 134;
         } else if (aim === "down") {
-          pts.push({ x: c.x + dir * 40, y: c.y + 16 });
-          pts.push({ x: c.x + dir * 118, y: c.y + 42 });
-        } else {
-          pts.push({ x: c.x + dir * 52, y: c.y });
-          pts.push({ x: c.x + dir * 144, y: c.y });
+          ang = dir === 1 ? 0.32 : Math.PI - 0.32;
+          len = 132;
         }
 
-        drawPolyline(pts, mat, 11);
-        drawImpactDust(c.x + dir * 40, f.y + f.height + 5, dir, mat, 5);
+        drawBlade(c.x + dir * 4, c.y, ang, len, mat, q, 11);
+        drawImpactDust(c.x + dir * 40, f.y + f.height + 5, dir, mat, Math.ceil(5 * q));
       }
     }
 
     function drawQueenVfx(f, mat, attack, aim) {
       const c = fighterCenter(f);
       const dir = visualDir(f);
+      const e = attackElapsed(f);
 
       if (attack === "light") {
-        drawPolyline([
-          { x: c.x - dir * 12, y: c.y + 36 },
-          { x: c.x + dir * 54, y: c.y + 4 },
-          { x: c.x + dir * 152, y: c.y - 42 }
-        ], mat, 10);
+        const q = clamp((e - 2) / 10, 0, 1);
+        drawBlade(c.x - dir * 12, c.y + 36, dir === 1 ? -0.45 : Math.PI + 0.45, 165, mat, q, 10);
       }
 
       if (attack === "heavy" || attack === "crouchHeavy") {
-        drawArcStroke(c.x + dir * 28, c.y + 10, 116, dir === 1 ? -1.0 : Math.PI + 0.06, dir === 1 ? 0.78 : Math.PI - 0.78, mat, 16);
+        const q = clamp((e - 4) / 18, 0, 1);
+        drawArcStroke(c.x + dir * 28, c.y + 10, 116, dir === 1 ? -1.0 : Math.PI + 0.06, dir === 1 ? -1.0 + 1.78 * q : Math.PI + 0.06 - 1.78 * q, mat, 16, q);
       }
 
       if (attack === "airHeavy") {
-        drawArcStroke(c.x + dir * 12, c.y, 86, dir === 1 ? -0.9 : Math.PI - 0.22, dir === 1 ? 1.0 : Math.PI + 0.9, mat, 14);
+        const q = clamp((e - 4) / 14, 0, 1);
+        drawArcStroke(c.x + dir * 12, c.y, 86, dir === 1 ? -0.9 : Math.PI - 0.22, dir === 1 ? -0.9 + 1.9 * q : Math.PI - 0.22 + 1.9 * q, mat, 14, q);
       }
 
       if (attack === "special" || attack === "airSpecial") {
+        const q = clamp((e - 6) / 22, 0, 1);
+
         if (aim === "forward") {
-          drawAfterimage(f, c.x + dir * 42, c.y, 1.02, 0.18);
-          drawAfterimage(f, c.x + dir * 94, c.y, 1.08, 0.12);
-          drawPolyline([
-            { x: c.x - dir * 24, y: c.y + 56 },
-            { x: c.x + dir * 72, y: c.y + 14 },
-            { x: c.x + dir * 188, y: c.y - 36 },
-            { x: c.x + dir * 300, y: c.y - 88 }
-          ], mat, 18);
+          drawAfterimage(f, c.x + dir * 42 * q, c.y, 1.02, 0.18 * q);
+          drawAfterimage(f, c.x + dir * 94 * q, c.y, 1.08, 0.12 * q);
+          drawBlade(c.x - dir * 24, c.y + 56, dir === 1 ? -0.47 : Math.PI + 0.47, 335, mat, q, 18);
         }
 
         if (aim === "up") {
-          drawPolyline([
-            { x: c.x, y: c.y + 38 },
-            { x: c.x, y: c.y - 46 },
-            { x: c.x, y: c.y - 266 }
-          ], mat, 18);
-          drawAfterimage({ ...f, characterKey: "queen" }, c.x, c.y - 188, 0.58, 0.24);
+          drawBlade(c.x, c.y + 38, -Math.PI / 2, 300, mat, q, 18);
+          drawAfterimage({ ...f, characterKey: "queen" }, c.x, c.y - 188 * q, 0.58, 0.24 * q);
         }
 
         if (aim === "down") {
-          drawPolyline([
-            { x: c.x - dir * 16, y: c.y + 20 },
-            { x: c.x + dir * 88, y: c.y + 38 },
-            { x: c.x + dir * 192, y: c.y + 60 },
-            { x: c.x + dir * 282, y: c.y + 88 }
-          ], mat, 18);
-          drawImpactDust(c.x + dir * 136, f.y + f.height + 5, dir, mat, 11);
+          drawBlade(c.x - dir * 16, c.y + 20, dir === 1 ? 0.24 : Math.PI - 0.24, 300, mat, q, 18);
+          drawImpactDust(c.x + dir * 136, f.y + f.height + 5, dir, mat, Math.ceil(11 * q));
         }
       }
     }
@@ -1932,6 +2078,39 @@
           ctx.stroke();
         }
 
+        if (fx.type === "counterStart") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,238,190,${a})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 34 + p * 38, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.font = "900 38px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(255,238,190,${a})`;
+          ctx.fillText(GLYPHS[fx.piece] || "♙", fx.x, fx.y - 52);
+        }
+
+        if (fx.type === "counterSuccess") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,255,255,${a})`;
+          ctx.lineWidth = 5;
+
+          for (let i = 0; i < 10; i++) {
+            const ang = i * Math.PI * 0.2 + p;
+            ctx.beginPath();
+            ctx.moveTo(fx.x, fx.y);
+            ctx.lineTo(fx.x + Math.cos(ang) * (22 + p * 70), fx.y + Math.sin(ang) * (22 + p * 70));
+            ctx.stroke();
+          }
+
+          ctx.font = "900 72px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(255,255,255,${0.5 * a})`;
+          ctx.fillText(GLYPHS[fx.piece] || "♙", fx.x, fx.y + 24);
+        }
+
         if (fx.type === "grab") {
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,255,255,${a})`;
@@ -1944,29 +2123,6 @@
           ctx.moveTo(fx.x - (fx.dir || 1) * 42 * p, fx.y - 28);
           ctx.lineTo(fx.x + (fx.dir || 1) * 82 * p, fx.y - 2);
           ctx.stroke();
-        }
-
-        if (fx.type === "shield") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(220,220,220,${a})`;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 22 + p * 34, -1.2, 1.2);
-          ctx.stroke();
-        }
-
-        if (fx.type === "parry") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,255,255,${a})`;
-          ctx.lineWidth = 4;
-
-          for (let i = 0; i < 8; i++) {
-            const ang = i * Math.PI / 4 + p;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (22 + p * 46), fx.y + Math.sin(ang) * (22 + p * 46));
-            ctx.stroke();
-          }
         }
 
         if (fx.type === "guardBreak") {
@@ -2018,7 +2174,7 @@
           ctx.font = "900 74px Georgia";
           ctx.textAlign = "center";
           ctx.fillStyle = `rgba(255,255,255,${a})`;
-          ctx.fillText("♛", fx.x, fx.y + 22);
+          ctx.fillText("♕", fx.x, fx.y + 22);
         }
 
         fx.life--;
@@ -2043,7 +2199,7 @@
 
       ctx.font = "500 18px system-ui";
       ctx.fillStyle = "rgba(70,40,20,0.78)";
-      ctx.fillText("Classic board theme. Literal chess piece icons.", 480, 286);
+      ctx.fillText("Fantasy chessboard fighter. Shift is counter now.", 480, 286);
 
       ctx.restore();
     }
