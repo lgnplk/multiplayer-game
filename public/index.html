@@ -6,15 +6,13 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     :root {
-      --panel: rgba(46, 28, 16, 0.78);
-      --line: rgba(255,255,255,0.14);
-      --text: #fff7ed;
-      --muted: #ead9c1;
-      --gold: #ffd874;
-      --brown-1: #6b4a2d;
-      --brown-2: #432916;
-      --light-square: #f2dfc0;
-      --dark-square: #9f6b3a;
+      --text: #fff6e7;
+      --muted: #ead8bb;
+      --gold: #ffd978;
+      --brown: #4e2d16;
+      --brown2: #7b4f2c;
+      --cream: #f2dfbd;
+      --darkSquare: #9b6637;
     }
 
     * {
@@ -24,12 +22,9 @@
     body {
       margin: 0;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 15% 10%, rgba(180,130,70,0.24), transparent 34%),
-        radial-gradient(circle at 85% 20%, rgba(255,227,160,0.10), transparent 30%),
-        linear-gradient(180deg, var(--brown-1) 0%, var(--brown-2) 100%);
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
       color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #3b2110;
     }
 
     button,
@@ -41,28 +36,28 @@
       border: 0;
       border-radius: 14px;
       padding: 10px 14px;
-      color: white;
       cursor: pointer;
-      background: linear-gradient(135deg, #8a6340, #4a2d18);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.32);
+      color: white;
+      background: linear-gradient(135deg, #9b673a, #4b2914);
+      box-shadow: 0 12px 24px rgba(0,0,0,.28);
     }
 
     button.secondary {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid var(--line);
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.15);
     }
 
     button.danger {
-      background: linear-gradient(135deg, #7c1f2f, #31211d);
+      background: linear-gradient(135deg, #7a2230, #321b13);
     }
 
     input {
       width: 100%;
       padding: 11px 12px;
       border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.08);
-      color: var(--text);
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.08);
+      color: white;
       outline: none;
     }
 
@@ -72,23 +67,27 @@
       padding: 18px;
       display: grid;
       place-items: center;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255,221,160,.18), transparent 30%),
+        radial-gradient(circle at 80% 25%, rgba(255,255,255,.08), transparent 24%),
+        linear-gradient(180deg, #805834, #32190c);
     }
 
     #menu {
       width: min(1200px, 100%);
       height: min(760px, 100%);
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
+      grid-template-columns: 1.15fr .85fr;
       gap: 18px;
     }
 
     .panel {
-      background: var(--panel);
-      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.15);
       overflow: hidden;
+      background: rgba(55, 31, 14, .76);
+      box-shadow: 0 28px 70px rgba(0,0,0,.38);
       backdrop-filter: blur(14px);
-      box-shadow: 0 28px 70px rgba(0,0,0,0.35);
     }
 
     .hero {
@@ -103,48 +102,31 @@
       content: "";
       position: absolute;
       inset: -100%;
-      pointer-events: none;
       background:
-        linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.08) 75%),
-        linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.10) 75%),
-        linear-gradient(45deg, rgba(0,0,0,0.10) 25%, transparent 25%);
-      background-position:
-        0 0,
-        36px 36px,
-        0 0,
-        36px 36px;
-      background-size: 72px 72px;
-      transform: rotate(-12deg);
-      animation: diagonalBoard 18s linear infinite;
-      opacity: 0.75;
+        linear-gradient(45deg, rgba(242,223,189,.18) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(242,223,189,.18) 75%),
+        linear-gradient(45deg, transparent 75%, rgba(70,38,18,.26) 75%),
+        linear-gradient(45deg, rgba(70,38,18,.26) 25%, transparent 25%);
+      background-size: 86px 86px;
+      background-position: 0 0, 43px 43px, 0 0, 43px 43px;
+      transform: rotate(-14deg);
+      animation: boardMove 16s linear infinite;
+      opacity: .9;
     }
 
     .hero::after {
       content: "";
       position: absolute;
       inset: 0;
-      pointer-events: none;
       background:
-        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 28%),
-        linear-gradient(180deg, rgba(70,40,20,0.08), rgba(20,10,4,0.45));
+        radial-gradient(circle at 40% 18%, rgba(255,255,255,.12), transparent 32%),
+        linear-gradient(180deg, rgba(55,31,14,.18), rgba(35,17,7,.72));
+      pointer-events: none;
     }
 
-    @keyframes diagonalBoard {
-      from {
-        background-position:
-          0 0,
-          36px 36px,
-          0 0,
-          36px 36px;
-      }
-
+    @keyframes boardMove {
       to {
-        background-position:
-          144px 144px,
-          180px 180px,
-          144px 144px,
-          180px 180px;
+        background-position: 172px 172px, 215px 215px, 172px 172px, 215px 215px;
       }
     }
 
@@ -156,8 +138,8 @@
     .title {
       margin: 0;
       font-size: clamp(44px, 6vw, 86px);
-      line-height: 0.9;
-      letter-spacing: -0.075em;
+      line-height: .9;
+      letter-spacing: -.075em;
       font-weight: 1000;
     }
 
@@ -186,54 +168,39 @@
     }
 
     .character-card {
-      min-height: 184px;
+      min-height: 188px;
       padding: 12px;
       border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,.15);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
       cursor: pointer;
-      transition: transform 0.14s ease, border-color 0.14s ease;
-      overflow: hidden;
+      transition: transform .15s ease, border-color .15s ease;
       position: relative;
-    }
-
-    .character-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(255,255,255,0.12), transparent 30%);
-      pointer-events: none;
+      overflow: hidden;
     }
 
     .character-card:hover {
       transform: translateY(-3px);
-      border-color: rgba(255,255,255,0.32);
+      border-color: rgba(255,255,255,.36);
     }
 
     .character-card.selected {
-      border-color: rgba(255,216,116,0.95);
-      box-shadow: inset 0 0 0 1px rgba(255,216,116,0.45), 0 0 26px rgba(255,216,116,0.12);
+      border-color: rgba(255,217,120,.95);
+      box-shadow: inset 0 0 0 1px rgba(255,217,120,.45), 0 0 30px rgba(255,217,120,.13);
     }
 
     .piece-big {
-      height: 102px;
+      height: 104px;
       display: grid;
       place-items: center;
-      font-size: 90px;
-      color: #f4ead8;
-      font-family: Georgia, "Times New Roman", "Segoe UI Symbol", serif;
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.35),
-        0 10px 18px rgba(0,0,0,0.35);
+      font: 900 90px Georgia, "Times New Roman", serif;
+      color: #fff4df;
+      text-shadow: 0 3px 0 rgba(60,36,17,.75), 0 14px 24px rgba(0,0,0,.38);
     }
 
     .character-card h3 {
       margin: 0 0 6px;
       font-size: 17px;
-      position: relative;
-      z-index: 1;
     }
 
     .character-card p {
@@ -241,8 +208,6 @@
       font-size: 12px;
       line-height: 1.28;
       color: var(--muted);
-      position: relative;
-      z-index: 1;
     }
 
     .side-panel {
@@ -255,7 +220,17 @@
     .section-title {
       margin: 0;
       font-size: 22px;
-      letter-spacing: -0.03em;
+      letter-spacing: -.03em;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.09);
+      color: var(--muted);
+      font-size: 11px;
     }
 
     .lobbies {
@@ -263,7 +238,6 @@
       display: grid;
       align-content: start;
       gap: 10px;
-      padding-right: 4px;
     }
 
     .lobby-card {
@@ -271,51 +245,36 @@
       gap: 8px;
       padding: 13px;
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.06);
     }
 
-    .lobby-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .lobby-name {
-      font-weight: 800;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    .lobby-top,
     .lobby-actions {
       display: flex;
       gap: 8px;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .lobby-actions button {
       flex: 1;
       padding: 8px 10px;
-      border-radius: 12px;
       font-size: 13px;
     }
 
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      padding: 4px 7px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.09);
-      color: var(--muted);
+    .lobby-name {
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .leaderboard {
-      display: grid;
-      gap: 6px;
       color: var(--muted);
       font-size: 13px;
+      display: grid;
+      gap: 6px;
     }
 
     #gameWrap {
@@ -323,7 +282,6 @@
       width: min(100vw, 1280px);
       height: min(100vh, 760px);
       place-items: center;
-      position: relative;
     }
 
     #gameFrame {
@@ -332,8 +290,8 @@
       aspect-ratio: 16 / 9;
       overflow: hidden;
       border-radius: 28px;
-      border: 1px solid rgba(255,255,255,0.18);
-      box-shadow: 0 35px 100px rgba(0,0,0,0.58);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 35px 100px rgba(0,0,0,.58);
       background: #c8a57a;
     }
 
@@ -369,10 +327,10 @@
 
     .nameLine {
       display: flex;
-      align-items: center;
       gap: 8px;
+      align-items: center;
       font-weight: 900;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+      text-shadow: 0 2px 12px rgba(0,0,0,.8);
     }
 
     .hudSide.right .nameLine {
@@ -382,11 +340,11 @@
     .barShell,
     .meterShell {
       height: 18px;
-      border-radius: 999px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.36);
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.36);
+      box-shadow: inset 0 2px 8px rgba(0,0,0,.4);
     }
 
     .meterShell {
@@ -395,26 +353,25 @@
 
     .bar,
     .meter {
-      width: 50%;
       height: 100%;
       border-radius: 999px;
-      transition: width 0.08s linear;
+      transition: width .08s linear;
     }
 
     .whiteHp {
-      background: linear-gradient(90deg, #f7f2db, #d8cba9, #8b806a);
+      background: linear-gradient(90deg, #fff7dc, #d8c49a, #8b6d45);
     }
 
     .blackHp {
-      background: linear-gradient(90deg, #555, #222, #050505);
+      background: linear-gradient(90deg, #646464, #222, #050505);
     }
 
     .stamina {
-      background: linear-gradient(90deg, #f4f0df, #a9a18d);
+      background: linear-gradient(90deg, #f4f0df, #a9936f);
     }
 
     .promo {
-      background: linear-gradient(90deg, #ffe26c, #e3d1a1);
+      background: linear-gradient(90deg, #ffe36d, #d8a63b);
     }
 
     #centerHud {
@@ -427,20 +384,19 @@
     #roundText {
       font-size: 13px;
       font-weight: 1000;
-      letter-spacing: 0.09em;
+      letter-spacing: .09em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,.92);
     }
 
     #timer {
       min-width: 78px;
       padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.42);
+      border: 1px solid rgba(255,255,255,.16);
       font-size: 24px;
       font-weight: 1000;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.42);
-      border: 1px solid rgba(255,255,255,0.16);
-      text-shadow: 0 0 18px rgba(255,255,255,0.22);
     }
 
     #message {
@@ -453,14 +409,14 @@
       text-align: center;
       padding: 14px 20px;
       border-radius: 20px;
-      background: rgba(60, 34, 17, 0.55);
-      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(60,34,17,.55);
+      border: 1px solid rgba(255,255,255,.16);
       font-size: clamp(18px, 3vw, 34px);
       font-weight: 1000;
-      letter-spacing: -0.04em;
-      text-shadow: 0 2px 18px rgba(0,0,0,0.8);
+      letter-spacing: -.04em;
+      text-shadow: 0 2px 18px rgba(0,0,0,.8);
       opacity: 0;
-      transition: opacity 0.18s ease;
+      transition: opacity .18s ease;
     }
 
     #message.show {
@@ -476,22 +432,21 @@
       align-items: flex-end;
       justify-content: space-between;
       gap: 14px;
-      color: rgba(255,255,255,0.88);
+      color: rgba(255,255,255,.9);
       font-size: 12px;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+      text-shadow: 0 2px 12px rgba(0,0,0,.7);
       pointer-events: none;
     }
 
     #controls {
-      max-width: 760px;
+      max-width: 780px;
       line-height: 1.45;
     }
 
     #leaveBtn {
       pointer-events: auto;
-      border-radius: 14px;
-      font-size: 13px;
       padding: 9px 12px;
+      font-size: 13px;
     }
 
     @media (max-width: 900px) {
@@ -517,8 +472,8 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            A fantasy chessboard fighter. Shift is no longer block or parry — every piece now has its own counterattack.
-            Bishop air special is a true zigzag dash, and rook special is a huge dodgeable castle cannon.
+            Rebuilt from scratch: weapon-first fantasy chess combat, reliable attack inputs,
+            distinct move identities, and a living diagonal chessboard menu.
           </p>
         </div>
 
@@ -590,11 +545,9 @@
 
           <div id="bottomHud">
             <div id="controls">
-              <b>Move:</b> A / D · <b>Jump:</b> W · <b>Crouch / Fast Fall:</b> S ·
+              <b>Move:</b> A/D · <b>Jump:</b> W/Space · <b>Crouch/Fast Fall:</b> S ·
               <b>Light:</b> J · <b>Heavy:</b> K · <b>Special:</b> L ·
-              <b>Dash / Unique Counter:</b> Shift ·
-              <b>Bishop Air Special:</b> jump then L ·
-              <b>Knight Air Heavy:</b> jump then K with direction
+              <b>Dash / Counter:</b> Shift
             </div>
             <button id="leaveBtn" class="danger">Leave</button>
           </div>
@@ -611,7 +564,6 @@
 
     const menu = document.getElementById("menu");
     const gameWrap = document.getElementById("gameWrap");
-
     const characterGrid = document.getElementById("characterGrid");
     const lobbiesEl = document.getElementById("lobbies");
     const leaderboardEl = document.getElementById("leaderboard");
@@ -651,36 +603,33 @@
       characters: {},
       lobbyData: { lobbies: [], leaderboard: [] },
       gameState: null,
-      seenEffects: new Set(),
+      seenFx: new Set(),
       particles: [],
       localFx: [],
+      t: 0,
+      shake: 0,
+      flash: 0,
       input: {
         left: false,
         right: false,
-        jump: false,
-        crouch: false,
-        counter: false,
-        light: false,
-        heavy: false,
-        special: false
-      },
-      pulse: {
-        light: false,
-        heavy: false,
-        special: false
-      },
-      t: 0,
-      shake: 0,
-      flash: 0
+        up: false,
+        down: false,
+        seq: {
+          light: 0,
+          heavy: 0,
+          special: 0,
+          counter: 0,
+          jump: 0
+        }
+      }
     };
 
     function clamp(v, a, b) {
       return Math.max(a, Math.min(b, v));
     }
 
-    function safePct(v, max) {
-      if (!max || max <= 0) return 0;
-      return clamp((v / max) * 100, 0, 100);
+    function pct(v, max) {
+      return max ? clamp(v / max * 100, 0, 100) : 0;
     }
 
     function pieceOf(f) {
@@ -689,164 +638,224 @@
       return f.characterKey || "king";
     }
 
-    function glyphFor(f) {
+    function glyph(f) {
       return GLYPHS[pieceOf(f)] || "♙";
     }
 
-    function visualDir(f) {
-      return f?.attack ? (f.attackFacing || f.facing || 1) : (f?.facing || 1);
-    }
-
-    function materialOf(f) {
-      if (f?.side === "black") {
+    function mat(f) {
+      if (f.side === "black") {
         return {
-          main: "#060606",
-          inner: "#242424",
-          light: "#777",
-          stroke: "rgba(255,255,255,0.46)",
-          shadow: "rgba(0,0,0,0.92)",
-          dust: "110,110,110",
-          trail: "rgba(28,28,28,0.96)",
-          trail2: "rgba(90,90,90,0.78)",
-          sparkle: "rgba(255,255,255,0.7)",
-          magic: "rgba(70,70,70,0.9)",
-          weapon: "#171717",
-          weaponEdge: "#e8e2d3"
+          fill: "#080808",
+          fill2: "#2a2a2a",
+          outline: "rgba(255,255,255,.36)",
+          glow: "rgba(50,50,50,.88)",
+          weapon: "#111",
+          weapon2: "#555",
+          edge: "#f5ead7",
+          magic: "rgba(95,95,95,.9)",
+          dust: "80,70,60"
         };
       }
 
       return {
-        main: "#fbf4df",
-        inner: "#efe2c7",
-        light: "#ffffff",
-        stroke: "rgba(56,40,24,0.72)",
-        shadow: "rgba(0,0,0,0.7)",
-        dust: "210,190,160",
-        trail: "rgba(250,239,216,0.96)",
-        trail2: "rgba(255,255,255,0.82)",
-        sparkle: "rgba(255,255,255,0.96)",
-        magic: "rgba(255,238,190,0.9)",
-        weapon: "#efe1c4",
-        weaponEdge: "#55361f"
+        fill: "#fff4dc",
+        fill2: "#e5cfa8",
+        outline: "rgba(61,38,19,.75)",
+        glow: "rgba(255,235,185,.9)",
+        weapon: "#f2dfbd",
+        weapon2: "#b38348",
+        edge: "#503018",
+        magic: "rgba(255,232,170,.9)",
+        dust: "210,185,145"
       };
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    function dir(f) {
+      return f.attack ? (f.attackFacing || f.facing || 1) : (f.facing || 1);
     }
 
-    function addParticle(x, y, opts = {}) {
-      state.particles.push({
-        x,
-        y,
-        vx: opts.vx ?? (Math.random() - 0.5) * 5,
-        vy: opts.vy ?? (Math.random() - 0.5) * 5,
-        r: opts.r ?? (2 + Math.random() * 5),
-        life: opts.life ?? 20,
-        maxLife: opts.life ?? 20,
-        color: opts.color ?? "255,255,255",
-        gravity: opts.gravity ?? 0.08,
-        blend: opts.blend ?? "source-over",
-        shrink: opts.shrink ?? true
-      });
+    function center(f) {
+      return { x: f.x + f.w / 2, y: f.y + f.h / 2 };
+    }
 
-      if (state.particles.length > 600) {
-        state.particles.splice(0, state.particles.length - 600);
+    function progress(f) {
+      if (!f.attackDuration) return 0;
+      return clamp((f.attackDuration - f.attackTimer) / f.attackDuration, 0, 1);
+    }
+
+    function elapsed(f) {
+      return f.attackDuration - f.attackTimer;
+    }
+
+    function ease(x) {
+      return 1 - Math.pow(1 - clamp(x, 0, 1), 3);
+    }
+
+    function html(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[c]));
+    }
+
+    function sendInput() {
+      socket.emit("input", state.input);
+    }
+
+    function pressAction(name) {
+      state.input.seq[name]++;
+      sendInput();
+    }
+
+    const keys = {
+      KeyA: ["hold", "left"],
+      ArrowLeft: ["hold", "left"],
+      KeyD: ["hold", "right"],
+      ArrowRight: ["hold", "right"],
+      KeyW: ["jump", "up"],
+      ArrowUp: ["jump", "up"],
+      Space: ["jump", "up"],
+      KeyS: ["hold", "down"],
+      ArrowDown: ["hold", "down"],
+      KeyJ: ["action", "light"],
+      KeyK: ["action", "heavy"],
+      KeyL: ["action", "special"],
+      ShiftLeft: ["action", "counter"],
+      ShiftRight: ["action", "counter"]
+    };
+
+    window.addEventListener("keydown", (e) => {
+      const k = keys[e.code];
+      if (!k) return;
+      e.preventDefault();
+
+      if (k[0] === "hold") {
+        state.input[k[1]] = true;
       }
-    }
 
-    function burst(x, y, color, count, power = 5) {
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const s = Math.random() * power;
-
-        addParticle(x, y, {
-          vx: Math.cos(a) * s,
-          vy: Math.sin(a) * s - Math.random() * 1.8,
-          r: 2 + Math.random() * 5,
-          life: 14 + Math.random() * 18,
-          color
-        });
+      if (k[0] === "jump") {
+        if (!state.input.up) pressAction("jump");
+        state.input.up = true;
       }
-    }
 
-    function addLocalFx(type, x, y, data = {}) {
-      state.localFx.push({
-        type,
-        x,
-        y,
-        life: data.life ?? 24,
-        maxLife: data.life ?? 24,
-        ...data
-      });
-
-      if (state.localFx.length > 160) {
-        state.localFx.splice(0, state.localFx.length - 160);
+      if (k[0] === "action" && !e.repeat) {
+        pressAction(k[1]);
       }
-    }
 
-    function renderCharacterCards() {
+      sendInput();
+    });
+
+    window.addEventListener("keyup", (e) => {
+      const k = keys[e.code];
+      if (!k) return;
+      e.preventDefault();
+
+      if (k[0] === "hold") state.input[k[1]] = false;
+      if (k[0] === "jump") state.input.up = false;
+
+      sendInput();
+    });
+
+    setInterval(() => {
+      if (state.role !== "menu") sendInput();
+    }, 1000 / 20);
+
+    createBtn.onclick = () => {
+      const n = nameInput.value.trim();
+      const l = lobbyInput.value.trim();
+
+      if (n) socket.emit("setName", n);
+      socket.emit("setCharacter", state.selected);
+      socket.emit("createLobby", l || undefined);
+    };
+
+    leaveBtn.onclick = () => {
+      socket.emit("leaveLobby");
+      showMenu();
+    };
+
+    nameInput.onchange = () => socket.emit("setName", nameInput.value);
+
+    socket.on("welcome", (data) => {
+      state.id = data.id;
+      state.characters = data.characters || {};
+      renderCharacters();
+    });
+
+    socket.on("lobbyData", (data) => {
+      state.lobbyData = data || {};
+      state.characters = data.characters || state.characters;
+      renderCharacters();
+      renderLobbies();
+      renderLeaderboard();
+    });
+
+    socket.on("enteredLobby", (data) => {
+      state.role = data.role || "spectator";
+      showGame();
+    });
+
+    socket.on("leftLobby", showMenu);
+
+    socket.on("gameState", (gs) => {
+      state.gameState = gs;
+      consumeFx(gs);
+      updateHud(gs);
+
+      if (gs?.lobby?.status !== "waiting") showGame();
+    });
+
+    function renderCharacters() {
       characterGrid.innerHTML = "";
 
-      for (const [key, ch] of Object.entries(state.characters || {})) {
+      for (const [key, ch] of Object.entries(state.characters)) {
         const card = document.createElement("div");
         card.className = `character-card ${state.selected === key ? "selected" : ""}`;
-
         card.innerHTML = `
-          <div class="piece-big">${GLYPHS[key] || "♙"}</div>
+          <div class="piece-big">${GLYPHS[key]}</div>
           <h3>${ch.name}</h3>
-          <p>${ch.title || ""}</p>
+          <p>${ch.title}</p>
         `;
-
         card.onclick = () => {
           state.selected = key;
           socket.emit("setCharacter", key);
-          renderCharacterCards();
+          renderCharacters();
         };
-
         characterGrid.appendChild(card);
       }
     }
 
     function renderLobbies() {
-      const lobbies = state.lobbyData.lobbies || [];
+      const list = state.lobbyData.lobbies || [];
       lobbiesEl.innerHTML = "";
 
-      if (!lobbies.length) {
-        const div = document.createElement("div");
-        div.className = "lobby-card";
-        div.innerHTML = `<div class="subtitle">No boards open yet.</div>`;
-        lobbiesEl.appendChild(div);
+      if (!list.length) {
+        const d = document.createElement("div");
+        d.className = "lobby-card";
+        d.innerHTML = `<div class="subtitle">No boards open yet.</div>`;
+        lobbiesEl.appendChild(d);
         return;
       }
 
-      for (const lobby of lobbies) {
-        const canJoin = lobby.status === "waiting" && !lobby.blackName;
-        const card = document.createElement("div");
-        card.className = "lobby-card";
-
-        card.innerHTML = `
+      for (const l of list) {
+        const canJoin = l.status === "waiting" && !l.blackName;
+        const d = document.createElement("div");
+        d.className = "lobby-card";
+        d.innerHTML = `
           <div class="lobby-top">
-            <div class="lobby-name">${escapeHtml(lobby.name || "Untitled Board")}</div>
-            <div class="badge">${escapeHtml(lobby.status || "waiting")}</div>
+            <div class="lobby-name">${html(l.name || "Untitled")}</div>
+            <div class="badge">${html(l.status)}</div>
           </div>
-          <div class="subtitle">
-            White: ${escapeHtml(lobby.whiteName || "open")} ·
-            Black: ${escapeHtml(lobby.blackName || "open")} ·
-            Watching: ${lobby.spectatorCount || 0}
-          </div>
+          <div class="subtitle">White: ${html(l.whiteName || "open")} · Black: ${html(l.blackName || "open")} · Watching: ${l.spectatorCount || 0}</div>
           <div class="lobby-actions">
-            ${canJoin ? `<button data-join="${lobby.id}">Join</button>` : ""}
-            <button class="secondary" data-watch="${lobby.id}">Watch</button>
+            ${canJoin ? `<button data-join="${l.id}">Join</button>` : ""}
+            <button class="secondary" data-watch="${l.id}">Watch</button>
           </div>
         `;
-
-        lobbiesEl.appendChild(card);
+        lobbiesEl.appendChild(d);
       }
 
       lobbiesEl.querySelectorAll("[data-join]").forEach((b) => {
@@ -867,10 +876,10 @@
         return;
       }
 
-      rows.forEach((row, i) => {
-        const div = document.createElement("div");
-        div.textContent = `${i + 1}. ${row.name}: ${row.score}`;
-        leaderboardEl.appendChild(div);
+      rows.forEach((r, i) => {
+        const d = document.createElement("div");
+        d.textContent = `${i + 1}. ${r.name}: ${r.score}`;
+        leaderboardEl.appendChild(d);
       });
     }
 
@@ -886,223 +895,136 @@
       state.gameState = null;
     }
 
-    createBtn.onclick = () => {
-      const name = nameInput.value.trim();
-      const lobby = lobbyInput.value.trim();
-
-      if (name) socket.emit("setName", name);
-
-      socket.emit("setCharacter", state.selected);
-      socket.emit("createLobby", lobby || undefined);
-    };
-
-    leaveBtn.onclick = () => {
-      socket.emit("leaveLobby");
-      showMenu();
-    };
-
-    nameInput.addEventListener("change", () => {
-      socket.emit("setName", nameInput.value);
-    });
-
-    socket.on("welcome", (data) => {
-      state.id = data.id;
-      state.characters = data.characters || {};
-      renderCharacterCards();
-    });
-
-    socket.on("lobbyData", (data) => {
-      state.lobbyData = data || {};
-      state.characters = data.characters || state.characters;
-      renderCharacterCards();
-      renderLobbies();
-      renderLeaderboard();
-    });
-
-    socket.on("enteredLobby", (data) => {
-      state.role = data.role || "spectator";
-      showGame();
-    });
-
-    socket.on("leftLobby", () => {
-      showMenu();
-    });
-
-    socket.on("serverMessage", (msg) => {
-      alert(msg);
-    });
-
-    socket.on("gameState", (gs) => {
-      state.gameState = gs;
-      consumeServerEffects(gs);
-      updateHud(gs);
-
-      if (gs?.lobby?.status !== "waiting") {
-        showGame();
-      }
-    });
-
-    function consumeServerEffects(gs) {
-      const effects = gs?.game?.effects || [];
-
-      for (const fx of effects) {
-        if (!fx.id || state.seenEffects.has(fx.id)) continue;
-
-        state.seenEffects.add(fx.id);
-
-        if (state.seenEffects.size > 700) {
-          state.seenEffects = new Set(Array.from(state.seenEffects).slice(-350));
-        }
-
-        if (fx.type === "hit") {
-          burst(fx.x, fx.y, "235,225,200", 26, 8);
-          addLocalFx("impactRing", fx.x, fx.y, { life: 18, color: "235,225,200" });
-          state.shake = Math.max(state.shake, 8);
-          state.flash = Math.max(state.flash, 0.12);
-        }
-
-        if (fx.type === "grab") {
-          burst(fx.x, fx.y, "255,255,255", 36, 10);
-          addLocalFx("grab", fx.x, fx.y, { life: 24, dir: fx.dir || 1 });
-          state.shake = Math.max(state.shake, 12);
-          state.flash = Math.max(state.flash, 0.16);
-        }
-
-        if (fx.type === "counterStart") {
-          addLocalFx("counterStart", fx.x, fx.y, { life: 22, piece: fx.piece, dir: fx.dir || 1 });
-          burst(fx.x, fx.y, "255,242,210", 12, 4);
-        }
-
-        if (fx.type === "counterSuccess") {
-          addLocalFx("counterSuccess", fx.x, fx.y, { life: 32, piece: fx.piece, dir: fx.dir || 1 });
-          burst(fx.x, fx.y, "255,255,255", 46, 11);
-          state.shake = Math.max(state.shake, 13);
-          state.flash = Math.max(state.flash, 0.22);
-        }
-
-        if (fx.type === "guardBreak") {
-          burst(fx.x, fx.y, "210,210,210", 36, 10);
-          addLocalFx("guardBreak", fx.x, fx.y, { life: 28 });
-          state.shake = Math.max(state.shake, 12);
-        }
-
-        if (fx.type === "dash" || fx.type === "airDodge") {
-          addLocalFx("dash", fx.x, fx.y, { life: 16, dir: fx.dir || 1 });
-        }
-
-        if (fx.type === "queenEnd") {
-          burst(fx.x, fx.y, "220,210,180", 45, 9);
-          addLocalFx("queenEnd", fx.x, fx.y, { life: 34 });
-        }
-
-        if (fx.type === "roundWin") {
-          burst(fx.x, fx.y, "255,240,200", 70, 11);
-          addLocalFx("roundWin", fx.x, fx.y, { life: 64 });
-        }
-
-        if (fx.type === "wallBounce") {
-          burst(fx.x, fx.y, "255,255,255", 18, 5);
-          state.shake = Math.max(state.shake, 9);
-        }
-      }
-    }
-
     function updateHud(gs) {
-      const game = gs?.game;
-      const match = gs?.match;
-      const lobby = gs?.lobby;
+      const g = gs?.game;
+      const l = gs?.lobby;
+      const m = gs?.match;
 
-      if (!game || !game.fighters) {
-        messageEl.textContent = lobby?.message || "Waiting for match...";
+      if (!g?.fighters) {
+        messageEl.textContent = l?.message || "Waiting...";
         messageEl.classList.add("show");
         return;
       }
 
-      const white = game.fighters.white;
-      const black = game.fighters.black;
+      const w = g.fighters.white;
+      const b = g.fighters.black;
 
-      whiteNameEl.textContent = lobby?.whiteName || white?.name || "White";
-      blackNameEl.textContent = lobby?.blackName || black?.name || "Black";
-      whitePieceEl.textContent = white?.characterName || pieceOf(white);
-      blackPieceEl.textContent = black?.characterName || pieceOf(black);
+      whiteNameEl.textContent = l?.whiteName || w.name || "White";
+      blackNameEl.textContent = l?.blackName || b.name || "Black";
+      whitePieceEl.textContent = w.characterName || pieceOf(w);
+      blackPieceEl.textContent = b.characterName || pieceOf(b);
 
-      whiteHpEl.style.width = `${safePct(white.hp, white.maxHp)}%`;
-      blackHpEl.style.width = `${safePct(black.hp, black.maxHp)}%`;
-      whiteMeterEl.style.width = `${safePct(white.stamina ?? 100, white.maxStamina ?? 100)}%`;
-      blackMeterEl.style.width = `${safePct(black.stamina ?? 100, black.maxStamina ?? 100)}%`;
-      whitePromoEl.style.width = `${safePct(white.promotionMeter || 0, 180)}%`;
-      blackPromoEl.style.width = `${safePct(black.promotionMeter || 0, 180)}%`;
+      whiteHpEl.style.width = `${pct(w.hp, w.maxHp)}%`;
+      blackHpEl.style.width = `${pct(b.hp, b.maxHp)}%`;
+      whiteMeterEl.style.width = `${pct(w.stamina, w.maxStamina)}%`;
+      blackMeterEl.style.width = `${pct(b.stamina, b.maxStamina)}%`;
+      whitePromoEl.style.width = `${pct(w.promotion || 0, 190)}%`;
+      blackPromoEl.style.width = `${pct(b.promotion || 0, 190)}%`;
 
-      roundTextEl.textContent = `Round ${match?.currentRound || 1} · ${match?.whiteRounds || 0}-${match?.blackRounds || 0}`;
-      timerEl.textContent = String(Math.ceil((game.roundTime ?? 5940) / 60)).padStart(2, "0");
+      roundTextEl.textContent = `Round ${m?.round || 1} · ${m?.whiteRounds || 0}-${m?.blackRounds || 0}`;
+      timerEl.textContent = String(Math.ceil((g.roundTime || 0) / 60)).padStart(2, "0");
 
-      if (game.roundOver || lobby?.status === "finished") {
-        messageEl.textContent = lobby?.message || "";
+      if (g.roundOver || l?.status === "finished") {
+        messageEl.textContent = l.message || "";
         messageEl.classList.add("show");
       } else {
-        messageEl.textContent = "";
         messageEl.classList.remove("show");
       }
     }
 
-    const keyMap = {
-      KeyA: "left",
-      ArrowLeft: "left",
-      KeyD: "right",
-      ArrowRight: "right",
-      KeyW: "jump",
-      ArrowUp: "jump",
-      Space: "jump",
-      KeyS: "crouch",
-      ArrowDown: "crouch",
-      ShiftLeft: "counter",
-      ShiftRight: "counter",
-      KeyJ: "light",
-      KeyK: "heavy",
-      KeyL: "special"
-    };
+    function consumeFx(gs) {
+      const fx = gs?.game?.effects || [];
 
-    window.addEventListener("keydown", (e) => {
-      const k = keyMap[e.code];
-      if (!k) return;
+      for (const e of fx) {
+        if (!e.id || state.seenFx.has(e.id)) continue;
+        state.seenFx.add(e.id);
 
-      e.preventDefault();
+        if (state.seenFx.size > 800) {
+          state.seenFx = new Set(Array.from(state.seenFx).slice(-400));
+        }
 
-      if ((k === "light" || k === "heavy" || k === "special") && !state.input[k]) {
-        state.pulse[k] = true;
+        if (e.type === "hit") {
+          burst(e.x, e.y, "255,235,200", 24, 8);
+          addFx("impact", e.x, e.y, { life: 18 });
+          state.shake = Math.max(state.shake, 8);
+          state.flash = Math.max(state.flash, .1);
+        }
+
+        if (e.type === "grab") {
+          burst(e.x, e.y, "255,255,255", 36, 10);
+          addFx("grab", e.x, e.y, { life: 24, dir: e.dir });
+          state.shake = Math.max(state.shake, 12);
+        }
+
+        if (e.type === "counterStart") {
+          addFx("counterStart", e.x, e.y, { life: 22, piece: e.piece, dir: e.dir });
+        }
+
+        if (e.type === "counterSuccess") {
+          addFx("counterSuccess", e.x, e.y, { life: 34, piece: e.piece, dir: e.dir });
+          burst(e.x, e.y, "255,255,255", 48, 11);
+          state.shake = Math.max(state.shake, 13);
+          state.flash = Math.max(state.flash, .2);
+        }
+
+        if (e.type === "dash") addFx("dash", e.x, e.y, { life: 16, dir: e.dir });
+        if (e.type === "wallBounce") {
+          burst(e.x, e.y, "255,255,255", 18, 5);
+          state.shake = Math.max(state.shake, 9);
+        }
+        if (e.type === "queenEnd") addFx("queenEnd", e.x, e.y, { life: 34 });
+        if (e.type === "roundWin") addFx("roundWin", e.x, e.y, { life: 64 });
       }
-
-      state.input[k] = true;
-      sendInput();
-    });
-
-    window.addEventListener("keyup", (e) => {
-      const k = keyMap[e.code];
-      if (!k) return;
-
-      e.preventDefault();
-      state.input[k] = false;
-      sendInput();
-    });
-
-    function sendInput() {
-      socket.emit("input", {
-        ...state.input,
-        light: state.pulse.light || state.input.light,
-        heavy: state.pulse.heavy || state.input.heavy,
-        special: state.pulse.special || state.input.special
-      });
-
-      state.pulse.light = false;
-      state.pulse.heavy = false;
-      state.pulse.special = false;
     }
 
-    setInterval(() => {
-      if (state.role !== "menu") sendInput();
-    }, 1000 / 30);
+    function addParticle(x, y, o = {}) {
+      state.particles.push({
+        x,
+        y,
+        vx: o.vx ?? (Math.random() - .5) * 5,
+        vy: o.vy ?? (Math.random() - .5) * 5,
+        r: o.r ?? 2 + Math.random() * 5,
+        life: o.life ?? 20,
+        max: o.life ?? 20,
+        color: o.color ?? "255,255,255",
+        g: o.g ?? .08
+      });
 
-    function drawRoundRect(x, y, w, h, r) {
+      if (state.particles.length > 700) {
+        state.particles.splice(0, state.particles.length - 700);
+      }
+    }
+
+    function burst(x, y, color, count, power) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = Math.random() * power;
+        addParticle(x, y, {
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s - Math.random() * 1.8,
+          color,
+          life: 14 + Math.random() * 18,
+          r: 2 + Math.random() * 5
+        });
+      }
+    }
+
+    function addFx(type, x, y, data = {}) {
+      state.localFx.push({
+        type,
+        x,
+        y,
+        life: data.life || 24,
+        max: data.life || 24,
+        ...data
+      });
+
+      if (state.localFx.length > 180) {
+        state.localFx.splice(0, state.localFx.length - 180);
+      }
+    }
+
+    function rr(x, y, w, h, r) {
       r = Math.min(r, w / 2, h / 2);
       ctx.beginPath();
       ctx.moveTo(x + r, y);
@@ -1117,7 +1039,7 @@
       ctx.closePath();
     }
 
-    function drawCheckerPattern(x, y, w, h, tile, light, dark, alpha = 1, offsetX = 0, offsetY = 0) {
+    function checker(x, y, w, h, tile, a, b, alpha = 1, ox = 0, oy = 0) {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.beginPath();
@@ -1126,9 +1048,9 @@
 
       for (let yy = y - tile; yy < y + h + tile; yy += tile) {
         for (let xx = x - tile; xx < x + w + tile; xx += tile) {
-          const ix = Math.floor((xx - x + offsetX) / tile);
-          const iy = Math.floor((yy - y + offsetY) / tile);
-          ctx.fillStyle = (ix + iy) % 2 === 0 ? light : dark;
+          const ix = Math.floor((xx - x + ox) / tile);
+          const iy = Math.floor((yy - y + oy) / tile);
+          ctx.fillStyle = (ix + iy) % 2 ? b : a;
           ctx.fillRect(xx, yy, tile, tile);
         }
       }
@@ -1137,941 +1059,657 @@
     }
 
     function drawBackground(game) {
-      const floorY = game?.floorY ?? 430;
+      const floor = game?.floorY || 430;
 
       const bg = ctx.createLinearGradient(0, 0, 0, 540);
-      bg.addColorStop(0, "#ead7b9");
-      bg.addColorStop(0.38, "#d0b08b");
-      bg.addColorStop(1, "#8d633c");
+      bg.addColorStop(0, "#ead8bb");
+      bg.addColorStop(.45, "#c8a073");
+      bg.addColorStop(1, "#71441f");
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, 960, 540);
 
-      ctx.fillStyle = "#6d4427";
-      ctx.fillRect(0, 0, 960, 18);
-      ctx.fillRect(0, 522, 960, 18);
-      ctx.fillRect(0, 0, 18, 540);
-      ctx.fillRect(942, 0, 18, 540);
+      checker(42, 38, 876, 245, 64, "#f1ddbd", "#a16b3c", .72, state.t * .035, state.t * .035);
 
-      drawCheckerPattern(46, 42, 868, 242, 64, "#f0dec2", "#a97745", 0.66, state.t * 0.03, state.t * 0.03);
-
-      ctx.strokeStyle = "rgba(89,55,28,0.6)";
+      ctx.strokeStyle = "rgba(80,45,18,.68)";
       ctx.lineWidth = 10;
-      ctx.strokeRect(46, 42, 868, 242);
+      ctx.strokeRect(42, 38, 876, 245);
 
       ctx.save();
-      ctx.globalAlpha = 0.18;
+      ctx.globalAlpha = .15;
       ctx.font = "900 46px Georgia";
       ctx.textAlign = "center";
-      ctx.fillStyle = "#5e351c";
-
-      for (let i = 0; i < 10; i++) {
-        const glyph = ["♔", "♕", "♖", "♗", "♘", "♙"][i % 6];
-        ctx.fillText(glyph, 90 + i * 86, 190 + Math.sin(state.t * 0.02 + i) * 8);
+      ctx.fillStyle = "#5b3218";
+      for (let i = 0; i < 12; i++) {
+        const g = ["♔", "♕", "♖", "♗", "♘", "♙"][i % 6];
+        ctx.fillText(g, 58 + i * 82, 174 + Math.sin(state.t * .025 + i) * 9);
       }
-
       ctx.restore();
 
-      const floorTop = floorY - 4;
-      drawCheckerPattern(0, floorTop, 960, 540 - floorTop, 60, "#f7e5c9", "#9f6b3a", 1, 0, 0);
+      checker(0, floor - 4, 960, 540 - floor + 4, 60, "#f7e5c9", "#9f6b3a");
 
-      const shine = ctx.createLinearGradient(0, floorTop, 0, 540);
-      shine.addColorStop(0, "rgba(255,255,255,0.15)");
-      shine.addColorStop(1, "rgba(0,0,0,0.18)");
+      const shine = ctx.createLinearGradient(0, floor - 4, 0, 540);
+      shine.addColorStop(0, "rgba(255,255,255,.16)");
+      shine.addColorStop(1, "rgba(0,0,0,.20)");
       ctx.fillStyle = shine;
-      ctx.fillRect(0, floorTop, 960, 540 - floorTop);
+      ctx.fillRect(0, floor - 4, 960, 540 - floor + 4);
 
-      ctx.strokeStyle = "rgba(80,52,28,0.85)";
+      ctx.strokeStyle = "rgba(75,45,20,.85)";
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(0, floorTop + 1);
-      ctx.lineTo(960, floorTop + 1);
+      ctx.moveTo(0, floor - 3);
+      ctx.lineTo(960, floor - 3);
       ctx.stroke();
 
-      const v = ctx.createLinearGradient(0, 0, 0, 540);
-      v.addColorStop(0, "rgba(0,0,0,0)");
-      v.addColorStop(1, "rgba(0,0,0,0.28)");
-      ctx.fillStyle = v;
+      const vignette = ctx.createRadialGradient(480, 260, 160, 480, 260, 620);
+      vignette.addColorStop(0, "rgba(0,0,0,0)");
+      vignette.addColorStop(1, "rgba(0,0,0,.38)");
+      ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, 960, 540);
     }
 
-    function fighterCenter(f) {
-      return {
-        x: f.x + f.width / 2,
-        y: f.y + f.height / 2
-      };
-    }
-
-    function attackProgress(f) {
-      if (!f.attackDuration) return 0;
-      return clamp((f.attackDuration - f.attackTimer) / f.attackDuration, 0, 1);
-    }
-
-    function attackElapsed(f) {
-      return f.attackDuration - f.attackTimer;
-    }
-
-    function drawShadow(f) {
-      const c = fighterCenter(f);
-      const floorY = state.gameState?.game?.floorY ?? 430;
-      const air = clamp((floorY - (f.y + f.height)) / 150, 0, 1);
-
-      ctx.save();
-      ctx.globalAlpha = 0.34 * (1 - air * 0.65);
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.ellipse(
-        c.x,
-        floorY + 8,
-        f.width * (0.92 - air * 0.28),
-        16 * (1 - air * 0.25),
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-      ctx.restore();
-    }
-
-    function drawFighter(f) {
-      if (!f) return;
-
-      const mat = materialOf(f);
-      const c = fighterCenter(f);
-      const hurt = f.hurtTimer > 0;
-      const pulse = f.attack ? 1 : 0;
-      const bob = Math.sin(state.t * 0.08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1.0 : 0.45);
-
-      drawShadow(f);
-      drawPieceFloorContact(f, mat);
-
-      if (f.attack) {
-        drawAttackVfx(f, mat);
-      }
-
-      ctx.save();
-
-      if (hurt) {
-        ctx.translate((Math.random() - 0.5) * 2.2, 0);
-      }
-
-      drawChessGlyph(f, c.x, c.y + bob, mat, 1 + pulse * 0.018);
-
-      if (f.armorTimer > 0) drawArmorShell(f, mat);
-      if (f.guardBrokenTimer > 0) drawStunStars(f);
-
-      ctx.restore();
-
-      drawNameTag(f);
-      drawCooldownDots(f);
-    }
-
-    function drawChessGlyph(f, x, y, mat, scale = 1, alpha = 1) {
-      const glyph = glyphFor(f);
-      const fontSize = Math.round(f.height * 1.18 * scale);
+    function drawPiece(f, x, y, scale = 1, alpha = 1) {
+      const m = mat(f);
+      const size = Math.round(f.h * 1.18 * scale);
 
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = `900 ${fontSize}px Georgia, "Times New Roman", "Segoe UI Symbol", serif`;
-
-      ctx.shadowColor = "rgba(0,0,0,0.58)";
+      ctx.font = `900 ${size}px Georgia, "Times New Roman", serif`;
+      ctx.shadowColor = "rgba(0,0,0,.55)";
       ctx.shadowBlur = 10;
       ctx.shadowOffsetY = 5;
 
+      ctx.lineWidth = f.side === "white" ? 4.2 : 4.6;
+      ctx.strokeStyle = m.outline;
+      ctx.strokeText(glyph(f), x, y);
+
+      const grad = ctx.createLinearGradient(x, y - size * .5, x, y + size * .45);
       if (f.side === "white") {
-        ctx.lineWidth = 4.2;
-        ctx.strokeStyle = "rgba(64,48,30,0.74)";
-        ctx.strokeText(glyph, x, y);
-
-        const grad = ctx.createLinearGradient(x, y - fontSize * 0.5, x, y + fontSize * 0.4);
-        grad.addColorStop(0, "#ffffff");
-        grad.addColorStop(0.46, "#fbf4df");
-        grad.addColorStop(1, "#e9d8b5");
-        ctx.fillStyle = grad;
-        ctx.fillText(glyph, x, y);
+        grad.addColorStop(0, "#fff");
+        grad.addColorStop(.5, "#fff3db");
+        grad.addColorStop(1, "#dfc18f");
       } else {
-        ctx.lineWidth = 4.6;
-        ctx.strokeStyle = "rgba(255,255,255,0.34)";
-        ctx.strokeText(glyph, x, y);
-
-        const grad = ctx.createLinearGradient(x, y - fontSize * 0.5, x, y + fontSize * 0.4);
         grad.addColorStop(0, "#5a5a5a");
-        grad.addColorStop(0.35, "#111111");
-        grad.addColorStop(1, "#000000");
-        ctx.fillStyle = grad;
-        ctx.fillText(glyph, x, y);
+        grad.addColorStop(.35, "#111");
+        grad.addColorStop(1, "#000");
       }
+
+      ctx.fillStyle = grad;
+      ctx.fillText(glyph(f), x, y);
 
       if (f.promoted) {
-        ctx.globalAlpha = 0.42;
-        ctx.lineWidth = 2.2;
-        ctx.strokeStyle = f.side === "white" ? "rgba(255,220,120,0.95)" : "rgba(255,255,255,0.7)";
-        ctx.strokeText(glyph, x, y);
+        ctx.globalAlpha = alpha * .46;
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = "rgba(255,220,115,.95)";
+        ctx.strokeText(glyph(f), x, y);
       }
 
       ctx.restore();
     }
 
-    function drawAfterimage(f, x, y, scale = 1, alpha = 0.24) {
-      drawChessGlyph(f, x, y, materialOf(f), scale, alpha);
-    }
-
-    function drawPieceFloorContact(f, mat) {
-      const c = fighterCenter(f);
+    function shadow(f) {
+      const c = center(f);
+      const floor = state.gameState?.game?.floorY || 430;
+      const air = clamp((floor - (f.y + f.h)) / 150, 0, 1);
 
       ctx.save();
-      ctx.globalAlpha = f.side === "white" ? 0.10 : 0.18;
-      ctx.fillStyle = f.side === "white" ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.26)";
+      ctx.globalAlpha = .32 * (1 - air * .65);
+      ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.ellipse(c.x, f.y + f.height + 9, f.width * 0.85, 10, 0, 0, Math.PI * 2);
+      ctx.ellipse(c.x, floor + 8, f.w * (.92 - air * .28), 16 * (1 - air * .25), 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
 
-    function drawArmorShell(f, mat) {
-      const c = fighterCenter(f);
-
-      ctx.save();
-      ctx.globalAlpha = 0.36;
-      ctx.strokeStyle = f.side === "white"
-        ? "rgba(255,255,255,0.85)"
-        : "rgba(0,0,0,0.92)";
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      ctx.ellipse(c.x, c.y, f.width * 0.7, f.height * 0.57, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function drawStunStars(f) {
-      const c = fighterCenter(f);
-
-      ctx.save();
-      ctx.globalAlpha = 0.9;
-      ctx.strokeStyle = "#f0e5b8";
-      ctx.lineWidth = 2.5;
-
-      for (let i = 0; i < 3; i++) {
-        const a = state.t * 0.08 + i * ((Math.PI * 2) / 3);
-        const x = c.x + Math.cos(a) * 26;
-        const y = c.y - f.height * 0.5 + Math.sin(a) * 8;
-        drawStar(x, y, 5, 8, 4);
-      }
-
-      ctx.restore();
-    }
-
-    function drawStar(x, y, points, outer, inner) {
-      ctx.beginPath();
-
-      for (let i = 0; i < points * 2; i++) {
-        const r = i % 2 === 0 ? outer : inner;
-        const a = -Math.PI / 2 + (Math.PI / points) * i;
-        const px = x + Math.cos(a) * r;
-        const py = y + Math.sin(a) * r;
-
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    function drawNameTag(f) {
-      const c = fighterCenter(f);
-
-      ctx.save();
-      ctx.font = "700 11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.92)";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 6;
-      ctx.fillText(f.name || "", c.x, f.y - 12);
-      ctx.restore();
-    }
-
-    function drawCooldownDots(f) {
-      const c = fighterCenter(f);
-      const y = f.y + f.height + 18;
-      const values = [f.lightCooldown || 0, f.heavyCooldown || 0, f.specialCooldown || 0, f.counterCooldown || 0];
-      const maxes = [20, 56, 230, 150];
-
-      ctx.save();
-
-      for (let i = 0; i < 4; i++) {
-        const x = c.x - 27 + i * 18;
-        const ready = values[i] <= 0;
-
-        ctx.globalAlpha = ready ? 0.85 : 0.35;
-        ctx.fillStyle = i === 3 && ready ? "#ffe6a0" : ready ? "#ffffff" : "rgba(255,255,255,0.3)";
-        ctx.beginPath();
-        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (!ready) {
-          ctx.strokeStyle = "rgba(0,0,0,0.55)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(x, y, 6.2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(values[i] / maxes[i], 0, 1));
-          ctx.stroke();
-        }
-      }
-
-      ctx.restore();
-    }
-
-    function drawPolyline(points, mat, width = 8, alpha = 1) {
-      if (!points || points.length < 2) return;
+    function line(points, m, w = 8, alpha = 1) {
+      if (points.length < 2) return;
 
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.lineCap = "round";
 
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.strokeStyle = "rgba(0,0,0,.35)";
+      ctx.lineWidth = w + 6;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.strokeStyle = m.weapon;
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.strokeStyle = m.edge;
+      ctx.lineWidth = Math.max(2, w * .25);
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function blade(x, y, angle, len, m, p, width = 10) {
+      const q = ease(p);
+      const tip = {
+        x: x + Math.cos(angle) * len * q,
+        y: y + Math.sin(angle) * len * q
+      };
+
+      line([
+        { x, y },
+        {
+          x: x + Math.cos(angle) * len * q * .56,
+          y: y + Math.sin(angle) * len * q * .56
+        },
+        tip
+      ], m, width, clamp(.15 + q, 0, 1));
+
+      ctx.save();
+      ctx.translate(tip.x, tip.y);
+      ctx.rotate(angle);
+      ctx.globalAlpha = clamp(q, 0, 1);
+      ctx.fillStyle = m.weapon2;
+      ctx.strokeStyle = m.edge;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(20, 0);
+      ctx.lineTo(-8, -8);
+      ctx.lineTo(-3, 0);
+      ctx.lineTo(-8, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function arc(cx, cy, r, a1, a2, m, width, alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.lineCap = "round";
+
+      ctx.strokeStyle = "rgba(0,0,0,.3)";
       ctx.lineWidth = width + 6;
       ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.arc(cx, cy, r, a1, a2);
       ctx.stroke();
 
-      ctx.strokeStyle = mat.trail;
+      ctx.strokeStyle = m.weapon;
       ctx.lineWidth = width;
       ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.arc(cx, cy, r, a1, a2);
       ctx.stroke();
 
-      ctx.strokeStyle = mat.sparkle;
-      ctx.globalAlpha = alpha * 0.88;
-      ctx.lineWidth = Math.max(2, width * 0.26);
+      ctx.strokeStyle = m.edge;
+      ctx.lineWidth = Math.max(2, width * .25);
       ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.arc(cx, cy, r - 2, a1, a2);
       ctx.stroke();
 
       ctx.restore();
     }
 
-    function drawArcStroke(cx, cy, r, start, end, mat, width = 10, alpha = 1) {
+    function spark(x, y, m, len = 20, rays = 7) {
       ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.lineCap = "round";
-
-      ctx.strokeStyle = "rgba(0,0,0,0.28)";
-      ctx.lineWidth = width + 5;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, start, end);
-      ctx.stroke();
-
-      ctx.strokeStyle = mat.trail;
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, start, end);
-      ctx.stroke();
-
-      ctx.strokeStyle = mat.sparkle;
-      ctx.globalAlpha = alpha * 0.75;
-      ctx.lineWidth = Math.max(2, width * 0.25);
-      ctx.beginPath();
-      ctx.arc(cx, cy, r - 2, start, end);
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function drawBlade(x, y, angle, len, mat, progress = 1, width = 10) {
-      const p = clamp(progress, 0, 1);
-      const l = len * p;
-      const x2 = x + Math.cos(angle) * l;
-      const y2 = y + Math.sin(angle) * l;
-
-      drawPolyline([
-        { x, y },
-        { x: x + Math.cos(angle) * l * 0.54, y: y + Math.sin(angle) * l * 0.54 },
-        { x: x2, y: y2 }
-      ], mat, width, clamp(0.25 + p, 0, 1));
-
-      ctx.save();
-      ctx.translate(x2, y2);
-      ctx.rotate(angle);
-
-      ctx.fillStyle = mat.weapon;
-      ctx.strokeStyle = mat.weaponEdge;
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      ctx.moveTo(18, 0);
-      ctx.lineTo(-8, -7);
-      ctx.lineTo(-4, 0);
-      ctx.lineTo(-8, 7);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function drawSparkBurst(x, y, mat, len = 22, rays = 7) {
-      ctx.save();
-      ctx.lineCap = "round";
-      ctx.strokeStyle = mat.sparkle;
+      ctx.strokeStyle = m.magic;
       ctx.lineWidth = 2.2;
-      ctx.globalAlpha = 0.8;
-
+      ctx.lineCap = "round";
       for (let i = 0; i < rays; i++) {
-        const a = (Math.PI * 2 * i) / rays + state.t * 0.01;
+        const a = i * Math.PI * 2 / rays + state.t * .02;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len);
         ctx.stroke();
       }
-
       ctx.restore();
     }
 
-    function drawImpactDust(x, y, dir, mat, count = 4) {
+    function dust(x, y, d, m, count = 5) {
       ctx.save();
-      ctx.globalAlpha = 0.55;
-      ctx.fillStyle = `rgba(${mat.dust},0.75)`;
-
+      ctx.fillStyle = `rgba(${m.dust},.65)`;
       for (let i = 0; i < count; i++) {
         ctx.beginPath();
-        ctx.ellipse(
-          x - dir * (i * 15 + 8),
-          y + Math.sin(i) * 3,
-          14 + i * 2,
-          6 + i,
-          0,
-          0,
-          Math.PI * 2
-        );
+        ctx.ellipse(x - d * (i * 16 + 8), y + Math.sin(i) * 3, 14 + i * 2, 6 + i, 0, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
+    }
+
+    function after(f, x, y, s = 1, a = .16) {
+      drawPiece(f, x, y, s, a);
+    }
+
+    function hammer(c, d, m, p) {
+      const q = ease(p);
+      const x = c.x + d * (20 + 70 * q);
+      const y = c.y - 28 + 40 * q;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(d * (-.8 + 1.4 * q));
+      ctx.fillStyle = m.weapon;
+      ctx.strokeStyle = m.edge;
+      ctx.lineWidth = 3;
+
+      rr(-12, -48, 24, 76, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      rr(-36, -62, 72, 30, 7);
+      ctx.fill();
+      ctx.stroke();
 
       ctx.restore();
     }
 
-    function drawAttackVfx(f, mat) {
-      const piece = pieceOf(f);
-      const attack = f.attack;
-      const aim = f.attackAim || "forward";
-
-      if (attack === "counter") return drawCounterVfx(f, mat);
-
-      if (piece === "king") drawKingVfx(f, mat, attack, aim);
-      else if (piece === "rook") drawRookVfx(f, mat, attack, aim);
-      else if (piece === "bishop") drawBishopVfx(f, mat, attack, aim);
-      else if (piece === "knight") drawKnightVfx(f, mat, attack, aim);
-      else if (piece === "pawn") drawPawnVfx(f, mat, attack, aim);
-      else if (piece === "queen") drawQueenVfx(f, mat, attack, aim);
+    function spear(c, d, m, p, len = 126, width = 7, angle = 0) {
+      blade(c.x - d * 6, c.y, d === 1 ? angle : Math.PI - angle, len, m, p, width);
     }
 
-    function drawCounterVfx(f, mat) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const p = attackProgress(f);
-      const e = attackElapsed(f);
-      const piece = pieceOf(f);
+    function staff(c, d, m, p, angle, len = 150, width = 10) {
+      blade(c.x - d * 10, c.y + 30, d === 1 ? angle : Math.PI - angle, len, m, p, width);
+      const q = ease(p);
+      const tx = c.x - d * 10 + Math.cos(d === 1 ? angle : Math.PI - angle) * len * q;
+      const ty = c.y + 30 + Math.sin(d === 1 ? angle : Math.PI - angle) * len * q;
+      spark(tx, ty, m, 16 * q, 8);
+    }
 
+    function castleBrick(x, y, m, rot = 0, alpha = 1) {
       ctx.save();
-
-      if (e < 13) {
-        ctx.globalAlpha = 0.35 + Math.sin(state.t * 0.6) * 0.12;
-        ctx.strokeStyle = mat.sparkle;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 46 + e * 2, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.font = "900 34px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillStyle = mat.sparkle;
-        ctx.fillText(GLYPHS[piece], c.x, c.y - 62);
-      } else {
-        const q = clamp((e - 13) / 14, 0, 1);
-
-        if (piece === "king") {
-          drawAfterimage(f, c.x + dir * 34, c.y, 1.08, 0.18);
-          drawBlade(c.x - dir * 6, c.y + 34, dir === 1 ? -0.25 : Math.PI + 0.25, 124, mat, q, 18);
-          drawSparkBurst(c.x + dir * 86, c.y + 18, mat, 26, 9);
-        } else if (piece === "rook") {
-          drawCastleBricks(c.x - dir * 16, c.y - 52, dir, mat, q, 8);
-          drawPolyline([
-            { x: c.x - dir * 48 * q, y: c.y + 20 },
-            { x: c.x + dir * 55 * q, y: c.y + 20 },
-            { x: c.x + dir * 122 * q, y: c.y + 20 }
-          ], mat, 22, q);
-        } else if (piece === "bishop") {
-          drawBlade(c.x - dir * 28, c.y + 46, dir === 1 ? -0.85 : Math.PI + 0.85, 160, mat, q, 14);
-          drawBlade(c.x - dir * 24, c.y - 32, dir === 1 ? 0.7 : Math.PI - 0.7, 116, mat, q * 0.9, 10);
-        } else if (piece === "knight") {
-          const a = [
-            { x: c.x - dir * 48, y: c.y + 34 },
-            { x: c.x + dir * 40 * q, y: c.y + 34 },
-            { x: c.x + dir * 40 * q, y: c.y - 58 * q }
-          ];
-          drawPolyline(a, mat, 16, q);
-          drawAfterimage(f, c.x + dir * 42 * q, c.y - 26 * q, 0.98, 0.2 * q);
-        } else if (piece === "pawn") {
-          drawBlade(c.x - dir * 6, c.y + 8, dir === 1 ? 0 : Math.PI, 120, mat, q, 11);
-        } else {
-          drawArcStroke(c.x + dir * 12, c.y, 110 * q, dir === 1 ? -1.2 : Math.PI + 0.1, dir === 1 ? 0.95 : Math.PI - 0.95, mat, 18, q);
-          drawAfterimage(f, c.x + dir * 52 * q, c.y, 1.1, 0.2 * q);
-        }
-      }
-
-      ctx.restore();
-    }
-
-    function drawKingVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const p = attackProgress(f);
-      const e = attackElapsed(f);
-
-      if (attack === "light") {
-        const q = clamp((e - 2) / 8, 0, 1);
-        drawBlade(c.x - dir * 10, c.y + 2, dir === 1 ? -0.18 : Math.PI + 0.18, 112, mat, q, 8);
-      }
-
-      if (attack === "heavy") {
-        const q = clamp((e - 5) / 16, 0, 1);
-        drawAfterimage(f, c.x + dir * 28 * q, c.y, 1.02, 0.14 * q);
-        drawArcStroke(c.x + dir * 20, c.y + 8, 82, dir === 1 ? -1.15 : Math.PI + 0.08, dir === 1 ? -1.15 + 1.9 * q : Math.PI + 0.08 - 1.9 * q, mat, 14, q);
-      }
-
-      if (attack === "crouchHeavy") {
-        const q = clamp((e - 5) / 13, 0, 1);
-        drawBlade(c.x - dir * 12, c.y + 22, dir === 1 ? 0.22 : Math.PI - 0.22, 148, mat, q, 13);
-        drawImpactDust(c.x + dir * 80, f.y + f.height + 4, dir, mat, Math.ceil(7 * q));
-      }
-
-      if (attack === "airHeavy") {
-        const q = clamp((e - 4) / 13, 0, 1);
-        drawArcStroke(c.x, c.y + 10, 62, dir === 1 ? -1.0 : Math.PI + 0.1, dir === 1 ? -1.0 + 2.0 * q : Math.PI + 0.1 - 2.0 * q, mat, 12, q);
-      }
-
-      if (attack === "special" || attack === "airSpecial") {
-        if (aim === "forward") {
-          const q = clamp((e - 8) / 18, 0, 1);
-          drawAfterimage(f, c.x + dir * 34 * q, c.y, 1.04, 0.18 * q);
-          drawAfterimage(f, c.x + dir * 72 * q, c.y, 1.08, 0.12 * q);
-          drawBlade(c.x - dir * 18, c.y + 12, dir === 1 ? -0.03 : Math.PI + 0.03, 176, mat, q, 20);
-          drawImpactDust(c.x + dir * 86, f.y + f.height + 4, dir, mat, Math.ceil(10 * q));
-        }
-
-        if (aim === "up") {
-          const q = clamp((e - 7) / 18, 0, 1);
-          drawBlade(c.x, c.y + 28, -Math.PI / 2, 220, mat, q, 16);
-          drawAfterimage({ ...f, characterKey: "king" }, c.x, c.y - 146 * q, 0.58, 0.22 * q);
-        }
-
-        if (aim === "down") {
-          const q = clamp((e - 5) / 16, 0, 1);
-          drawArcStroke(c.x + dir * 14, c.y + 8, 54, dir === 1 ? -0.35 : Math.PI - 0.85, dir === 1 ? -0.35 + 1.55 * q : Math.PI - 0.85 + 1.55 * q, mat, 14, q);
-          drawSparkBurst(c.x + dir * 46, c.y + 34, mat, 20 * q, 8);
-        }
-      }
-    }
-
-    function drawCastleBricks(x, y, dir, mat, q, count = 10) {
-      ctx.save();
-
-      for (let i = 0; i < count; i++) {
-        const bx = x + dir * (i * 42 + state.t * 3) % 420;
-        const by = y + Math.sin(i * 1.7 + state.t * 0.08) * 28;
-        ctx.save();
-        ctx.translate(bx, by);
-        ctx.rotate((i % 2 ? 0.12 : -0.12) * dir);
-        ctx.globalAlpha = q;
-        ctx.fillStyle = mat.weapon;
-        ctx.strokeStyle = mat.weaponEdge;
-        ctx.lineWidth = 2;
-        drawRoundRect(-14, -9, 28, 18, 4);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      ctx.restore();
-    }
-
-    function drawMiniRooksInBeam(x1, x2, y, dir, mat, q) {
-      ctx.save();
-      ctx.globalAlpha = q;
-      ctx.font = "900 34px Georgia";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = mat.side === "black" ? "#111" : mat.weapon;
-      ctx.strokeStyle = mat.weaponEdge;
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = m.weapon;
+      ctx.strokeStyle = m.edge;
       ctx.lineWidth = 2;
+      rr(-15, -10, 30, 20, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
 
-      const length = Math.abs(x2 - x1);
-      for (let i = 0; i < 12; i++) {
-        const offset = (state.t * 8 + i * 70) % length;
-        const x = dir === 1 ? x1 + offset : x1 - offset;
-        const yy = y + Math.sin(state.t * 0.12 + i) * 26;
+    function cannon(c, d, m, p) {
+      const q = ease(p);
+      ctx.save();
+      ctx.translate(c.x + d * 46, c.y + 10);
+      ctx.scale(d, 1);
+      ctx.fillStyle = m.weapon;
+      ctx.strokeStyle = m.edge;
+      ctx.lineWidth = 3;
 
-        ctx.strokeText("♖", x, yy);
-        ctx.fillText("♖", x, yy);
-      }
+      rr(-24, -18, 78 * q, 36, 9);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = m.weapon2;
+      ctx.beginPath();
+      ctx.arc(-18, 22, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
 
       ctx.restore();
     }
 
-    function drawRookVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const e = attackElapsed(f);
-
-      if (attack === "light") {
-        const q = clamp((e - 3) / 8, 0, 1);
-        drawBlade(c.x + dir * 8, c.y + 18, dir === 1 ? 0 : Math.PI, 132, mat, q, 12);
-      }
-
-      if (attack === "heavy" || attack === "crouchHeavy") {
-        const q = clamp((e - 6) / 16, 0, 1);
-        const y = attack === "crouchHeavy" ? c.y + 32 : c.y + 10;
-        drawAfterimage(f, c.x + dir * 38 * q, c.y + 3, 1.03, 0.14 * q);
-        drawBlade(c.x + dir * 18, y, dir === 1 ? 0 : Math.PI, 192, mat, q, 20);
-        drawImpactDust(c.x + dir * 90, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
-      }
-
-      if (attack === "airHeavy") {
-        const q = clamp((e - 5) / 15, 0, 1);
-        drawArcStroke(c.x + dir * 8, c.y + 10, 64, dir === 1 ? -0.4 : Math.PI - 0.9, dir === 1 ? -0.4 + 1.45 * q : Math.PI - 0.9 + 1.45 * q, mat, 12, q);
-      }
-
-      if (attack === "special") {
-        if (aim === "forward") {
-          const wind = clamp(e / 42, 0, 1);
-          const fire = clamp((e - 42) / 20, 0, 1);
-          const endX = dir === 1 ? 938 : 22;
-          const startX = c.x + dir * 46;
-
-          ctx.save();
-          ctx.globalAlpha = 0.22 + wind * 0.35;
-          ctx.strokeStyle = mat.sparkle;
-          ctx.lineWidth = 3 + wind * 8;
-          ctx.beginPath();
-          ctx.moveTo(startX, c.y);
-          ctx.lineTo(startX + dir * 100 * wind, c.y);
-          ctx.stroke();
-          ctx.restore();
-
-          drawCastleBricks(c.x + dir * 40, c.y - 50, dir, mat, wind, 8);
-
-          if (fire > 0) {
-            ctx.save();
-            const beam = ctx.createLinearGradient(startX, c.y, endX, c.y);
-            beam.addColorStop(0, mat.trail2);
-            beam.addColorStop(0.35, mat.trail);
-            beam.addColorStop(1, "rgba(255,255,255,0.15)");
-            ctx.globalAlpha = 0.9 * fire;
-            ctx.fillStyle = beam;
-            drawRoundRect(dir === 1 ? startX : endX, c.y - 48, Math.abs(endX - startX), 96, 14);
-            ctx.fill();
-
-            ctx.strokeStyle = mat.weaponEdge;
-            ctx.lineWidth = 4;
-            drawRoundRect(dir === 1 ? startX : endX, c.y - 48, Math.abs(endX - startX), 96, 14);
-            ctx.stroke();
-            ctx.restore();
-
-            drawMiniRooksInBeam(startX, endX, c.y, dir, mat, fire);
-            drawImpactDust(c.x + dir * 108, f.y + f.height + 5, dir, mat, 12);
-          }
-        }
-
-        if (aim === "up") {
-          const q = clamp((e - 8) / 24, 0, 1);
-          drawBlade(c.x, c.y + 44, -Math.PI / 2, 292, mat, q, 22);
-        }
-
-        if (aim === "down") {
-          const q = clamp((e - 8) / 20, 0, 1);
-          drawBlade(c.x + dir * 16, c.y + 40, dir === 1 ? 0 : Math.PI, 250, mat, q, 22);
-          drawImpactDust(c.x + dir * 110, f.y + f.height + 5, dir, mat, Math.ceil(12 * q));
-        }
-      }
+    function lance(c, d, m, p, angle = 0) {
+      blade(c.x - d * 10, c.y + 16, d === 1 ? angle : Math.PI - angle, 142, m, p, 9);
     }
 
-    function drawBishopVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const e = attackElapsed(f);
+    function twin(c, d, m, p) {
+      blade(c.x - d * 16, c.y + 34, d === 1 ? -.48 : Math.PI + .48, 178, m, p, 9);
+      blade(c.x - d * 8, c.y - 26, d === 1 ? .35 : Math.PI - .35, 150, m, clamp(p - .12, 0, 1), 8);
+    }
 
-      if (attack === "light") {
-        const q = clamp((e - 2) / 8, 0, 1);
-        drawBlade(c.x - dir * 10, c.y + 36, dir === 1 ? -0.72 : Math.PI + 0.72, 132, mat, q, 9);
-      }
+    function drawWeapon(f) {
+      if (!f.attack) return;
 
-      if (attack === "heavy") {
-        const q = clamp((e - 3) / 15, 0, 1);
-        drawAfterimage(f, c.x - dir * 18, c.y + 16, 0.98, 0.16 * q);
-        drawAfterimage(f, c.x + dir * 28, c.y - 12, 1.0, 0.14 * q);
-        drawAfterimage(f, c.x + dir * 72, c.y - 42, 1.04, 0.12 * q);
-        drawBlade(c.x - dir * 14, c.y + 24, dir === 1 ? -0.78 : Math.PI + 0.78, 166, mat, q, 16);
-        drawSparkBurst(c.x + dir * 128, c.y - 104, mat, 18 * q, 8);
-      }
+      const p = pieceOf(f);
+      const m = mat(f);
+      const c = center(f);
+      const d = dir(f);
+      const e = elapsed(f);
+      const q = progress(f);
+      const wind = clamp(e / 14, 0, 1);
+      const swing = clamp((e - 3) / 16, 0, 1);
 
-      if (attack === "crouchLight") {
-        const q = clamp((e - 2) / 8, 0, 1);
-        drawBlade(c.x - dir * 6, c.y + 36, dir === 1 ? -0.18 : Math.PI + 0.18, 106, mat, q, 7);
-      }
-
-      if (attack === "crouchHeavy") {
-        const q = clamp((e - 5) / 13, 0, 1);
-        drawBlade(c.x - dir * 16, c.y + 32, dir === 1 ? -0.55 : Math.PI + 0.55, 140, mat, q, 11);
-      }
-
-      if (attack === "airHeavy") {
-        const q = clamp((e - 2) / 15, 0, 1);
-        drawAfterimage(f, c.x - dir * 12, c.y - 14, 0.98, 0.16 * q);
-        drawAfterimage(f, c.x + dir * 34, c.y + 18, 1.02, 0.14 * q);
-        drawAfterimage(f, c.x + dir * 80, c.y + 52, 1.05, 0.12 * q);
-        drawBlade(c.x - dir * 10, c.y - 20, dir === 1 ? 0.82 : Math.PI - 0.82, 166, mat, q, 16);
-        drawSparkBurst(c.x + dir * 132, c.y + 112, mat, 18 * q, 8);
-      }
-
-      if (attack === "airSpecial") {
-        const sm = f.scriptedMove;
-        const pts = sm?.points?.length ? sm.points : [
-          { x: c.x - dir * 70, y: c.y - 40 },
-          { x: c.x - dir * 28, y: c.y + 22 },
-          { x: c.x + dir * 14, y: c.y - 20 },
-          { x: c.x + dir * 62, y: c.y + 40 },
-          { x: c.x + dir * 110, y: c.y - 8 }
-        ];
-
-        for (let i = 0; i < pts.length - 1; i++) {
-          const alpha = (i + 1) / pts.length;
-          drawPolyline([pts[i], pts[i + 1]], mat, 18 * alpha, 0.22 + alpha * 0.55);
-        }
-
-        for (let i = 0; i < pts.length; i += 3) {
-          drawAfterimage(f, pts[i].x, pts[i].y, 0.92 + i * 0.01, 0.12);
-        }
-
-        drawSparkBurst(c.x, c.y, mat, 18, 8);
+      if (f.attack === "counter") {
+        drawCounter(f, m);
         return;
       }
 
-      if (attack === "special") {
-        const q = clamp((e - 4) / 18, 0, 1);
-
-        if (aim === "forward") {
-          drawBlade(c.x - dir * 22, c.y + 78, dir === 1 ? -0.68 : Math.PI + 0.68, 255, mat, q, 14);
+      if (p === "king") {
+        if (f.attack === "light") hammer(c, d, m, clamp((e - 2) / 12, 0, 1));
+        if (f.attack === "heavy") {
+          after(f, c.x + d * 28 * swing, c.y, 1.04, .14);
+          hammer(c, d, m, clamp((e - 5) / 20, 0, 1));
+          arc(c.x + d * 30, c.y + 6, 82, d === 1 ? -1.1 : Math.PI + .1, d === 1 ? -1.1 + 1.95 * swing : Math.PI + .1 - 1.95 * swing, m, 12, swing);
         }
-
-        if (aim === "up") {
-          drawBlade(c.x - dir * 10, c.y + 32, dir === 1 ? -0.95 : Math.PI + 0.95, 214, mat, q, 14);
+        if (f.attack === "crouchHeavy") spear(c, d, m, swing, 148, 12, .18);
+        if (f.attack === "airHeavy") arc(c.x, c.y + 10, 62, d === 1 ? -1 : Math.PI + .1, d === 1 ? -1 + 2 * swing : Math.PI + .1 - 2 * swing, m, 12, swing);
+        if (f.attack === "special" || f.attack === "airSpecial") {
+          if (f.attackAim === "down") {
+            ctx.save();
+            ctx.globalAlpha = .8 * swing;
+            ctx.strokeStyle = m.magic;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.arc(c.x + d * 38, c.y + 12, 46 + 14 * swing, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          } else if (f.attackAim === "up") {
+            blade(c.x, c.y + 36, -Math.PI / 2, 240, m, swing, 16);
+          } else {
+            hammer(c, d, m, swing);
+            blade(c.x - d * 10, c.y + 12, d === 1 ? 0 : Math.PI, 190, m, swing, 18);
+          }
         }
+      }
 
-        if (aim === "down") {
-          drawBlade(c.x - dir * 10, c.y - 20, dir === 1 ? 0.78 : Math.PI - 0.78, 218, mat, q, 14);
-          drawImpactDust(c.x + dir * 118, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
+      if (p === "rook") {
+        if (f.attack === "light") {
+          cannon(c, d, m, swing);
+          castleBrick(c.x + d * 95 * swing, c.y + 10, m, .1 * d, swing);
+        }
+        if (f.attack === "heavy" || f.attack === "crouchHeavy") {
+          cannon(c, d, m, swing);
+          for (let i = 0; i < 4; i++) {
+            castleBrick(c.x + d * (55 + i * 38) * swing, c.y + (i % 2 ? -8 : 18), m, .2 * d, swing);
+          }
+          dust(c.x + d * 90, f.y + f.h + 4, d, m, Math.ceil(7 * swing));
+        }
+        if (f.attack === "airHeavy") arc(c.x + d * 8, c.y + 10, 64, d === 1 ? -.4 : Math.PI - .9, d === 1 ? -.4 + 1.45 * swing : Math.PI - .9 + 1.45 * swing, m, 12, swing);
+
+        if (f.attack === "special") {
+          if (f.attackAim === "forward") {
+            const fire = clamp((e - 42) / 22, 0, 1);
+            cannon(c, d, m, wind);
+
+            for (let i = 0; i < 8; i++) {
+              castleBrick(c.x + d * (40 + ((state.t * 3 + i * 42) % 340)), c.y - 52 + Math.sin(state.t * .08 + i) * 28, m, d * .15, wind);
+            }
+
+            if (fire > 0) {
+              const x1 = c.x + d * 55;
+              const x2 = d === 1 ? 936 : 24;
+              const bx = d === 1 ? x1 : x2;
+              const bw = Math.abs(x2 - x1);
+
+              ctx.save();
+              const g = ctx.createLinearGradient(x1, c.y, x2, c.y);
+              g.addColorStop(0, m.magic);
+              g.addColorStop(.35, m.weapon);
+              g.addColorStop(1, "rgba(255,255,255,.16)");
+              ctx.globalAlpha = .92 * fire;
+              ctx.fillStyle = g;
+              rr(bx, c.y - 48, bw, 96, 16);
+              ctx.fill();
+              ctx.strokeStyle = m.edge;
+              ctx.lineWidth = 4;
+              rr(bx, c.y - 48, bw, 96, 16);
+              ctx.stroke();
+              ctx.restore();
+
+              ctx.save();
+              ctx.font = "900 34px Georgia";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              for (let i = 0; i < 12; i++) {
+                const off = (state.t * 8 + i * 72) % bw;
+                const x = d === 1 ? x1 + off : x1 - off;
+                const y = c.y + Math.sin(state.t * .12 + i) * 26;
+                ctx.globalAlpha = fire;
+                ctx.fillStyle = m.weapon;
+                ctx.strokeStyle = m.edge;
+                ctx.lineWidth = 2;
+                ctx.strokeText("♖", x, y);
+                ctx.fillText("♖", x, y);
+              }
+              ctx.restore();
+            }
+          } else if (f.attackAim === "up") {
+            blade(c.x, c.y + 48, -Math.PI / 2, 310, m, swing, 22);
+          } else {
+            blade(c.x + d * 14, c.y + 44, d === 1 ? 0 : Math.PI, 260, m, swing, 22);
+            dust(c.x + d * 110, f.y + f.h + 4, d, m, Math.ceil(10 * swing));
+          }
+        }
+      }
+
+      if (p === "bishop") {
+        if (f.attack === "light") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
+        if (f.attack === "heavy") {
+          const s = clamp((e - 2) / 16, 0, 1);
+          after(f, c.x + d * 35 * s, c.y - 24 * s, 1, .14);
+          staff(c, d, m, s, -.78, 172, 16);
+        }
+        if (f.attack === "crouchLight") staff(c, d, m, swing, -.18, 110, 7);
+        if (f.attack === "crouchHeavy") staff(c, d, m, swing, -.55, 146, 11);
+        if (f.attack === "airHeavy") staff(c, d, m, swing, .82, 172, 16);
+
+        if (f.attack === "airSpecial") {
+          const trail = f.script?.trail || [];
+          for (let i = 0; i < trail.length - 1; i++) {
+            const a = (i + 1) / trail.length;
+            line([trail[i], trail[i + 1]], m, 6 + a * 15, .18 + a * .62);
+          }
+          for (let i = 0; i < trail.length; i += 4) {
+            after(f, trail[i].x, trail[i].y, .9, .12);
+          }
+          spark(c.x, c.y, m, 18, 8);
+        } else if (f.attack === "special") {
+          const s = clamp((e - 4) / 18, 0, 1);
+          if (f.attackAim === "up") staff(c, d, m, s, -.96, 218, 14);
+          else if (f.attackAim === "down") staff(c, d, m, s, .78, 222, 14);
+          else staff(c, d, m, s, -.68, 258, 14);
+        }
+      }
+
+      if (p === "knight") {
+        if (f.attack === "light") lance(c, d, m, swing, -.08);
+        if (f.attack === "heavy") lance(c, d, m, swing, -1.08);
+        if (f.attack === "crouchHeavy") lance(c, d, m, swing, d === 1 ? -2.78 : -.36);
+        if (f.attack === "airHeavy") {
+          const trail = f.script?.trail || [];
+          if (trail.length > 1) line(trail, m, 14, .85);
+          for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
+          lance(c, d, m, .9, 0);
+        }
+        if (f.attack === "special" || f.attack === "airSpecial") {
+          const s = clamp((e - 4) / 16, 0, 1);
+          if (f.attackAim === "up") {
+            line([{ x: c.x, y: c.y + 40 }, { x: c.x, y: c.y - 104 * s }, { x: c.x + d * 72 * s, y: c.y - 104 * s }], m, 14, s);
+          } else if (f.attackAim === "down") {
+            line([{ x: c.x, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y + 86 * s }], m, 14, s);
+            dust(c.x + d * 94, f.y + f.h + 5, d, m, Math.ceil(8 * s));
+          } else {
+            line([{ x: c.x, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y - 54 * s }], m, 14, s);
+          }
+        }
+      }
+
+      if (p === "pawn") {
+        if (f.attack === "light" || f.attack === "crouchLight") spear(c, d, m, swing, 106, 7, 0);
+        if (f.attack === "heavy") spear(c, d, m, swing, 130, 9, -.18);
+        if (f.attack === "crouchHeavy") spear(c, d, m, swing, 116, 9, -.7);
+        if (f.attack === "airHeavy") arc(c.x + d * 6, c.y + 12, 44, d === 1 ? -.8 : Math.PI - .35, d === 1 ? -.8 + 1.75 * swing : Math.PI - .35 + 1.75 * swing, m, 9, swing);
+        if (f.attack === "special" || f.attack === "airSpecial") {
+          const s = clamp((e - 4) / 14, 0, 1);
+          if (f.attackAim === "up") spear(c, d, m, s, 140, 11, -1.25);
+          else if (f.attackAim === "down") spear(c, d, m, s, 138, 11, .32);
+          else spear(c, d, m, s, 154, 11, 0);
+          dust(c.x + d * 40, f.y + f.h + 5, d, m, Math.ceil(5 * s));
+        }
+      }
+
+      if (p === "queen") {
+        if (f.attack === "light") twin(c, d, m, clamp((e - 2) / 10, 0, 1));
+        if (f.attack === "heavy" || f.attack === "crouchHeavy") {
+          const s = clamp((e - 4) / 18, 0, 1);
+          arc(c.x + d * 28, c.y + 10, 116, d === 1 ? -1 : Math.PI + .06, d === 1 ? -1 + 1.78 * s : Math.PI + .06 - 1.78 * s, m, 16, s);
+          twin(c, d, m, s);
+        }
+        if (f.attack === "airHeavy") arc(c.x + d * 12, c.y, 86, d === 1 ? -.9 : Math.PI - .22, d === 1 ? -.9 + 1.9 * swing : Math.PI - .22 + 1.9 * swing, m, 14, swing);
+        if (f.attack === "special" || f.attack === "airSpecial") {
+          const s = clamp((e - 6) / 22, 0, 1);
+          after(f, c.x + d * 50 * s, c.y, 1.06, .16 * s);
+          if (f.attackAim === "up") blade(c.x, c.y + 38, -Math.PI / 2, 300, m, s, 18);
+          else if (f.attackAim === "down") blade(c.x - d * 16, c.y + 20, d === 1 ? .24 : Math.PI - .24, 300, m, s, 18);
+          else blade(c.x - d * 24, c.y + 56, d === 1 ? -.47 : Math.PI + .47, 335, m, s, 18);
         }
       }
     }
 
-    function drawKnightVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const e = attackElapsed(f);
+    function drawCounter(f, m) {
+      const c = center(f);
+      const d = dir(f);
+      const e = elapsed(f);
+      const p = pieceOf(f);
 
-      if (attack === "light") {
-        const q = clamp((e - 2) / 8, 0, 1);
-        drawArcStroke(c.x + dir * 20, c.y + 10, 42, dir === 1 ? -0.85 : Math.PI - 0.28, dir === 1 ? -0.85 + 1.3 * q : Math.PI - 0.28 + 1.3 * q, mat, 9, q);
+      if (e < 14) {
+        ctx.save();
+        ctx.globalAlpha = .55 + Math.sin(state.t * .6) * .12;
+        ctx.strokeStyle = m.magic;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 40 + e * 2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.font = "900 36px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillStyle = m.magic;
+        ctx.fillText(GLYPHS[p], c.x, c.y - 62);
+        ctx.restore();
+        return;
       }
 
-      if (attack === "heavy") {
-        const q = clamp((e - 4) / 13, 0, 1);
-        drawBlade(c.x - dir * 8, c.y + 24, dir === 1 ? -1.08 : Math.PI + 1.08, 130, mat, q, 12);
-      }
+      const s = clamp((e - 14) / 14, 0, 1);
 
-      if (attack === "crouchHeavy") {
-        const q = clamp((e - 4) / 12, 0, 1);
-        drawBlade(c.x + dir * 12, c.y + 32, dir === 1 ? -2.78 : -0.36, 108, mat, q, 10);
-      }
-
-      if (attack === "airHeavy") {
-        const sm = f.scriptedMove;
-        if (sm && sm.type === "knightL") {
-          const pLen = 92;
-          const sLen = 58;
-          const sx = sm.secondary.x;
-          const sy = sm.secondary.y;
-          const px = sm.primary.x;
-          const py = sm.primary.y;
-
-          const start = { x: c.x - px * pLen * 0.55 - sx * sLen * 0.5, y: c.y - py * pLen * 0.55 - sy * sLen * 0.5 };
-          const corner = { x: start.x + px * pLen, y: start.y + py * pLen };
-          const end = { x: corner.x + sx * sLen, y: corner.y + sy * sLen };
-
-          drawPolyline([start, corner, end], mat, 15);
-          drawAfterimage(f, corner.x, corner.y, 0.92, 0.14);
-          drawAfterimage(f, end.x, end.y, 0.98, 0.12);
-          drawSparkBurst(end.x, end.y, mat, 16, 7);
-        } else {
-          const q = clamp((e - 2) / 16, 0, 1);
-          drawArcStroke(c.x + dir * 10, c.y, 54, dir === 1 ? -0.8 : Math.PI - 0.25, dir === 1 ? -0.8 + 1.9 * q : Math.PI - 0.25 + 1.9 * q, mat, 12, q);
-        }
-      }
-
-      if (attack === "special" || attack === "airSpecial") {
-        const q = clamp((e - 4) / 16, 0, 1);
-
-        if (aim === "forward") {
-          drawPolyline([
-            { x: c.x, y: c.y + 28 },
-            { x: c.x + dir * 90 * q, y: c.y + 28 },
-            { x: c.x + dir * 90 * q, y: c.y - 54 * q }
-          ], mat, 14, q);
-        }
-
-        if (aim === "up") {
-          drawPolyline([
-            { x: c.x, y: c.y + 40 },
-            { x: c.x, y: c.y - 104 * q },
-            { x: c.x + dir * 72 * q, y: c.y - 104 * q }
-          ], mat, 14, q);
-        }
-
-        if (aim === "down") {
-          drawPolyline([
-            { x: c.x, y: c.y - 28 },
-            { x: c.x + dir * 104 * q, y: c.y - 28 },
-            { x: c.x + dir * 104 * q, y: c.y + 86 * q }
-          ], mat, 14, q);
-          drawImpactDust(c.x + dir * 94, f.y + f.height + 5, dir, mat, Math.ceil(8 * q));
-        }
+      if (p === "king") {
+        hammer(c, d, m, s);
+        blade(c.x - d * 8, c.y + 30, d === 1 ? -.2 : Math.PI + .2, 130, m, s, 18);
+      } else if (p === "rook") {
+        cannon(c, d, m, s);
+        for (let i = 0; i < 6; i++) castleBrick(c.x + d * (35 + i * 28) * s, c.y - 34 + i * 9, m, d * .18, s);
+      } else if (p === "bishop") {
+        staff(c, d, m, s, -.88, 166, 15);
+        staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
+      } else if (p === "knight") {
+        line([{ x: c.x - d * 46, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y - 60 * s }], m, 16, s);
+        lance(c, d, m, s, -.2);
+      } else if (p === "pawn") {
+        spear(c, d, m, s, 126, 11, 0);
+      } else {
+        twin(c, d, m, s);
+        arc(c.x + d * 12, c.y, 110 * s, d === 1 ? -1.2 : Math.PI + .1, d === 1 ? .95 : Math.PI - .95, m, 16, s);
       }
     }
 
-    function drawPawnVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const e = attackElapsed(f);
+    function drawFighter(f) {
+      const c = center(f);
+      const m = mat(f);
+      const bob = Math.sin(state.t * .08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1 : .4);
 
-      if (attack === "light" || attack === "crouchLight") {
-        const q = clamp((e - 2) / 7, 0, 1);
-        const y = attack === "crouchLight" ? c.y + 36 : c.y + 10;
-        drawBlade(c.x - dir * 4, y, dir === 1 ? 0 : Math.PI, 96, mat, q, 7);
+      shadow(f);
+
+      ctx.save();
+      ctx.globalAlpha = f.side === "white" ? .1 : .18;
+      ctx.fillStyle = f.side === "white" ? "rgba(255,255,255,.22)" : "rgba(0,0,0,.26)";
+      ctx.beginPath();
+      ctx.ellipse(c.x, f.y + f.h + 9, f.w * .85, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      drawWeapon(f);
+
+      ctx.save();
+      if (f.hurt > 0) ctx.translate((Math.random() - .5) * 2.2, 0);
+      drawPiece(f, c.x, c.y + bob, 1 + (f.attack ? .018 : 0), 1);
+
+      if (f.armor > 0) {
+        ctx.globalAlpha = .34;
+        ctx.strokeStyle = m.magic;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, f.w * .74, f.h * .58, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
+      ctx.restore();
 
-      if (attack === "heavy") {
-        const q = clamp((e - 4) / 11, 0, 1);
-        drawBlade(c.x - dir * 8, c.y + 16, dir === 1 ? -0.18 : Math.PI + 0.18, 122, mat, q, 9);
-      }
+      ctx.save();
+      ctx.font = "700 11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.shadowColor = "rgba(0,0,0,.8)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(f.name || "", c.x, f.y - 12);
+      ctx.restore();
 
-      if (attack === "crouchHeavy") {
-        const q = clamp((e - 4) / 11, 0, 1);
-        drawBlade(c.x, c.y + 24, dir === 1 ? -0.7 : Math.PI + 0.7, 108, mat, q, 9);
-      }
-
-      if (attack === "airHeavy") {
-        const q = clamp((e - 4) / 11, 0, 1);
-        drawArcStroke(c.x + dir * 6, c.y + 12, 44, dir === 1 ? -0.8 : Math.PI - 0.35, dir === 1 ? -0.8 + 1.75 * q : Math.PI - 0.35 + 1.75 * q, mat, 9, q);
-      }
-
-      if (attack === "special" || attack === "airSpecial") {
-        const q = clamp((e - 4) / 14, 0, 1);
-
-        let ang = dir === 1 ? 0 : Math.PI;
-        let len = 150;
-
-        if (aim === "up") {
-          ang = dir === 1 ? -1.25 : Math.PI + 1.25;
-          len = 134;
-        } else if (aim === "down") {
-          ang = dir === 1 ? 0.32 : Math.PI - 0.32;
-          len = 132;
-        }
-
-        drawBlade(c.x + dir * 4, c.y, ang, len, mat, q, 11);
-        drawImpactDust(c.x + dir * 40, f.y + f.height + 5, dir, mat, Math.ceil(5 * q));
-      }
+      drawCooldownDots(f);
     }
 
-    function drawQueenVfx(f, mat, attack, aim) {
-      const c = fighterCenter(f);
-      const dir = visualDir(f);
-      const e = attackElapsed(f);
+    function drawCooldownDots(f) {
+      const c = center(f);
+      const y = f.y + f.h + 18;
+      const vals = [f.lightCd || 0, f.heavyCd || 0, f.specialCd || 0, f.counterCd || 0];
+      const max = [20, 60, 250, 150];
 
-      if (attack === "light") {
-        const q = clamp((e - 2) / 10, 0, 1);
-        drawBlade(c.x - dir * 12, c.y + 36, dir === 1 ? -0.45 : Math.PI + 0.45, 165, mat, q, 10);
-      }
+      ctx.save();
+      for (let i = 0; i < 4; i++) {
+        const x = c.x - 27 + i * 18;
+        const ready = vals[i] <= 0;
 
-      if (attack === "heavy" || attack === "crouchHeavy") {
-        const q = clamp((e - 4) / 18, 0, 1);
-        drawArcStroke(c.x + dir * 28, c.y + 10, 116, dir === 1 ? -1.0 : Math.PI + 0.06, dir === 1 ? -1.0 + 1.78 * q : Math.PI + 0.06 - 1.78 * q, mat, 16, q);
-      }
+        ctx.globalAlpha = ready ? .85 : .35;
+        ctx.fillStyle = i === 3 && ready ? "#ffe6a0" : ready ? "#fff" : "rgba(255,255,255,.3)";
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
 
-      if (attack === "airHeavy") {
-        const q = clamp((e - 4) / 14, 0, 1);
-        drawArcStroke(c.x + dir * 12, c.y, 86, dir === 1 ? -0.9 : Math.PI - 0.22, dir === 1 ? -0.9 + 1.9 * q : Math.PI - 0.22 + 1.9 * q, mat, 14, q);
-      }
-
-      if (attack === "special" || attack === "airSpecial") {
-        const q = clamp((e - 6) / 22, 0, 1);
-
-        if (aim === "forward") {
-          drawAfterimage(f, c.x + dir * 42 * q, c.y, 1.02, 0.18 * q);
-          drawAfterimage(f, c.x + dir * 94 * q, c.y, 1.08, 0.12 * q);
-          drawBlade(c.x - dir * 24, c.y + 56, dir === 1 ? -0.47 : Math.PI + 0.47, 335, mat, q, 18);
-        }
-
-        if (aim === "up") {
-          drawBlade(c.x, c.y + 38, -Math.PI / 2, 300, mat, q, 18);
-          drawAfterimage({ ...f, characterKey: "queen" }, c.x, c.y - 188 * q, 0.58, 0.24 * q);
-        }
-
-        if (aim === "down") {
-          drawBlade(c.x - dir * 16, c.y + 20, dir === 1 ? 0.24 : Math.PI - 0.24, 300, mat, q, 18);
-          drawImpactDust(c.x + dir * 136, f.y + f.height + 5, dir, mat, Math.ceil(11 * q));
+        if (!ready) {
+          ctx.strokeStyle = "rgba(0,0,0,.55)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(x, y, 6.2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(vals[i] / max[i], 0, 1));
+          ctx.stroke();
         }
       }
+      ctx.restore();
     }
 
     function drawParticles() {
       ctx.save();
-
       for (const p of state.particles) {
-        const a = clamp(p.life / p.maxLife, 0, 1);
-
-        ctx.globalCompositeOperation = p.blend;
+        const a = clamp(p.life / p.max, 0, 1);
         ctx.globalAlpha = a;
         ctx.fillStyle = `rgba(${p.color},${a})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.shrink ? p.r * a : p.r, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.r * a, 0, Math.PI * 2);
         ctx.fill();
 
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += p.gravity;
-        p.vx *= 0.985;
+        p.vy += p.g;
+        p.vx *= .985;
         p.life--;
       }
-
       ctx.restore();
+
       state.particles = state.particles.filter((p) => p.life > 0);
     }
 
     function drawLocalFx() {
       ctx.save();
-      ctx.globalCompositeOperation = "source-over";
 
       for (const fx of state.localFx) {
-        const p = 1 - fx.life / fx.maxLife;
-        const a = clamp(fx.life / fx.maxLife, 0, 1);
+        const p = 1 - fx.life / fx.max;
+        const a = clamp(fx.life / fx.max, 0, 1);
 
-        if (fx.type === "impactRing") {
+        if (fx.type === "impact") {
           ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(${fx.color || "255,255,255"},${a})`;
+          ctx.strokeStyle = `rgba(255,238,205,${a})`;
           ctx.lineWidth = 5 * a;
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 12 + p * 62, 0, Math.PI * 2);
@@ -2098,7 +1736,7 @@
           ctx.lineWidth = 5;
 
           for (let i = 0; i < 10; i++) {
-            const ang = i * Math.PI * 0.2 + p;
+            const ang = i * Math.PI * .2 + p;
             ctx.beginPath();
             ctx.moveTo(fx.x, fx.y);
             ctx.lineTo(fx.x + Math.cos(ang) * (22 + p * 70), fx.y + Math.sin(ang) * (22 + p * 70));
@@ -2107,7 +1745,7 @@
 
           ctx.font = "900 72px Georgia";
           ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,255,255,${0.5 * a})`;
+          ctx.fillStyle = `rgba(255,255,255,${.5 * a})`;
           ctx.fillText(GLYPHS[fx.piece] || "♙", fx.x, fx.y + 24);
         }
 
@@ -2118,31 +1756,11 @@
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 22 + p * 58, 0, Math.PI * 2);
           ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(fx.x - (fx.dir || 1) * 42 * p, fx.y - 28);
-          ctx.lineTo(fx.x + (fx.dir || 1) * 82 * p, fx.y - 2);
-          ctx.stroke();
-        }
-
-        if (fx.type === "guardBreak") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(230,230,230,${a})`;
-          ctx.lineWidth = 2.5;
-
-          for (let i = 0; i < 12; i++) {
-            const ang = i * 1.4;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (20 + p * 56), fx.y + Math.sin(ang) * (20 + p * 56));
-            ctx.stroke();
-          }
         }
 
         if (fx.type === "dash") {
-          ctx.globalAlpha = a * 0.55;
-          ctx.fillStyle = "rgba(255,255,255,0.75)";
-
+          ctx.globalAlpha = a * .55;
+          ctx.fillStyle = "rgba(255,255,255,.75)";
           for (let i = 0; i < 5; i++) {
             ctx.beginPath();
             ctx.ellipse(fx.x - (fx.dir || 1) * (i * 18 + p * 26), fx.y, 18 + i * 4, 8 + i * 2, 0, 0, Math.PI * 2);
@@ -2154,19 +1772,14 @@
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(230,220,190,${a})`;
           ctx.lineWidth = 4;
-
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 70 * p, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 120 * p, 0, Math.PI * 2);
           ctx.stroke();
         }
 
         if (fx.type === "roundWin") {
           ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,240,200,${0.28 * a})`;
+          ctx.fillStyle = `rgba(255,240,200,${.28 * a})`;
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 56 + p * 170, 0, Math.PI * 2);
           ctx.fill();
@@ -2184,79 +1797,74 @@
       state.localFx = state.localFx.filter((fx) => fx.life > 0);
     }
 
-    function drawWaitingScreen() {
+    function drawWaiting() {
       ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillStyle = "rgba(0,0,0,.18)";
       ctx.fillRect(0, 0, 960, 540);
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "1000 54px system-ui";
-      ctx.fillStyle = "rgba(70,40,20,0.95)";
-      ctx.shadowColor = "rgba(255,255,255,0.5)";
+      ctx.fillStyle = "rgba(70,40,20,.95)";
+      ctx.shadowColor = "rgba(255,255,255,.5)";
       ctx.shadowBlur = 12;
       ctx.fillText("WAITING FOR BOARD", 480, 238);
 
       ctx.font = "500 18px system-ui";
-      ctx.fillStyle = "rgba(70,40,20,0.78)";
-      ctx.fillText("Fantasy chessboard fighter. Shift is counter now.", 480, 286);
-
+      ctx.fillStyle = "rgba(70,40,20,.78)";
+      ctx.fillText("Weapon-first fantasy chess combat.", 480, 286);
       ctx.restore();
     }
 
     function drawRoundOverlay(game) {
-      const winner = game.roundWinner;
-      if (!winner) return;
+      if (!game.roundWinner) return;
 
       ctx.save();
-      ctx.fillStyle = "rgba(90,60,34,0.22)";
+      ctx.fillStyle = "rgba(90,60,34,.22)";
       ctx.fillRect(0, 0, 960, 540);
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "1000 66px system-ui";
-      ctx.fillStyle = winner === "white" ? "#fff7ec" : "#2b1a10";
-      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.fillStyle = game.roundWinner === "white" ? "#fff7ec" : "#2b1a10";
+      ctx.shadowColor = "rgba(0,0,0,.35)";
       ctx.shadowBlur = 20;
-      ctx.fillText(`${winner.toUpperCase()} TAKES THE ROUND`, 480, 270);
-
+      ctx.fillText(`${game.roundWinner.toUpperCase()} TAKES THE ROUND`, 480, 270);
       ctx.restore();
     }
 
-    function drawScene() {
+    function loop() {
       state.t++;
 
       const gs = state.gameState;
       const game = gs?.game;
 
-      if (state.shake > 0) state.shake *= 0.82;
-      if (state.flash > 0) state.flash *= 0.86;
+      if (state.shake > 0) state.shake *= .82;
+      if (state.flash > 0) state.flash *= .86;
 
       ctx.save();
 
-      const shakePower = Math.max(state.shake, game?.shake || 0);
-      ctx.translate((Math.random() - 0.5) * shakePower, (Math.random() - 0.5) * shakePower * 0.7);
+      const shake = Math.max(state.shake, game?.shake || 0);
+      ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake * .7);
 
       drawBackground(game);
 
-      if (!game || !game.fighters) {
-        drawWaitingScreen();
+      if (!game?.fighters) {
+        drawWaiting();
         ctx.restore();
-        requestAnimationFrame(drawScene);
+        requestAnimationFrame(loop);
         return;
       }
 
-      const white = game.fighters.white;
-      const black = game.fighters.black;
+      const w = game.fighters.white;
+      const b = game.fighters.black;
 
-      if (white && black) {
-        if (white.x < black.x) {
-          drawFighter(white);
-          drawFighter(black);
-        } else {
-          drawFighter(black);
-          drawFighter(white);
-        }
+      if (w.x < b.x) {
+        drawFighter(w);
+        drawFighter(b);
+      } else {
+        drawFighter(b);
+        drawFighter(w);
       }
 
       drawParticles();
@@ -2272,14 +1880,12 @@
         ctx.restore();
       }
 
-      if (game && game.roundOver) {
-        drawRoundOverlay(game);
-      }
+      if (game.roundOver) drawRoundOverlay(game);
 
-      requestAnimationFrame(drawScene);
+      requestAnimationFrame(loop);
     }
 
-    requestAnimationFrame(drawScene);
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
