@@ -1213,61 +1213,77 @@ function updateFighter(f, enemy, input, game) {
     if (input.specialPressed) startAttack(f, "special", input, game);
   }
 
-  scriptMove(f);
+  function scriptMove(f) {
+  const s = f.script;
+  if (!s || typeof s !== "object") return;
 
-  f.x += f.vx;
-  f.y += f.vy;
-  f.vy += GRAVITY;
+  if (!Number.isFinite(f.vx)) f.vx = 0;
+  if (!Number.isFinite(f.vy)) f.vy = 0;
 
-  if (f.y + f.h >= FLOOR) {
-    f.y = FLOOR - f.h;
-    f.vy = 0;
-    f.grounded = true;
+  if (s.trail) {
+    if (!Array.isArray(s.trail)) s.trail = [];
 
-    if (f.script && f.script.type === "fixed" && f.script.vy > 0) f.script = null;
-  } else {
-    f.grounded = false;
+    s.trail.push({
+      x: Number.isFinite(f.x) ? f.x + f.w / 2 : 0,
+      y: Number.isFinite(f.y) ? f.y + f.h / 2 : 0
+    });
+
+    if (s.trail.length > 22) s.trail.shift();
   }
 
-  if (f.x < LEFT) f.x = LEFT;
-  if (f.x + f.w > RIGHT) f.x = RIGHT - f.w;
+  if (s.type === "fixed") {
+    f.vx = Number.isFinite(s.vx) ? s.vx : 0;
+    f.vy = Number.isFinite(s.vy) ? s.vy : 0;
+    s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
 
-  if (!f.attack) {
-    f.facing = f.x < enemy.x ? 1 : -1;
-    f.attackFacing = f.facing;
+    if (s.t <= 0) f.script = null;
+    return;
   }
 
-  if (f.attack) {
-    f.attackTimer--;
-    if (f.attackTimer <= 0) {
-      f.attack = null;
-      f.attackAim = "forward";
-      f.hitDone = false;
-      f.multiHitWait = 0;
+  if (s.type === "knightL") {
+    if (!s.primary || !s.secondary) {
       f.script = null;
+      return;
     }
+
+    if (s.phase === 1) {
+      f.vx = (s.primary.x || 0) * (s.s1 || 0);
+      f.vy = (s.primary.y || 0) * (s.s1 || 0);
+      s.t--;
+
+      if (s.t <= 0) {
+        s.phase = 2;
+        s.t = s.t2 || 6;
+      }
+    } else {
+      f.vx = (s.secondary.x || 0) * (s.s2 || 0);
+      f.vy = (s.secondary.y || 0) * (s.s2 || 0);
+      s.t--;
+
+      if (s.t <= 0) f.script = null;
+    }
+
+    return;
   }
 
-  if (f.wallBounceTimer > 0) {
-    f.wallBounceTimer--;
+  if (s.type === "bishopZigzag") {
+    f.vx = (s.dir || f.facing || 1) * (s.sx || 0);
+    f.vy = (s.yDir || -1) * (s.sy || 0);
 
-    const hitL = f.x <= LEFT + 1;
-    const hitR = f.x + f.w >= RIGHT - 1;
+    s.t--;
 
-    if ((hitL || hitR) && Math.abs(f.vx) > 4.2) {
-      const side = hitL ? -1 : 1;
-      f.x = hitL ? LEFT : RIGHT - f.w;
-      f.vx = -side * Math.max(7, Math.abs(f.vx) * 0.52);
-      f.vy = Math.min(f.vy, -7);
-
-      const damage = Math.ceil(f.wallBouncePower * WALL_BOUNCE_DAMAGE_MULT);
-      f.hp = Math.max(0, f.hp - damage);
-      f.hurt = Math.max(f.hurt, 18);
-      f.wallBounceTimer = 0;
-
-      fx(game, "wallBounce", f.x + f.w / 2, f.y + f.h / 2, { timer: 18 });
+    if (s.t <= 0) {
+      s.phase = (s.phase || 0) + 1;
+      s.t = 8;
+      s.yDir = -(s.yDir || -1);
     }
+
+    if (s.phase >= 4) f.script = null;
+    return;
   }
+
+  f.script = null;
+}
 }
 
 function prepInput(player) {
