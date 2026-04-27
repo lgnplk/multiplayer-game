@@ -18,7 +18,10 @@
       --green: #86ffbe;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       overflow: hidden;
@@ -30,7 +33,10 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     }
 
-    button, input { font: inherit; }
+    button,
+    input {
+      font: inherit;
+    }
 
     button {
       border: 0;
@@ -106,11 +112,19 @@
     }
 
     @keyframes breathe {
-      from { transform: translateY(-8px) scale(1); }
-      to { transform: translateY(8px) scale(1.02); }
+      from {
+        transform: translateY(-8px) scale(1);
+      }
+
+      to {
+        transform: translateY(8px) scale(1.02);
+      }
     }
 
-    .hero > * { position: relative; z-index: 1; }
+    .hero > * {
+      position: relative;
+      z-index: 1;
+    }
 
     .title {
       margin: 0;
@@ -120,7 +134,9 @@
       font-weight: 1000;
     }
 
-    .title span { color: var(--gold); }
+    .title span {
+      color: var(--gold);
+    }
 
     .subtitle {
       margin: 0;
@@ -312,7 +328,9 @@
       gap: 7px;
     }
 
-    .hudSide.right { text-align: right; }
+    .hudSide.right {
+      text-align: right;
+    }
 
     .nameLine {
       display: flex;
@@ -322,7 +340,9 @@
       text-shadow: 0 2px 12px rgba(0,0,0,0.8);
     }
 
-    .hudSide.right .nameLine { justify-content: flex-end; }
+    .hudSide.right .nameLine {
+      justify-content: flex-end;
+    }
 
     .barShell,
     .meterShell {
@@ -334,7 +354,9 @@
       box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
     }
 
-    .meterShell { height: 8px; }
+    .meterShell {
+      height: 8px;
+    }
 
     .bar,
     .meter {
@@ -406,7 +428,9 @@
       transition: opacity 0.18s ease;
     }
 
-    #message.show { opacity: 1; }
+    #message.show {
+      opacity: 1;
+    }
 
     #bottomHud {
       position: absolute;
@@ -423,7 +447,10 @@
       pointer-events: none;
     }
 
-    #controls { max-width: 620px; line-height: 1.45; }
+    #controls {
+      max-width: 620px;
+      line-height: 1.45;
+    }
 
     #leaveBtn {
       pointer-events: auto;
@@ -455,9 +482,8 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            Massive animated chess pieces fight on a giant glowing board. Every move now has a distinct
-            identity: royal shockwaves, fortress beams, diagonal bishop rifts, knight burst jumps,
-            pawn lance charges, and queen-level storm magic.
+            Heavy polished chess pieces fight on a giant board. The game is faster now,
+            attacks hit harder, and knockback is a main mechanic.
           </p>
         </div>
 
@@ -624,10 +650,6 @@
       return Math.max(a, Math.min(b, v));
     }
 
-    function lerp(a, b, t) {
-      return a + (b - a) * t;
-    }
-
     function safePct(v, max) {
       if (!max || max <= 0) return 0;
       return clamp((v / max) * 100, 0, 100);
@@ -637,6 +659,10 @@
       if (!f) return "king";
       if (f.characterKey === "pawn" && f.promoted) return "queen";
       return f.characterKey || "king";
+    }
+
+    function visualDir(f) {
+      return f?.attack ? (f.attackFacing || f.facing || 1) : (f?.facing || 1);
     }
 
     function escapeHtml(str) {
@@ -667,6 +693,7 @@
         blend: opts.blend ?? "lighter",
         shrink: opts.shrink ?? true
       });
+
       if (state.particles.length > 500) {
         state.particles.splice(0, state.particles.length - 500);
       }
@@ -676,6 +703,7 @@
       for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2;
         const s = Math.random() * power;
+
         addParticle(x, y, {
           vx: Math.cos(a) * s,
           vy: Math.sin(a) * s - Math.random() * 1.8,
@@ -695,6 +723,7 @@
         maxLife: data.life ?? 24,
         ...data
       });
+
       if (state.localFx.length > 120) {
         state.localFx.splice(0, state.localFx.length - 120);
       }
@@ -702,19 +731,23 @@
 
     function renderCharacterCards() {
       characterGrid.innerHTML = "";
+
       for (const [key, ch] of Object.entries(state.characters || {})) {
         const card = document.createElement("div");
         card.className = `character-card ${state.selected === key ? "selected" : ""}`;
+
         card.innerHTML = `
           <div class="piece-big">${PIECE_SYMBOL[key] || "♟"}</div>
           <h3>${ch.name}</h3>
           <p>${ch.title || ""}</p>
         `;
+
         card.onclick = () => {
           state.selected = key;
           socket.emit("setCharacter", key);
           renderCharacterCards();
         };
+
         characterGrid.appendChild(card);
       }
     }
@@ -735,6 +768,7 @@
         const canJoin = lobby.status === "waiting" && !lobby.blackName;
         const card = document.createElement("div");
         card.className = "lobby-card";
+
         card.innerHTML = `
           <div class="lobby-top">
             <div class="lobby-name">${escapeHtml(lobby.name || "Untitled Board")}</div>
@@ -750,12 +784,14 @@
             <button class="secondary" data-watch="${lobby.id}">Watch</button>
           </div>
         `;
+
         lobbiesEl.appendChild(card);
       }
 
       lobbiesEl.querySelectorAll("[data-join]").forEach((b) => {
         b.onclick = () => socket.emit("joinLobby", b.dataset.join);
       });
+
       lobbiesEl.querySelectorAll("[data-watch]").forEach((b) => {
         b.onclick = () => socket.emit("watchLobby", b.dataset.watch);
       });
@@ -764,10 +800,12 @@
     function renderLeaderboard() {
       leaderboardEl.innerHTML = "";
       const rows = state.lobbyData.leaderboard || [];
+
       if (!rows.length) {
         leaderboardEl.textContent = "No wins yet.";
         return;
       }
+
       rows.forEach((row, i) => {
         const div = document.createElement("div");
         div.textContent = `${i + 1}. ${row.name}: ${row.score}`;
@@ -790,7 +828,9 @@
     createBtn.onclick = () => {
       const name = nameInput.value.trim();
       const lobby = lobbyInput.value.trim();
+
       if (name) socket.emit("setName", name);
+
       socket.emit("setCharacter", state.selected);
       socket.emit("createLobby", lobby || undefined);
     };
@@ -835,13 +875,18 @@
       state.gameState = gs;
       consumeServerEffects(gs);
       updateHud(gs);
-      if (gs?.lobby?.status !== "waiting") showGame();
+
+      if (gs?.lobby?.status !== "waiting") {
+        showGame();
+      }
     });
 
     function consumeServerEffects(gs) {
       const effects = gs?.game?.effects || [];
+
       for (const fx of effects) {
         if (!fx.id || state.seenEffects.has(fx.id)) continue;
+
         state.seenEffects.add(fx.id);
 
         if (state.seenEffects.size > 600) {
@@ -889,6 +934,7 @@
 
         if (fx.type === "wallBounce") {
           burst(fx.x, fx.y, "255,255,255", 18, 5);
+          state.shake = Math.max(state.shake, 9);
         }
       }
     }
@@ -951,10 +997,13 @@
     window.addEventListener("keydown", (e) => {
       const k = keyMap[e.code];
       if (!k) return;
+
       e.preventDefault();
+
       if ((k === "light" || k === "heavy" || k === "special") && !state.input[k]) {
         state.pulse[k] = true;
       }
+
       state.input[k] = true;
       sendInput();
     });
@@ -962,6 +1011,7 @@
     window.addEventListener("keyup", (e) => {
       const k = keyMap[e.code];
       if (!k) return;
+
       e.preventDefault();
       state.input[k] = false;
       sendInput();
@@ -974,6 +1024,7 @@
         heavy: state.pulse.heavy || state.input.heavy,
         special: state.pulse.special || state.input.special
       });
+
       state.pulse.light = false;
       state.pulse.heavy = false;
       state.pulse.special = false;
@@ -985,6 +1036,7 @@
 
     function drawRoundRect(x, y, w, h, r) {
       r = Math.min(r, w / 2, h / 2);
+
       ctx.beginPath();
       ctx.moveTo(x + r, y);
       ctx.lineTo(x + w - r, y);
@@ -1010,26 +1062,30 @@
 
       ctx.save();
       ctx.globalAlpha = 0.18;
+
       for (let i = 0; i < 75; i++) {
         const x = (i * 119 + state.t * 0.08) % 990 - 10;
         const y = 34 + ((i * 77) % 220);
         const r = 0.8 + (i % 4) * 0.45;
+
         ctx.fillStyle = i % 2 ? "#ffe8a3" : "#c5d8ff";
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
       }
+
       ctx.restore();
 
       const moonX = 782;
       const moonY = 88;
-      const g = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 60);
-      g.addColorStop(0, "rgba(255,240,185,0.82)");
-      g.addColorStop(1, "rgba(255,240,185,0)");
-      ctx.fillStyle = g;
+      const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 60);
+      moonGlow.addColorStop(0, "rgba(255,240,185,0.82)");
+      moonGlow.addColorStop(1, "rgba(255,240,185,0)");
+      ctx.fillStyle = moonGlow;
       ctx.beginPath();
       ctx.arc(moonX, moonY, 60, 0, Math.PI * 2);
       ctx.fill();
+
       ctx.fillStyle = "rgba(255,241,196,0.92)";
       ctx.beginPath();
       ctx.arc(moonX, moonY, 22, 0, Math.PI * 2);
@@ -1058,6 +1114,7 @@
         const x = i * 145 * scale;
         const w = 96 * scale;
         const h = (84 + (i % 4) * 26) * scale;
+
         ctx.fillRect(x, baseY - h, w, h);
 
         ctx.fillRect(x + w * 0.1, baseY - h - 26 * scale, w * 0.18, 26 * scale);
@@ -1072,6 +1129,7 @@
 
     function drawBoardFloor(floorY) {
       const tileSize = 60;
+
       for (let y = floorY; y < 540; y += tileSize) {
         for (let x = 0; x < 960; x += tileSize) {
           const dark = ((x / tileSize) + (y / tileSize)) % 2 === 0;
@@ -1110,17 +1168,22 @@
       ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.fillRect(16, 120, 12, floorY - 120);
       ctx.fillRect(932, 120, 12, floorY - 120);
+
       ctx.restore();
     }
 
     function fighterCenter(f) {
-      return { x: f.x + f.width / 2, y: f.y + f.height / 2 };
+      return {
+        x: f.x + f.width / 2,
+        y: f.y + f.height / 2
+      };
     }
 
     function fillGlowCircle(x, y, r, inner, outer) {
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       g.addColorStop(0, inner);
       g.addColorStop(1, outer);
+
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -1131,11 +1194,20 @@
       const c = fighterCenter(f);
       const floorY = state.gameState?.game?.floorY ?? 430;
       const air = clamp((floorY - (f.y + f.height)) / 150, 0, 1);
+
       ctx.save();
-      ctx.globalAlpha = 0.3 * (1 - air * 0.6);
+      ctx.globalAlpha = 0.42 * (1 - air * 0.65);
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.ellipse(c.x, floorY + 7, f.width * (0.72 - air * 0.24), 13 * (1 - air * 0.25), 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        c.x,
+        floorY + 8,
+        f.width * (0.85 - air * 0.28),
+        16 * (1 - air * 0.25),
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.restore();
     }
@@ -1160,7 +1232,9 @@
       ctx.save();
       ctx.translate(c.x, c.y + bob);
 
-      if (hurt) ctx.translate((Math.random() - 0.5) * 2.8, 0);
+      if (hurt) {
+        ctx.translate((Math.random() - 0.5) * 2.8, 0);
+      }
 
       ctx.scale(1 + pulse * 0.025, 1 + (!f.grounded ? 0.04 : 0));
       drawChessPieceBody(f, colors);
@@ -1178,22 +1252,27 @@
     function drawPieceAura(f, colors) {
       const c = fighterCenter(f);
       const piece = pieceOf(f);
-      const alpha = f.promoted ? 0.22 : 0.12;
 
       ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      fillGlowCircle(c.x, c.y, Math.max(f.width, f.height) * 0.8, `rgba(${hexToRgb(colors[1])}, ${alpha})`, `rgba(${hexToRgb(colors[1])}, 0)`);
 
-      if (piece === "queen") {
-        for (let i = 0; i < 3; i++) {
-          ctx.globalAlpha = 0.26 - i * 0.05;
-          ctx.strokeStyle = colors[i];
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.ellipse(c.x, c.y, f.width * (0.9 + i * 0.22), f.height * (0.54 + i * 0.05), state.t * 0.01 + i, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
+      ctx.globalAlpha = piece === "queen" ? 0.26 : 0.14;
+
+      const g = ctx.createRadialGradient(
+        c.x,
+        f.y + f.height + 12,
+        0,
+        c.x,
+        f.y + f.height + 12,
+        f.width * 1.1
+      );
+
+      g.addColorStop(0, `rgba(${hexToRgb(colors[1])},0.22)`);
+      g.addColorStop(1, `rgba(${hexToRgb(colors[1])},0)`);
+
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(c.x, f.y + f.height + 10, f.width * 0.9, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.restore();
     }
@@ -1205,172 +1284,234 @@
 
       ctx.save();
 
-      const grad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
-      grad.addColorStop(0, colors[0]);
-      grad.addColorStop(0.48, colors[1]);
-      grad.addColorStop(1, colors[2]);
+      const material = ctx.createLinearGradient(-w * 0.45, -h * 0.5, w * 0.45, h * 0.5);
+      material.addColorStop(0, colors[0]);
+      material.addColorStop(0.22, "#ffffff");
+      material.addColorStop(0.42, colors[0]);
+      material.addColorStop(0.68, colors[1]);
+      material.addColorStop(1, colors[2]);
 
-      ctx.fillStyle = grad;
-      ctx.shadowColor = colors[1];
-      ctx.shadowBlur = f.attack ? 24 : 14;
+      ctx.fillStyle = material;
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 8;
 
-      ctx.beginPath();
-      if (piece === "king") kingShape(w, h);
-      else if (piece === "rook") rookShape(w, h);
-      else if (piece === "bishop") bishopShape(w, h);
-      else if (piece === "knight") knightShape(w, h);
-      else if (piece === "pawn") pawnShape(w, h);
-      else if (piece === "queen") queenShape(w, h);
+      drawPhysicalPiece(piece, w, h);
       ctx.fill();
 
       ctx.shadowBlur = 0;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(0,0,0,0.34)";
-      ctx.stroke();
-      ctx.lineWidth = 1.3;
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
+      ctx.shadowOffsetY = 0;
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(0,0,0,0.42)";
       ctx.stroke();
 
-      drawPieceDetails(piece, w, h);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.stroke();
+
+      drawPhysicalBands(piece, w, h, colors);
+      drawPieceEngraving(piece, w, h);
+
       ctx.restore();
     }
 
-    function kingShape(w, h) {
-      ctx.moveTo(-w * 0.14, -h * 0.42);
-      ctx.lineTo(-w * 0.34, -h * 0.22);
-      ctx.lineTo(-w * 0.14, -h * 0.18);
-      ctx.lineTo(-w * 0.26, h * 0.2);
-      ctx.quadraticCurveTo(-w * 0.38, h * 0.32, -w * 0.36, h * 0.42);
-      ctx.lineTo(w * 0.36, h * 0.42);
-      ctx.quadraticCurveTo(w * 0.38, h * 0.32, w * 0.26, h * 0.2);
-      ctx.lineTo(w * 0.14, -h * 0.18);
-      ctx.lineTo(w * 0.34, -h * 0.22);
-      ctx.lineTo(w * 0.14, -h * 0.42);
-      ctx.lineTo(w * 0.08, -h * 0.3);
-      ctx.lineTo(0, -h * 0.54);
-      ctx.lineTo(-w * 0.08, -h * 0.3);
+    function drawPhysicalPiece(piece, w, h) {
+      ctx.beginPath();
+
+      if (piece === "pawn") {
+        ctx.moveTo(-w * 0.38, h * 0.42);
+        ctx.quadraticCurveTo(-w * 0.48, h * 0.34, -w * 0.3, h * 0.28);
+        ctx.lineTo(-w * 0.2, h * 0.04);
+        ctx.quadraticCurveTo(-w * 0.32, -h * 0.05, -w * 0.18, -h * 0.14);
+        ctx.quadraticCurveTo(-w * 0.32, -h * 0.36, 0, -h * 0.44);
+        ctx.quadraticCurveTo(w * 0.32, -h * 0.36, w * 0.18, -h * 0.14);
+        ctx.quadraticCurveTo(w * 0.32, -h * 0.05, w * 0.2, h * 0.04);
+        ctx.lineTo(w * 0.3, h * 0.28);
+        ctx.quadraticCurveTo(w * 0.48, h * 0.34, w * 0.38, h * 0.42);
+        ctx.closePath();
+        return;
+      }
+
+      if (piece === "rook") {
+        ctx.moveTo(-w * 0.44, h * 0.42);
+        ctx.quadraticCurveTo(-w * 0.5, h * 0.33, -w * 0.32, h * 0.27);
+        ctx.lineTo(-w * 0.26, -h * 0.2);
+        ctx.lineTo(-w * 0.44, -h * 0.2);
+        ctx.lineTo(-w * 0.44, -h * 0.42);
+        ctx.lineTo(-w * 0.26, -h * 0.42);
+        ctx.lineTo(-w * 0.26, -h * 0.3);
+        ctx.lineTo(-w * 0.09, -h * 0.3);
+        ctx.lineTo(-w * 0.09, -h * 0.42);
+        ctx.lineTo(w * 0.09, -h * 0.42);
+        ctx.lineTo(w * 0.09, -h * 0.3);
+        ctx.lineTo(w * 0.26, -h * 0.3);
+        ctx.lineTo(w * 0.26, -h * 0.42);
+        ctx.lineTo(w * 0.44, -h * 0.42);
+        ctx.lineTo(w * 0.44, -h * 0.2);
+        ctx.lineTo(w * 0.26, -h * 0.2);
+        ctx.lineTo(w * 0.32, h * 0.27);
+        ctx.quadraticCurveTo(w * 0.5, h * 0.33, w * 0.44, h * 0.42);
+        ctx.closePath();
+        return;
+      }
+
+      if (piece === "bishop") {
+        ctx.moveTo(-w * 0.38, h * 0.42);
+        ctx.quadraticCurveTo(-w * 0.48, h * 0.33, -w * 0.3, h * 0.28);
+        ctx.lineTo(-w * 0.19, h * 0.08);
+        ctx.quadraticCurveTo(-w * 0.42, -h * 0.08, -w * 0.18, -h * 0.28);
+        ctx.quadraticCurveTo(-w * 0.05, -h * 0.43, 0, -h * 0.51);
+        ctx.quadraticCurveTo(w * 0.32, -h * 0.35, w * 0.2, -h * 0.1);
+        ctx.quadraticCurveTo(w * 0.36, h * 0.02, w * 0.19, h * 0.08);
+        ctx.lineTo(w * 0.3, h * 0.28);
+        ctx.quadraticCurveTo(w * 0.48, h * 0.33, w * 0.38, h * 0.42);
+        ctx.closePath();
+        return;
+      }
+
+      if (piece === "knight") {
+        ctx.moveTo(-w * 0.4, h * 0.42);
+        ctx.quadraticCurveTo(-w * 0.5, h * 0.32, -w * 0.28, h * 0.26);
+        ctx.lineTo(-w * 0.24, h * 0.08);
+        ctx.quadraticCurveTo(-w * 0.36, -h * 0.22, -w * 0.08, -h * 0.46);
+        ctx.quadraticCurveTo(w * 0.28, -h * 0.55, w * 0.38, -h * 0.22);
+        ctx.quadraticCurveTo(w * 0.2, -h * 0.16, w * 0.16, -h * 0.02);
+        ctx.quadraticCurveTo(w * 0.36, h * 0.1, w * 0.28, h * 0.28);
+        ctx.quadraticCurveTo(w * 0.46, h * 0.33, w * 0.4, h * 0.42);
+        ctx.closePath();
+        return;
+      }
+
+      if (piece === "queen") {
+        ctx.moveTo(-w * 0.44, h * 0.42);
+        ctx.quadraticCurveTo(-w * 0.52, h * 0.33, -w * 0.32, h * 0.27);
+        ctx.lineTo(-w * 0.24, -h * 0.12);
+        ctx.lineTo(-w * 0.43, -h * 0.37);
+        ctx.lineTo(-w * 0.2, -h * 0.18);
+        ctx.lineTo(-w * 0.08, -h * 0.5);
+        ctx.lineTo(0, -h * 0.22);
+        ctx.lineTo(w * 0.08, -h * 0.5);
+        ctx.lineTo(w * 0.2, -h * 0.18);
+        ctx.lineTo(w * 0.43, -h * 0.37);
+        ctx.lineTo(w * 0.24, -h * 0.12);
+        ctx.lineTo(w * 0.32, h * 0.27);
+        ctx.quadraticCurveTo(w * 0.52, h * 0.33, w * 0.44, h * 0.42);
+        ctx.closePath();
+        return;
+      }
+
+      ctx.moveTo(-w * 0.44, h * 0.42);
+      ctx.quadraticCurveTo(-w * 0.52, h * 0.33, -w * 0.32, h * 0.27);
+      ctx.lineTo(-w * 0.23, -h * 0.08);
+      ctx.lineTo(-w * 0.4, -h * 0.24);
+      ctx.lineTo(-w * 0.16, -h * 0.2);
+      ctx.lineTo(-w * 0.08, -h * 0.38);
+      ctx.lineTo(-w * 0.08, -h * 0.52);
+      ctx.lineTo(w * 0.08, -h * 0.52);
+      ctx.lineTo(w * 0.08, -h * 0.38);
+      ctx.lineTo(w * 0.16, -h * 0.2);
+      ctx.lineTo(w * 0.4, -h * 0.24);
+      ctx.lineTo(w * 0.23, -h * 0.08);
+      ctx.lineTo(w * 0.32, h * 0.27);
+      ctx.quadraticCurveTo(w * 0.52, h * 0.33, w * 0.44, h * 0.42);
       ctx.closePath();
     }
 
-    function rookShape(w, h) {
-      ctx.moveTo(-w * 0.42, -h * 0.42);
-      ctx.lineTo(-w * 0.22, -h * 0.42);
-      ctx.lineTo(-w * 0.22, -h * 0.3);
-      ctx.lineTo(-w * 0.08, -h * 0.3);
-      ctx.lineTo(-w * 0.08, -h * 0.42);
-      ctx.lineTo(w * 0.08, -h * 0.42);
-      ctx.lineTo(w * 0.08, -h * 0.3);
-      ctx.lineTo(w * 0.22, -h * 0.3);
-      ctx.lineTo(w * 0.22, -h * 0.42);
-      ctx.lineTo(w * 0.42, -h * 0.42);
-      ctx.lineTo(w * 0.34, h * 0.32);
-      ctx.quadraticCurveTo(w * 0.4, h * 0.42, w * 0.25, h * 0.44);
-      ctx.lineTo(-w * 0.25, h * 0.44);
-      ctx.quadraticCurveTo(-w * 0.4, h * 0.42, -w * 0.34, h * 0.32);
-      ctx.closePath();
-    }
-
-    function bishopShape(w, h) {
-      ctx.moveTo(0, -h * 0.5);
-      ctx.quadraticCurveTo(w * 0.36, -h * 0.3, w * 0.18, h * 0.08);
-      ctx.quadraticCurveTo(w * 0.36, h * 0.18, w * 0.26, h * 0.34);
-      ctx.quadraticCurveTo(w * 0.18, h * 0.44, 0, h * 0.46);
-      ctx.quadraticCurveTo(-w * 0.18, h * 0.44, -w * 0.26, h * 0.34);
-      ctx.quadraticCurveTo(-w * 0.36, h * 0.18, -w * 0.18, h * 0.08);
-      ctx.quadraticCurveTo(-w * 0.36, -h * 0.3, 0, -h * 0.5);
-      ctx.closePath();
-    }
-
-    function knightShape(w, h) {
-      ctx.moveTo(-w * 0.2, h * 0.42);
-      ctx.lineTo(-w * 0.3, h * 0.18);
-      ctx.quadraticCurveTo(-w * 0.3, -h * 0.22, -w * 0.05, -h * 0.5);
-      ctx.quadraticCurveTo(w * 0.28, -h * 0.56, w * 0.34, -h * 0.2);
-      ctx.quadraticCurveTo(w * 0.2, -h * 0.1, w * 0.14, h * 0.05);
-      ctx.quadraticCurveTo(w * 0.34, h * 0.16, w * 0.28, h * 0.38);
-      ctx.quadraticCurveTo(w * 0.22, h * 0.44, 0, h * 0.44);
-      ctx.closePath();
-    }
-
-    function pawnShape(w, h) {
-      ctx.arc(0, -h * 0.26, w * 0.24, 0, Math.PI * 2);
-      ctx.moveTo(-w * 0.22, -h * 0.02);
-      ctx.quadraticCurveTo(0, -h * 0.12, w * 0.22, -h * 0.02);
-      ctx.quadraticCurveTo(w * 0.3, h * 0.16, w * 0.2, h * 0.38);
-      ctx.lineTo(-w * 0.2, h * 0.38);
-      ctx.quadraticCurveTo(-w * 0.3, h * 0.16, -w * 0.22, -h * 0.02);
-      ctx.closePath();
-    }
-
-    function queenShape(w, h) {
-      ctx.moveTo(-w * 0.4, -h * 0.36);
-      ctx.lineTo(-w * 0.22, -h * 0.12);
-      ctx.lineTo(-w * 0.08, -h * 0.44);
-      ctx.lineTo(0, -h * 0.16);
-      ctx.lineTo(w * 0.08, -h * 0.44);
-      ctx.lineTo(w * 0.22, -h * 0.12);
-      ctx.lineTo(w * 0.4, -h * 0.36);
-      ctx.lineTo(w * 0.3, h * 0.34);
-      ctx.quadraticCurveTo(w * 0.34, h * 0.44, w * 0.18, h * 0.46);
-      ctx.lineTo(-w * 0.18, h * 0.46);
-      ctx.quadraticCurveTo(-w * 0.34, h * 0.44, -w * 0.3, h * 0.34);
-      ctx.closePath();
-    }
-
-    function drawPieceDetails(piece, w, h) {
+    function drawPhysicalBands(piece, w, h, colors) {
       ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.34)";
-      ctx.lineWidth = 2;
+
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = 4;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(0,0,0,0.28)";
+
+      const rings = [
+        { y: h * 0.34, rx: w * 0.43, ry: 8 },
+        { y: h * 0.24, rx: w * 0.32, ry: 6 },
+        { y: piece === "rook" ? -h * 0.2 : piece === "pawn" ? -h * 0.04 : h * 0.04, rx: w * 0.24, ry: 5 }
+      ];
+
+      for (const r of rings) {
+        ctx.beginPath();
+        ctx.ellipse(0, r.y, r.rx, r.ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(-r.rx * 0.18, r.y - 2, r.rx * 0.55, r.ry * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      const shine = ctx.createLinearGradient(-w * 0.2, -h * 0.45, w * 0.05, h * 0.35);
+      shine.addColorStop(0, "rgba(255,255,255,0.45)");
+      shine.addColorStop(0.5, "rgba(255,255,255,0.08)");
+      shine.addColorStop(1, "rgba(255,255,255,0)");
+
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.ellipse(-w * 0.13, -h * 0.02, w * 0.13, h * 0.42, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawPieceEngraving(piece, w, h) {
+      ctx.save();
+
+      ctx.strokeStyle = "rgba(0,0,0,0.32)";
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
 
       if (piece === "king") {
         ctx.beginPath();
-        ctx.moveTo(-w * 0.18, -h * 0.12);
-        ctx.lineTo(w * 0.18, -h * 0.12);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, -h * 0.55);
-        ctx.lineTo(0, -h * 0.41);
-        ctx.moveTo(-w * 0.07, -h * 0.48);
-        ctx.lineTo(w * 0.07, -h * 0.48);
+        ctx.moveTo(0, -h * 0.56);
+        ctx.lineTo(0, -h * 0.38);
+        ctx.moveTo(-w * 0.08, -h * 0.47);
+        ctx.lineTo(w * 0.08, -h * 0.47);
         ctx.stroke();
       }
 
       if (piece === "rook") {
         for (let i = -1; i <= 1; i++) {
           ctx.beginPath();
-          ctx.moveTo(i * w * 0.12, -h * 0.42);
-          ctx.lineTo(i * w * 0.12, -h * 0.3);
+          ctx.moveTo(i * w * 0.13, -h * 0.42);
+          ctx.lineTo(i * w * 0.13, -h * 0.29);
           ctx.stroke();
         }
       }
 
       if (piece === "bishop") {
         ctx.beginPath();
-        ctx.moveTo(w * 0.12, -h * 0.4);
+        ctx.moveTo(w * 0.13, -h * 0.39);
         ctx.lineTo(-w * 0.14, -h * 0.08);
         ctx.stroke();
       }
 
       if (piece === "knight") {
-        ctx.fillStyle = "rgba(0,0,0,0.32)";
         ctx.beginPath();
-        ctx.ellipse(w * 0.12, -h * 0.18, 4, 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(w * 0.12, -h * 0.2, 4, 6, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.02, -h * 0.4);
+        ctx.lineTo(-w * 0.14, -h * 0.55);
+        ctx.stroke();
       }
 
       if (piece === "pawn") {
         ctx.beginPath();
-        ctx.moveTo(-w * 0.12, h * 0.06);
-        ctx.quadraticCurveTo(0, h * 0.14, w * 0.12, h * 0.06);
+        ctx.arc(0, -h * 0.26, w * 0.18, 0.2, Math.PI - 0.2);
         ctx.stroke();
       }
 
       if (piece === "queen") {
         for (let i = -1; i <= 1; i++) {
           ctx.beginPath();
-          ctx.arc(i * w * 0.16, -h * 0.42, 4.2, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          ctx.arc(i * w * 0.15, -h * 0.43, 4.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -1380,11 +1521,12 @@
 
     function drawBlockShell(f, colors) {
       const c = fighterCenter(f);
+
       ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = "rgba(220,240,255,0.92)";
       ctx.shadowColor = colors[0];
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 12;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.arc(c.x, c.y, Math.max(f.width, f.height) * 0.48, -1.2, 1.2);
@@ -1394,12 +1536,12 @@
 
     function drawArmorShell(f, colors) {
       const c = fighterCenter(f);
+
       ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.48;
+      ctx.globalAlpha = 0.45;
       ctx.strokeStyle = colors[0];
       ctx.shadowColor = colors[1];
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 14;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.ellipse(c.x, c.y, f.width * 0.6, f.height * 0.55, 0, 0, Math.PI * 2);
@@ -1409,35 +1551,43 @@
 
     function drawStunStars(f) {
       const c = fighterCenter(f);
+
       ctx.save();
       ctx.globalAlpha = 0.9;
       ctx.strokeStyle = "#ffd66b";
       ctx.lineWidth = 3;
+
       for (let i = 0; i < 3; i++) {
         const a = state.t * 0.08 + i * ((Math.PI * 2) / 3);
         const x = c.x + Math.cos(a) * 26;
         const y = c.y - f.height * 0.5 + Math.sin(a) * 8;
+
         drawStar(x, y, 5, 8, 4);
       }
+
       ctx.restore();
     }
 
     function drawStar(x, y, points, outer, inner) {
       ctx.beginPath();
+
       for (let i = 0; i < points * 2; i++) {
         const r = i % 2 === 0 ? outer : inner;
         const a = -Math.PI / 2 + (Math.PI / points) * i;
         const px = x + Math.cos(a) * r;
         const py = y + Math.sin(a) * r;
+
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
+
       ctx.closePath();
       ctx.stroke();
     }
 
     function drawNameTag(f) {
       const c = fighterCenter(f);
+
       ctx.save();
       ctx.font = "700 11px system-ui";
       ctx.textAlign = "center";
@@ -1453,10 +1603,13 @@
       const y = f.y + f.height + 18;
       const values = [f.lightCooldown || 0, f.heavyCooldown || 0, f.specialCooldown || 0];
       const maxes = [20, 50, 108];
+
       ctx.save();
+
       for (let i = 0; i < 3; i++) {
         const x = c.x - 18 + i * 18;
         const ready = values[i] <= 0;
+
         ctx.globalAlpha = ready ? 0.85 : 0.35;
         ctx.fillStyle = ready ? "#ffffff" : "rgba(255,255,255,0.3)";
         ctx.beginPath();
@@ -1471,6 +1624,7 @@
           ctx.stroke();
         }
       }
+
       ctx.restore();
     }
 
@@ -1479,233 +1633,458 @@
       const attack = f.attack;
       const aim = f.attackAim || "forward";
 
-      if (piece === "king") return drawKingVfx(f, colors, attack, aim);
-      if (piece === "rook") return drawRookVfx(f, colors, attack, aim);
-      if (piece === "bishop") return drawBishopVfx(f, colors, attack, aim);
-      if (piece === "knight") return drawKnightVfx(f, colors, attack, aim);
-      if (piece === "pawn") return drawPawnVfx(f, colors, attack, aim);
-      if (piece === "queen") return drawQueenVfx(f, colors, attack, aim);
+      if (piece === "king") drawKingVfx(f, colors, attack, aim);
+      else if (piece === "rook") drawRookVfx(f, colors, attack, aim);
+      else if (piece === "bishop") drawBishopVfx(f, colors, attack, aim);
+      else if (piece === "knight") drawKnightVfx(f, colors, attack, aim);
+      else if (piece === "pawn") drawPawnVfx(f, colors, attack, aim);
+      else if (piece === "queen") drawQueenVfx(f, colors, attack, aim);
     }
 
-    function forwardPoint(f, mul = 1) {
-      return {
-        x: f.facing === 1 ? f.x + f.width + mul : f.x - mul,
-        y: f.y + f.height * 0.45
-      };
-    }
-
-    function drawSlashArc(x, y, r, start, end, colors, width = 8) {
+    function drawWeaponLine(x1, y1, x2, y2, width, outer, inner) {
       ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      for (let i = 0; i < 3; i++) {
-        ctx.globalAlpha = 0.62 - i * 0.14;
-        ctx.strokeStyle = colors[i] || colors[0];
-        ctx.shadowColor = colors[i] || colors[0];
-        ctx.shadowBlur = 18;
-        ctx.lineWidth = width - i * 2;
+      ctx.globalCompositeOperation = "source-over";
+
+      ctx.strokeStyle = "rgba(0,0,0,0.55)";
+      ctx.lineWidth = width + 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.strokeStyle = outer;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.strokeStyle = inner;
+      ctx.lineWidth = Math.max(2, width * 0.35);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawWeaponHead(x, y, angle, size, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(size + 3, 0);
+      ctx.lineTo(-size * 0.55, -size * 0.52);
+      ctx.lineTo(-size * 0.25, 0);
+      ctx.lineTo(-size * 0.55, size * 0.52);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.55, -size * 0.48);
+      ctx.lineTo(-size * 0.22, 0);
+      ctx.lineTo(-size * 0.55, size * 0.48);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawPhysicalArc(cx, cy, r, start, end, colors, width = 8) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+
+      ctx.strokeStyle = "rgba(0,0,0,0.45)";
+      ctx.lineWidth = width + 6;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end);
+      ctx.stroke();
+
+      ctx.strokeStyle = colors[0];
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#ffffff";
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = Math.max(2, width * 0.3);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 4, start, end);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawImpactDust(x, y, dir, count = 4) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = "rgba(210,200,180,0.75)";
+
+      for (let i = 0; i < count; i++) {
         ctx.beginPath();
-        ctx.arc(x, y, r - i * 10, start, end);
-        ctx.stroke();
+        ctx.ellipse(
+          x - dir * (i * 15 + 8),
+          y + Math.sin(i) * 3,
+          14 + i * 2,
+          6 + i,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
       }
+
       ctx.restore();
     }
 
     function drawKingVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlashArc(c.x + f.facing * 28, c.y + 8, 42, f.facing === 1 ? -0.9 : Math.PI + 0.1, f.facing === 1 ? 0.9 : Math.PI - 0.9, colors, 7);
+        const x1 = c.x + dir * 8;
+        const y1 = c.y - 6;
+        const x2 = c.x + dir * 92;
+        const y2 = c.y - 12;
+
+        drawWeaponLine(x1, y1, x2, y2, 8, "#d9a943", "#fff3ad");
+        drawWeaponHead(x2, y2, dir === 1 ? 0 : Math.PI, 15, "#ffd86b");
       }
 
-      if (attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
-        drawSlashArc(c.x + f.facing * 34, c.y, 68, f.facing === 1 ? -1.1 : Math.PI + 0.2, f.facing === 1 ? 0.95 : Math.PI - 0.95, colors, 12);
+      if (attack === "heavy" || attack === "airHeavy") {
+        drawPhysicalArc(
+          c.x + dir * 35,
+          c.y + 2,
+          76,
+          dir === 1 ? -1.15 : Math.PI + 0.15,
+          dir === 1 ? 0.82 : Math.PI - 0.82,
+          colors,
+          13
+        );
+
+        ctx.save();
+        ctx.fillStyle = "#ffd86b";
+        ctx.strokeStyle = "rgba(0,0,0,0.45)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(c.x + dir * 105, c.y + 38, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (attack === "crouchHeavy") {
+        drawPhysicalArc(
+          c.x + dir * 45,
+          f.y + f.height * 0.82,
+          62,
+          dir === 1 ? -0.25 : Math.PI - 0.9,
+          dir === 1 ? 0.72 : Math.PI + 0.25,
+          colors,
+          12
+        );
+
+        drawImpactDust(c.x + dir * 70, f.y + f.height + 4, dir, 5);
       }
 
       if (attack === "special" || attack === "airSpecial") {
         if (aim === "forward") {
-          for (let i = 0; i < 4; i++) {
-            ctx.save();
-            ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = 0.3 - i * 0.05;
-            ctx.strokeStyle = i % 2 ? colors[1] : "#fff";
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(c.x + f.facing * 70, c.y, 45 + i * 28 + Math.sin(state.t * 0.1 + i) * 3, -1.1, 1.1);
-            ctx.stroke();
-            ctx.restore();
-          }
+          ctx.save();
+          ctx.translate(c.x + dir * 100, c.y);
+          ctx.scale(dir, 1);
+
+          ctx.fillStyle = "#ffd86b";
+          ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          ctx.lineWidth = 5;
+
+          ctx.beginPath();
+          ctx.moveTo(-48, 42);
+          ctx.lineTo(-36, -34);
+          ctx.lineTo(-14, -12);
+          ctx.lineTo(0, -48);
+          ctx.lineTo(14, -12);
+          ctx.lineTo(36, -34);
+          ctx.lineTo(48, 42);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.restore();
+
+          drawImpactDust(c.x + dir * 65, f.y + f.height + 4, dir, 7);
         }
 
         if (aim === "up") {
-          ctx.save();
-          ctx.globalCompositeOperation = "lighter";
-          ctx.strokeStyle = colors[0];
-          ctx.shadowColor = colors[1];
-          ctx.shadowBlur = 24;
-          ctx.lineWidth = 10;
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y);
-          ctx.lineTo(c.x, c.y - 190);
-          ctx.stroke();
+          drawWeaponLine(c.x, c.y + 20, c.x, c.y - 185, 14, "#d9a943", "#fff3ad");
 
+          ctx.save();
           ctx.font = "900 72px Georgia";
           ctx.textAlign = "center";
-          ctx.fillStyle = "#fff";
-          ctx.fillText("♔", c.x, c.y - 140);
+          ctx.fillStyle = "#ffd86b";
+          ctx.strokeStyle = "rgba(0,0,0,0.5)";
+          ctx.lineWidth = 5;
+          ctx.strokeText("♔", c.x, c.y - 145);
+          ctx.fillText("♔", c.x, c.y - 145);
           ctx.restore();
         }
 
         if (aim === "down") {
           ctx.save();
-          ctx.globalCompositeOperation = "lighter";
-          ctx.globalAlpha = 0.4;
-          ctx.fillStyle = colors[0];
+          ctx.fillStyle = "rgba(255,216,107,0.38)";
+          ctx.strokeStyle = "rgba(0,0,0,0.35)";
+          ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.ellipse(c.x, f.y + f.height * 0.85, 84, 26, 0, 0, Math.PI * 2);
+          ctx.ellipse(c.x + dir * 30, f.y + f.height + 2, 100, 22, 0, 0, Math.PI * 2);
           ctx.fill();
+          ctx.stroke();
           ctx.restore();
+
+          drawImpactDust(c.x + dir * 45, f.y + f.height + 4, dir, 9);
         }
       }
     }
 
     function drawRookVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlashArc(c.x + f.facing * 46, c.y + 8, 52, f.facing === 1 ? -0.65 : Math.PI - 0.35, f.facing === 1 ? 0.45 : Math.PI + 0.65, colors, 9);
+        ctx.save();
+        ctx.translate(c.x + dir * 72, c.y + 6);
+        ctx.scale(dir, 1);
+
+        ctx.fillStyle = colors[1];
+        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.lineWidth = 5;
+        ctx.fillRect(-28, -38, 56, 76);
+        ctx.strokeRect(-28, -38, 56, 76);
+
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillRect(-18, -26, 12, 52);
+        ctx.fillRect(6, -26, 12, 52);
+
+        ctx.restore();
+
+        drawImpactDust(c.x + dir * 45, f.y + f.height + 5, dir, 4);
       }
 
       if (attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
+        const y = attack === "crouchHeavy" ? f.y + f.height * 0.72 : c.y + 4;
+
+        drawWeaponLine(c.x + dir * 10, y, c.x + dir * 160, y, 22, colors[1], "#ffffff");
+
         ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        ctx.fillStyle = `rgba(${hexToRgb(colors[1])},0.18)`;
-        ctx.fillRect(f.facing === 1 ? c.x + 10 : c.x - 170, c.y - 40, 170, 80);
+        ctx.translate(c.x + dir * 170, y);
+        ctx.scale(dir, 1);
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.lineWidth = 5;
+
+        ctx.beginPath();
+        ctx.moveTo(34, 0);
+        ctx.lineTo(-18, -34);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(-18, 34);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
         ctx.restore();
-        drawSlashArc(c.x + f.facing * 52, c.y, 78, f.facing === 1 ? -0.8 : Math.PI - 0.3, f.facing === 1 ? 0.55 : Math.PI + 0.8, colors, 12);
+
+        drawImpactDust(c.x + dir * 75, f.y + f.height + 5, dir, 7);
       }
 
       if (attack === "special") {
-        const startX = f.facing === 1 ? f.x + f.width : f.x;
-        const startY = aim === "up" ? f.y + 18 : aim === "down" ? f.y + f.height * 0.66 : c.y;
+        if (aim === "forward") {
+          ctx.save();
+          ctx.translate(c.x + dir * 145, c.y + 10);
+          ctx.scale(dir, 1);
 
-        let endX = startX + f.facing * 430;
-        let endY = startY;
+          ctx.fillStyle = colors[1];
+          ctx.strokeStyle = "rgba(0,0,0,0.58)";
+          ctx.lineWidth = 6;
+          drawRoundRect(-105, -56, 210, 112, 12);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          for (let i = -3; i <= 3; i++) {
+            ctx.fillRect(i * 26 - 6, -46, 12, 92);
+          }
+
+          ctx.restore();
+
+          drawImpactDust(c.x + dir * 80, f.y + f.height + 5, dir, 10);
+        }
 
         if (aim === "up") {
-          endX = startX + f.facing * 40;
-          endY = startY - 285;
-        } else if (aim === "down") {
-          endX = startX + f.facing * 250;
-          endY = startY + 10;
+          drawWeaponLine(c.x, c.y + 40, c.x, c.y - 255, 26, colors[1], "#ffffff");
+
+          ctx.save();
+          ctx.fillStyle = colors[0];
+          ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          ctx.lineWidth = 5;
+          ctx.fillRect(c.x - 38, c.y - 268, 76, 38);
+          ctx.strokeRect(c.x - 38, c.y - 268, 76, 38);
+          ctx.restore();
         }
 
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        for (let i = 0; i < 3; i++) {
-          ctx.strokeStyle = i === 0 ? colors[0] : i === 1 ? colors[1] : "#fff";
-          ctx.shadowColor = ctx.strokeStyle;
-          ctx.shadowBlur = 25;
-          ctx.lineWidth = i === 0 ? 18 : i === 1 ? 9 : 3;
-          ctx.beginPath();
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(endX, endY);
+        if (aim === "down") {
+          ctx.save();
+          ctx.translate(c.x + dir * 130, f.y + f.height * 0.75);
+          ctx.scale(dir, 1);
+          ctx.fillStyle = colors[1];
+          ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          ctx.lineWidth = 5;
+          drawRoundRect(-120, -24, 240, 48, 10);
+          ctx.fill();
           ctx.stroke();
+          ctx.restore();
+
+          drawImpactDust(c.x + dir * 85, f.y + f.height + 5, dir, 11);
         }
-        ctx.restore();
       }
     }
 
     function drawBishopVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
-      if (attack === "light" || attack === "heavy" || attack === "airHeavy" || attack === "crouchLight") {
-        const yoff = attack === "crouchLight" ? 34 : 0;
-        drawSlashArc(c.x + f.facing * 16, c.y + yoff, attack === "heavy" ? 84 : 62, f.facing === 1 ? -1.05 : Math.PI - 0.2, f.facing === 1 ? 0.1 : Math.PI + 1.05, colors, attack === "heavy" ? 10 : 7);
+      if (attack === "light") {
+        drawWeaponLine(c.x - dir * 8, c.y + 34, c.x + dir * 108, c.y - 54, 8, colors[1], "#ffffff");
+        drawWeaponHead(c.x + dir * 108, c.y - 54, dir === 1 ? -0.65 : Math.PI + 0.65, 14, colors[0]);
+      }
+
+      if (attack === "heavy" || attack === "airHeavy") {
+        drawWeaponLine(c.x - dir * 20, c.y + 62, c.x + dir * 155, c.y - 72, 12, colors[1], "#ffffff");
+        drawWeaponHead(c.x + dir * 155, c.y - 72, dir === 1 ? -0.65 : Math.PI + 0.65, 20, colors[0]);
+      }
+
+      if (attack === "crouchLight") {
+        drawWeaponLine(c.x - dir * 8, f.y + f.height * 0.78, c.x + dir * 98, f.y + f.height * 0.58, 7, colors[1], "#ffffff");
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        ctx.strokeStyle = colors[1];
-        ctx.shadowColor = colors[1];
-        ctx.shadowBlur = 24;
-        ctx.lineWidth = 6;
-
         if (aim === "forward") {
-          for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(c.x - f.facing * 20, c.y - 10 + i * 8);
-            ctx.lineTo(c.x + f.facing * (110 + i * 18), c.y - 90 + i * 18);
-            ctx.stroke();
-          }
+          drawWeaponLine(c.x - dir * 24, c.y + 76, c.x + dir * 210, c.y - 106, 15, colors[1], "#ffffff");
+          drawWeaponHead(c.x + dir * 210, c.y - 106, dir === 1 ? -0.66 : Math.PI + 0.66, 24, colors[0]);
         }
 
         if (aim === "up") {
-          for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(c.x - 20 + i * 10, c.y);
-            ctx.lineTo(c.x + f.facing * (100 + i * 8), c.y - 135);
-            ctx.stroke();
-          }
+          drawWeaponLine(c.x - dir * 12, c.y + 28, c.x + dir * 128, c.y - 160, 14, colors[1], "#ffffff");
+          drawWeaponHead(c.x + dir * 128, c.y - 160, dir === 1 ? -0.93 : Math.PI + 0.93, 22, colors[0]);
         }
 
         if (aim === "down") {
-          for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(c.x - 20 + i * 10, c.y);
-            ctx.lineTo(c.x + f.facing * (100 + i * 8), c.y + 105);
-            ctx.stroke();
-          }
+          drawWeaponLine(c.x - dir * 12, c.y - 26, c.x + dir * 150, c.y + 118, 14, colors[1], "#ffffff");
+          drawWeaponHead(c.x + dir * 150, c.y + 118, dir === 1 ? 0.72 : Math.PI - 0.72, 22, colors[0]);
+          drawImpactDust(c.x + dir * 110, f.y + f.height + 5, dir, 6);
         }
-
-        ctx.restore();
       }
     }
 
     function drawKnightVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlashArc(c.x + f.facing * 16, c.y + 6, 36, f.facing === 1 ? -0.8 : Math.PI - 0.4, f.facing === 1 ? 0.5 : Math.PI + 0.8, colors, 6);
+        ctx.save();
+        ctx.translate(c.x + dir * 58, c.y + 12);
+        ctx.scale(dir, 1);
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 30, 16, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
       }
 
-      if (attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
-        drawSlashArc(c.x + f.facing * 12, c.y - 10, 60, f.facing === 1 ? -1.2 : Math.PI - 0.1, f.facing === 1 ? 0.55 : Math.PI + 1.2, colors, 10);
+      if (attack === "heavy" || attack === "airHeavy") {
+        drawPhysicalArc(
+          c.x + dir * 20,
+          c.y - 10,
+          76,
+          dir === 1 ? -1.35 : Math.PI - 0.05,
+          dir === 1 ? 0.55 : Math.PI + 1.35,
+          colors,
+          13
+        );
+
+        ctx.save();
+        ctx.translate(c.x + dir * 90, c.y - 58);
+        ctx.scale(dir, 1);
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(24, 0);
+        ctx.quadraticCurveTo(5, -26, -22, -12);
+        ctx.quadraticCurveTo(-6, 4, -18, 22);
+        ctx.quadraticCurveTo(8, 22, 24, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      if (attack === "crouchHeavy") {
+        drawPhysicalArc(
+          c.x - dir * 18,
+          c.y + 24,
+          56,
+          dir === 1 ? -0.2 : Math.PI - 0.9,
+          dir === 1 ? 1.05 : Math.PI + 0.2,
+          colors,
+          10
+        );
       }
 
       if (attack === "special" || attack === "airSpecial") {
         ctx.save();
-        ctx.globalCompositeOperation = "lighter";
         ctx.strokeStyle = colors[1];
-        ctx.shadowColor = colors[1];
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 8;
-
-        const sx = c.x;
-        const sy = c.y;
+        ctx.lineWidth = 12;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.shadowColor = "rgba(0,0,0,0.4)";
+        ctx.shadowBlur = 5;
 
         if (aim === "forward") {
           ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(sx + f.facing * 60, sy);
-          ctx.lineTo(sx + f.facing * 60, sy - 58);
+          ctx.moveTo(c.x, c.y + 30);
+          ctx.lineTo(c.x + dir * 86, c.y + 30);
+          ctx.lineTo(c.x + dir * 86, c.y - 50);
           ctx.stroke();
+          drawWeaponHead(c.x + dir * 86, c.y - 50, -Math.PI / 2, 20, colors[0]);
         }
 
         if (aim === "up") {
           ctx.beginPath();
-          ctx.moveTo(sx, sy + 20);
-          ctx.lineTo(sx, sy - 72);
-          ctx.lineTo(sx + f.facing * 54, sy - 72);
+          ctx.moveTo(c.x, c.y + 40);
+          ctx.lineTo(c.x, c.y - 98);
+          ctx.lineTo(c.x + dir * 66, c.y - 98);
           ctx.stroke();
+          drawWeaponHead(c.x + dir * 66, c.y - 98, dir === 1 ? 0 : Math.PI, 20, colors[0]);
         }
 
         if (aim === "down") {
           ctx.beginPath();
-          ctx.moveTo(sx, sy - 18);
-          ctx.lineTo(sx + f.facing * 68, sy - 18);
-          ctx.lineTo(sx + f.facing * 68, sy + 64);
+          ctx.moveTo(c.x, c.y - 28);
+          ctx.lineTo(c.x + dir * 96, c.y - 28);
+          ctx.lineTo(c.x + dir * 96, c.y + 76);
           ctx.stroke();
+          drawWeaponHead(c.x + dir * 96, c.y + 76, Math.PI / 2, 20, colors[0]);
+          drawImpactDust(c.x + dir * 90, f.y + f.height + 5, dir, 7);
         }
 
         ctx.restore();
@@ -1714,135 +2093,124 @@
 
     function drawPawnVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
       if (attack === "light" || attack === "crouchLight") {
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        ctx.strokeStyle = "#fff";
-        ctx.shadowColor = colors[0];
-        ctx.shadowBlur = 14;
-        ctx.lineWidth = 7;
-        ctx.beginPath();
-        ctx.moveTo(c.x, c.y + (attack === "crouchLight" ? 18 : 8));
-        ctx.lineTo(c.x + f.facing * 70, c.y + (attack === "crouchLight" ? 18 : 8));
-        ctx.stroke();
-        ctx.restore();
+        const y = attack === "crouchLight" ? f.y + f.height * 0.74 : c.y + 8;
+        drawWeaponLine(c.x + dir * 2, y, c.x + dir * 100, y, 7, "#d8d8e8", "#ffffff");
+        drawWeaponHead(c.x + dir * 100, y, dir === 1 ? 0 : Math.PI, 16, colors[0]);
       }
 
-      if (attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
-        drawSlashArc(c.x + f.facing * 24, c.y + 8, 58, f.facing === 1 ? -0.95 : Math.PI - 0.25, f.facing === 1 ? 0.65 : Math.PI + 0.95, colors, 9);
+      if (attack === "heavy" || attack === "airHeavy") {
+        drawPhysicalArc(
+          c.x + dir * 36,
+          c.y + 12,
+          72,
+          dir === 1 ? -0.9 : Math.PI - 0.15,
+          dir === 1 ? 0.72 : Math.PI + 0.9,
+          colors,
+          10
+        );
+
+        drawWeaponLine(c.x - dir * 18, c.y + 34, c.x + dir * 122, c.y - 10, 7, "#d8d8e8", "#ffffff");
+        drawWeaponHead(c.x + dir * 122, c.y - 10, dir === 1 ? -0.3 : Math.PI + 0.3, 16, colors[0]);
+      }
+
+      if (attack === "crouchHeavy") {
+        drawWeaponLine(c.x, c.y + 40, c.x + dir * 96, c.y - 32, 8, "#d8d8e8", "#ffffff");
+        drawWeaponHead(c.x + dir * 96, c.y - 32, dir === 1 ? -0.65 : Math.PI + 0.65, 18, colors[0]);
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        const sx = c.x + f.facing * 8;
-        const sy = aim === "up" ? c.y - 12 : aim === "down" ? c.y + 18 : c.y;
+        const sx = c.x + dir * 8;
+        const sy = aim === "up" ? c.y - 10 : aim === "down" ? c.y + 18 : c.y;
 
-        let ex = sx + f.facing * 150;
+        let ex = sx + dir * 160;
         let ey = sy;
 
         if (aim === "up") {
-          ex = sx + f.facing * 45;
-          ey = sy - 120;
-        } else if (aim === "down") {
-          ex = sx + f.facing * 120;
-          ey = sy + 36;
+          ex = sx + dir * 46;
+          ey = sy - 136;
         }
 
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        ctx.strokeStyle = colors[0];
-        ctx.shadowColor = colors[1];
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 9;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(ex, ey);
-        ctx.stroke();
+        if (aim === "down") {
+          ex = sx + dir * 132;
+          ey = sy + 44;
+        }
 
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(ex, ey);
-        ctx.stroke();
-
-        ctx.translate(ex, ey);
-        ctx.rotate(Math.atan2(ey - sy, ex - sx));
-        ctx.fillStyle = "#fff";
-        ctx.beginPath();
-        ctx.moveTo(22, 0);
-        ctx.lineTo(-10, -12);
-        ctx.lineTo(-3, 0);
-        ctx.lineTo(-10, 12);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+        drawWeaponLine(sx, sy, ex, ey, 12, "#d8d8e8", "#ffffff");
+        drawWeaponHead(ex, ey, Math.atan2(ey - sy, ex - sx), 24, colors[0]);
+        drawImpactDust(c.x + dir * 40, f.y + f.height + 5, dir, 5);
       }
     }
 
     function drawQueenVfx(f, colors, attack, aim) {
       const c = fighterCenter(f);
+      const dir = visualDir(f);
 
-      if (attack === "light" || attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
-        drawSlashArc(c.x + f.facing * 28, c.y, attack === "light" ? 72 : 110, f.facing === 1 ? -1.1 : Math.PI - 0.12, f.facing === 1 ? 0.85 : Math.PI + 1.1, colors, attack === "light" ? 9 : 14);
+      if (attack === "light") {
+        drawWeaponLine(c.x - dir * 12, c.y + 40, c.x + dir * 145, c.y - 38, 9, "#d7c0ff", "#ffffff");
+        drawWeaponHead(c.x + dir * 145, c.y - 38, dir === 1 ? -0.45 : Math.PI + 0.45, 22, colors[0]);
+      }
+
+      if (attack === "heavy" || attack === "airHeavy" || attack === "crouchHeavy") {
+        drawPhysicalArc(
+          c.x + dir * 42,
+          c.y,
+          112,
+          dir === 1 ? -1.15 : Math.PI - 0.05,
+          dir === 1 ? 0.92 : Math.PI + 1.15,
+          colors,
+          16
+        );
+
+        drawWeaponLine(c.x - dir * 20, c.y + 60, c.x + dir * 190, c.y - 54, 10, "#d7c0ff", "#ffffff");
+        drawWeaponHead(c.x + dir * 190, c.y - 54, dir === 1 ? -0.45 : Math.PI + 0.45, 26, colors[0]);
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        for (let i = 0; i < 8; i++) {
-          const a = state.t * 0.04 + i * (Math.PI * 2 / 8);
-          const r = 44 + i * 9;
-          fillGlowCircle(
-            c.x + Math.cos(a) * r,
-            c.y + Math.sin(a) * r * 0.55,
-            16 + (i % 3) * 4,
-            `rgba(${hexToRgb(colors[i % 3])},0.22)`,
-            `rgba(${hexToRgb(colors[i % 3])},0)`
-          );
-        }
-
         if (aim === "forward") {
-          ctx.strokeStyle = colors[1];
-          ctx.shadowColor = colors[1];
-          ctx.shadowBlur = 28;
-          ctx.lineWidth = 14;
+          drawWeaponLine(c.x - dir * 35, c.y + 80, c.x + dir * 285, c.y - 82, 16, "#d7c0ff", "#ffffff");
+          drawWeaponHead(c.x + dir * 285, c.y - 82, dir === 1 ? -0.45 : Math.PI + 0.45, 34, colors[0]);
+
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = colors[1];
           ctx.beginPath();
-          ctx.moveTo(c.x + f.facing * 18, c.y - 6);
-          ctx.bezierCurveTo(c.x + f.facing * 110, c.y - 90, c.x + f.facing * 190, c.y + 90, c.x + f.facing * 280, c.y);
-          ctx.stroke();
+          ctx.ellipse(c.x + dir * 140, c.y, 150, 56, -dir * 0.42, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
 
         if (aim === "up") {
-          ctx.strokeStyle = colors[0];
-          ctx.shadowColor = colors[0];
-          ctx.shadowBlur = 28;
-          ctx.lineWidth = 14;
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y);
-          ctx.bezierCurveTo(c.x - 60, c.y - 90, c.x + 60, c.y - 180, c.x, c.y - 250);
-          ctx.stroke();
+          drawWeaponLine(c.x, c.y + 40, c.x, c.y - 260, 16, "#d7c0ff", "#ffffff");
+          drawWeaponHead(c.x, c.y - 260, -Math.PI / 2, 34, colors[0]);
+
+          ctx.save();
+          ctx.font = "900 66px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = colors[0];
+          ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          ctx.lineWidth = 5;
+          ctx.strokeText("♛", c.x, c.y - 185);
+          ctx.fillText("♛", c.x, c.y - 185);
+          ctx.restore();
         }
 
         if (aim === "down") {
-          ctx.strokeStyle = colors[2];
-          ctx.shadowColor = colors[2];
-          ctx.shadowBlur = 28;
-          ctx.lineWidth = 14;
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y + 10);
-          ctx.bezierCurveTo(c.x + f.facing * 70, c.y + 26, c.x + f.facing * 150, c.y + 80, c.x + f.facing * 240, c.y + 60);
-          ctx.stroke();
+          drawWeaponLine(c.x - dir * 20, c.y + 20, c.x + dir * 260, c.y + 82, 16, "#d7c0ff", "#ffffff");
+          drawWeaponHead(c.x + dir * 260, c.y + 82, dir === 1 ? 0.25 : Math.PI - 0.25, 34, colors[0]);
+          drawImpactDust(c.x + dir * 130, f.y + f.height + 5, dir, 10);
         }
-
-        ctx.restore();
       }
     }
 
     function drawParticles() {
       ctx.save();
+
       for (const p of state.particles) {
         const a = clamp(p.life / p.maxLife, 0, 1);
+
         ctx.globalCompositeOperation = p.blend;
         ctx.globalAlpha = a;
         ctx.fillStyle = `rgba(${p.color},${a})`;
@@ -1856,7 +2224,9 @@
         p.vx *= 0.985;
         p.life--;
       }
+
       ctx.restore();
+
       state.particles = state.particles.filter((p) => p.life > 0);
     }
 
@@ -1890,6 +2260,7 @@
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,255,255,${a})`;
           ctx.lineWidth = 4;
+
           for (let i = 0; i < 8; i++) {
             const ang = i * Math.PI / 4 + p;
             ctx.beginPath();
@@ -1903,6 +2274,7 @@
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,90,120,${a})`;
           ctx.lineWidth = 2.5;
+
           for (let i = 0; i < 12; i++) {
             const ang = i * 1.4;
             ctx.beginPath();
@@ -1915,6 +2287,7 @@
         if (fx.type === "dash") {
           ctx.globalAlpha = a * 0.55;
           ctx.fillStyle = "rgba(255,255,255,0.9)";
+
           for (let i = 0; i < 5; i++) {
             ctx.beginPath();
             ctx.ellipse(fx.x - (fx.dir || 1) * (i * 18 + p * 26), fx.y, 18 + i * 4, 8 + i * 2, 0, 0, Math.PI * 2);
@@ -1926,9 +2299,11 @@
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,90,220,${a})`;
           ctx.lineWidth = 4;
+
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 70 * p, 0, Math.PI * 2);
           ctx.stroke();
+
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 120 * p, 0, Math.PI * 2);
           ctx.stroke();
@@ -1970,6 +2345,7 @@
       ctx.font = "500 18px system-ui";
       ctx.fillStyle = "rgba(255,255,255,0.68)";
       ctx.fillText("The arena stays chess-themed from the very beginning.", 480, 286);
+
       ctx.restore();
     }
 
@@ -1988,6 +2364,7 @@
       ctx.shadowColor = winner === "white" ? "#ffb44d" : "#61d5ff";
       ctx.shadowBlur = 26;
       ctx.fillText(`${winner.toUpperCase()} TAKES THE ROUND`, 480, 270);
+
       ctx.restore();
     }
 
@@ -2029,6 +2406,7 @@
 
       drawParticles();
       drawLocalFx();
+
       ctx.restore();
 
       if (state.flash > 0) {
