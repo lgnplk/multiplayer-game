@@ -22,7 +22,7 @@ const ROUND_TIME = 99 * 60;
 const ROUNDS_TO_WIN = 3;
 
 const PROMOTION_MAX = 180;
-const QUEEN_DURATION = 4 * 60;
+const QUEEN_DURATION = 6 * 60; // 50% longer than before
 
 const MOVE_SPEED_MULT = 1.55;
 const JUMP_MULT = 1.14;
@@ -41,7 +41,7 @@ let nextLobbyId = 1;
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "True bruiser. Heavy armor, command grabs, shoulder checks, and brutal royal slams.",
+    title: "A true bruiser. Heavy armor, command grabs, shoulder checks, and brutal royal slams.",
     maxHp: 760,
     speed: 4.15,
     jump: 12.4,
@@ -59,7 +59,7 @@ const CHARACTERS = {
   },
   bishop: {
     name: "Bishop",
-    title: "Mobile diagonal duelist. More health, better air control, and sharp angled rushes.",
+    title: "Diagonal duelist. More health, more mobility, sharp angle rushes, and long chase patterns.",
     maxHp: 635,
     speed: 5.45,
     jump: 16.4,
@@ -68,7 +68,7 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Fast disruptor. More health, better jumping, L-shaped burst movement, and launch tools.",
+    title: "Fast disruptor. More health, more jump mobility, and L-shaped burst attacks.",
     maxHp: 640,
     speed: 5.35,
     jump: 19.1,
@@ -77,7 +77,7 @@ const CHARACTERS = {
   },
   pawn: {
     name: "Pawn",
-    title: "Weaker lancer. Must survive longer to promote, and queen time is brief.",
+    title: "Weaker lancer. Promotion takes longer to earn, but queen form is still dangerous.",
     maxHp: 470,
     speed: 5.0,
     jump: 13.6,
@@ -240,6 +240,8 @@ function createFighter(socketId, side, characterKey) {
     promotionMeter: 0,
     queenTimer: 0,
     preQueenStats: null,
+
+    scriptedMove: null,
 
     jumpWasDown: false,
     blockWasDown: false
@@ -658,15 +660,15 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
 
     if (attack === "heavy") {
       Object.assign(m, {
-        duration: 24,
-        activeStart: 7,
+        duration: 26,
+        activeStart: 5,
         activeEnd: 14,
-        damage: 9,
-        kb: 22,
-        lift: -13,
+        damage: 10,
+        kb: 25,
+        lift: -20,
         cooldown: 34,
         stamina: 8,
-        wallBounce: 24
+        wallBounce: 28
       });
     }
 
@@ -700,15 +702,15 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 25,
-        activeStart: 7,
+        duration: 26,
+        activeStart: 4,
         activeEnd: 14,
-        damage: 9,
-        kb: 21,
-        lift: 10,
+        damage: 10,
+        kb: 24,
+        lift: 18,
         cooldown: 34,
         stamina: 8,
-        wallBounce: 24
+        wallBounce: 28
       });
     }
 
@@ -804,15 +806,15 @@ function getMoveMeta(f, attack = f.attack, aim = f.attackAim || "forward") {
 
     if (attack === "airHeavy") {
       Object.assign(m, {
-        duration: 25,
-        activeStart: 7,
-        activeEnd: 14,
-        damage: 9,
+        duration: 26,
+        activeStart: 3,
+        activeEnd: 17,
+        damage: 10,
         kb: 24,
-        lift: 15,
-        cooldown: 32,
-        stamina: 8,
-        wallBounce: 30
+        lift: -2,
+        cooldown: 34,
+        stamina: 9,
+        wallBounce: 32
       });
     }
 
@@ -1137,6 +1139,15 @@ function diagonalBox(f, width, height, yOffset = 0, forwardOffset = 0) {
   };
 }
 
+function aroundBodyBox(f, padX = 24, padY = 24) {
+  return {
+    x: f.x - padX,
+    y: f.y - padY,
+    width: f.width + padX * 2,
+    height: f.height + padY * 2
+  };
+}
+
 function attackBox(f) {
   const piece = effectivePiece(f);
   const attack = f.attack;
@@ -1170,10 +1181,10 @@ function attackBox(f) {
 
   if (piece === "bishop") {
     if (attack === "light") return forwardBox(f, 126, 80, 16);
-    if (attack === "heavy") return forwardBox(f, 170, 110, 4);
+    if (attack === "heavy") return diagonalBox(f, 166, 138, -88, 16);
     if (attack === "crouchLight") return forwardBox(f, 116, 34, f.height * 0.65);
     if (attack === "crouchHeavy") return forwardBox(f, 145, 62, f.height * 0.45);
-    if (attack === "airHeavy") return forwardBox(f, 132, 108, 10);
+    if (attack === "airHeavy") return diagonalBox(f, 166, 148, 18, 16);
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") return diagonalBox(f, 190, 178, -145, 30);
@@ -1186,7 +1197,7 @@ function attackBox(f) {
     if (attack === "light") return forwardBox(f, 74, 54, 30);
     if (attack === "heavy") return bodyForwardBox(f, 104, 100, -12, 28);
     if (attack === "crouchHeavy") return forwardBox(f, 96, 70, f.height * 0.43);
-    if (attack === "airHeavy") return forwardBox(f, 112, 110, 14);
+    if (attack === "airHeavy") return aroundBodyBox(f, 28, 24);
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") return upBox(f, 116, 150, 10);
@@ -1344,6 +1355,100 @@ function tryWallJump(f, jumpPressed) {
   f.wallJumpLock = 16;
 }
 
+function fixedVectorMove(vx, vy, frames) {
+  return {
+    type: "fixedVector",
+    vx,
+    vy,
+    frames
+  };
+}
+
+function chooseKnightLPattern(f, input) {
+  let primary;
+
+  if (input.left && !input.right) {
+    primary = { x: -1, y: 0 };
+  } else if (input.right && !input.left) {
+    primary = { x: 1, y: 0 };
+  } else if (input.jump && !input.crouch) {
+    primary = { x: 0, y: -1 };
+  } else if (input.crouch && !input.jump) {
+    primary = { x: 0, y: 1 };
+  } else {
+    primary = { x: f.facing || 1, y: 0 };
+  }
+
+  let secondary;
+
+  if (primary.x !== 0) {
+    if (input.jump && !input.crouch) {
+      secondary = { x: 0, y: -1 };
+    } else if (input.crouch && !input.jump) {
+      secondary = { x: 0, y: 1 };
+    } else {
+      secondary = { x: 0, y: -1 };
+    }
+  } else {
+    if (input.left && !input.right) {
+      secondary = { x: -1, y: 0 };
+    } else if (input.right && !input.left) {
+      secondary = { x: 1, y: 0 };
+    } else {
+      secondary = { x: f.facing || 1, y: 0 };
+    }
+  }
+
+  return {
+    type: "knightL",
+    phase: 1,
+    timer: 7,
+    timer2: 5,
+    primary,
+    secondary,
+    speed1: 16.5,
+    speed2: 11.5
+  };
+}
+
+function applyScriptedMovement(f) {
+  const sm = f.scriptedMove;
+  if (!sm) return;
+
+  if (sm.type === "fixedVector") {
+    f.vx = sm.vx;
+    f.vy = sm.vy;
+    sm.frames -= 1;
+
+    if (sm.frames <= 0) {
+      f.scriptedMove = null;
+    }
+
+    return;
+  }
+
+  if (sm.type === "knightL") {
+    if (sm.phase === 1) {
+      f.vx = sm.primary.x * sm.speed1;
+      f.vy = sm.primary.y * sm.speed1;
+      sm.timer -= 1;
+
+      if (sm.timer <= 0) {
+        sm.phase = 2;
+        sm.timer = sm.timer2;
+      }
+    } else {
+      f.vx = sm.secondary.x * sm.speed2;
+      f.vy = sm.secondary.y * sm.speed2;
+      sm.timer -= 1;
+
+      if (sm.timer <= 0) {
+        f.scriptedMove = null;
+      }
+    }
+  }
+}
+
 function startAttack(f, baseType, input, game) {
   if (f.attack) return;
   if (f.guardBrokenTimer > 0 || f.hurtTimer > 8) return;
@@ -1368,6 +1473,7 @@ function startAttack(f, baseType, input, game) {
   f.attackDuration = meta.duration;
   f.hitThisAttack = false;
   f.multiHitCooldown = 0;
+  f.scriptedMove = null;
 
   if (baseType === "light") f.lightCooldown = meta.cooldown;
   if (baseType === "heavy") f.heavyCooldown = meta.cooldown;
@@ -1425,8 +1531,19 @@ function startAttack(f, baseType, input, game) {
 
   if (piece === "bishop") {
     if (attack === "light") f.vx += f.facing * 1.8;
-    if (attack === "heavy") f.vx += f.facing * 2.8;
-    if (attack === "airHeavy") f.vx += f.facing * 2.6;
+
+    if (attack === "heavy") {
+      f.scriptedMove = fixedVectorMove(f.facing * 9.8, -8.2, 11);
+      f.vx = f.facing * 9.8;
+      f.vy = -8.2;
+      f.grounded = false;
+    }
+
+    if (attack === "airHeavy") {
+      f.scriptedMove = fixedVectorMove(f.facing * 9.6, 8.8, 11);
+      f.vx = f.facing * 9.6;
+      f.vy = 8.8;
+    }
 
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "forward") {
@@ -1464,8 +1581,8 @@ function startAttack(f, baseType, input, game) {
     }
 
     if (attack === "airHeavy") {
-      f.vx += f.facing * 3.2;
-      f.vy += 3.6;
+      f.scriptedMove = chooseKnightLPattern(f, input);
+      f.grounded = false;
     }
 
     if (attack === "special" || attack === "airSpecial") {
@@ -1677,9 +1794,17 @@ function updateFighter(f, opponent, input, game) {
 
   if (!f.attack && !stunned && !f.blocking) {
     if (input.left && !input.right) {
-      f.vx = f.crouching ? -f.speed * 0.38 : f.grounded ? -f.speed : Math.max(f.vx - f.speed * 0.16 * airControl, -f.speed * airControl);
+      f.vx = f.crouching
+        ? -f.speed * 0.38
+        : f.grounded
+          ? -f.speed
+          : Math.max(f.vx - f.speed * 0.16 * airControl, -f.speed * airControl);
     } else if (input.right && !input.left) {
-      f.vx = f.crouching ? f.speed * 0.38 : f.grounded ? f.speed : Math.min(f.vx + f.speed * 0.16 * airControl, f.speed * airControl);
+      f.vx = f.crouching
+        ? f.speed * 0.38
+        : f.grounded
+          ? f.speed
+          : Math.min(f.vx + f.speed * 0.16 * airControl, f.speed * airControl);
     } else {
       f.vx *= f.grounded ? 0.72 : 0.96;
     }
@@ -1704,6 +1829,8 @@ function updateFighter(f, opponent, input, game) {
     if (input.special) startAttack(f, "special", input, game);
   }
 
+  applyScriptedMovement(f);
+
   f.x += f.vx;
   f.y += f.vy;
   f.vy += GRAVITY;
@@ -1712,6 +1839,10 @@ function updateFighter(f, opponent, input, game) {
     f.y = FLOOR_Y - f.height;
     f.vy = 0;
     f.grounded = true;
+
+    if (f.scriptedMove && f.scriptedMove.type === "fixedVector" && f.scriptedMove.vy > 0) {
+      f.scriptedMove = null;
+    }
   } else {
     f.grounded = false;
   }
@@ -1739,6 +1870,7 @@ function updateFighter(f, opponent, input, game) {
       f.attackFacing = f.facing;
       f.hitThisAttack = false;
       f.multiHitCooldown = 0;
+      f.scriptedMove = null;
     }
   }
 
@@ -1859,6 +1991,7 @@ function handleHit(attacker, defender, game) {
     attacker.vy = Math.min(attacker.vy, -3.5);
     attacker.attack = null;
     attacker.attackTimer = 0;
+    attacker.scriptedMove = null;
 
     game.hitstop = Math.max(game.hitstop, 8);
     game.shake = Math.max(game.shake, 8);
@@ -1935,7 +2068,10 @@ function handleHit(attacker, defender, game) {
     chargePawn(defender, 1.8 + damage * 0.08);
   }
 
-  game.hitstop = Math.max(game.hitstop, meta.continuous ? 3 : meta.damage >= 13 ? 9 : meta.damage >= 9 ? 7 : 5);
+  game.hitstop = Math.max(
+    game.hitstop,
+    meta.continuous ? 3 : meta.damage >= 13 ? 9 : meta.damage >= 9 ? 7 : 5
+  );
   game.shake = Math.max(game.shake, meta.damage >= 13 ? 10 : meta.damage >= 9 ? 7 : 4);
 
   pushEffect(

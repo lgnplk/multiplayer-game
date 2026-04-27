@@ -6,10 +6,10 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     :root {
-      --panel: rgba(10, 12, 24, 0.84);
+      --panel: rgba(46, 28, 16, 0.78);
       --line: rgba(255,255,255,0.14);
-      --text: #f4f5ff;
-      --muted: #b5bcdd;
+      --text: #fff7ed;
+      --muted: #ead9c1;
       --gold: #ffd874;
     }
 
@@ -21,9 +21,9 @@
       margin: 0;
       overflow: hidden;
       background:
-        radial-gradient(circle at 15% 10%, rgba(90,110,255,0.18), transparent 30%),
-        radial-gradient(circle at 85% 22%, rgba(255,216,116,0.10), transparent 28%),
-        linear-gradient(180deg, #080911 0%, #0b0d17 100%);
+        radial-gradient(circle at 15% 10%, rgba(180,130,70,0.24), transparent 34%),
+        radial-gradient(circle at 85% 20%, rgba(255,227,160,0.10), transparent 30%),
+        linear-gradient(180deg, #6b4a2d 0%, #432916 100%);
       color: var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     }
@@ -39,7 +39,7 @@
       padding: 10px 14px;
       color: white;
       cursor: pointer;
-      background: linear-gradient(135deg, #5f6480, #2b2d39);
+      background: linear-gradient(135deg, #8a6340, #4a2d18);
       box-shadow: 0 12px 28px rgba(0,0,0,0.32);
     }
 
@@ -57,7 +57,7 @@
       padding: 11px 12px;
       border-radius: 14px;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.08);
       color: var(--text);
       outline: none;
     }
@@ -80,11 +80,11 @@
 
     .panel {
       background: var(--panel);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 28px;
       overflow: hidden;
-      backdrop-filter: blur(18px);
-      box-shadow: 0 28px 70px rgba(0,0,0,0.4);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 28px 70px rgba(0,0,0,0.35);
     }
 
     .hero {
@@ -107,13 +107,8 @@
     }
 
     @keyframes breathe {
-      from {
-        transform: translateY(-8px) scale(1);
-      }
-
-      to {
-        transform: translateY(8px) scale(1.02);
-      }
+      from { transform: translateY(-8px) scale(1); }
+      to { transform: translateY(8px) scale(1.02); }
     }
 
     .hero > * {
@@ -157,9 +152,9 @@
       min-height: 184px;
       padding: 12px;
       border-radius: 22px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.14);
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
       cursor: pointer;
       transition: transform 0.14s ease, border-color 0.14s ease;
       overflow: hidden;
@@ -181,11 +176,11 @@
       display: grid;
       place-items: center;
       font-size: 90px;
-      color: #f1ecd9;
+      color: #f4ead8;
       font-family: Georgia, "Times New Roman", "Segoe UI Symbol", serif;
       text-shadow:
-        0 3px 0 rgba(0,0,0,0.45),
-        0 14px 24px rgba(0,0,0,0.45);
+        0 2px 0 rgba(0,0,0,0.35),
+        0 10px 18px rgba(0,0,0,0.35);
     }
 
     .character-card h3 {
@@ -226,7 +221,7 @@
       gap: 8px;
       padding: 13px;
       border-radius: 18px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.05);
     }
 
@@ -261,7 +256,7 @@
       font-size: 11px;
       padding: 4px 7px;
       border-radius: 999px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.09);
       color: var(--muted);
     }
@@ -289,7 +284,7 @@
       border-radius: 28px;
       border: 1px solid rgba(255,255,255,0.18);
       box-shadow: 0 35px 100px rgba(0,0,0,0.58);
-      background: #090b15;
+      background: #c8a57a;
     }
 
     canvas {
@@ -384,7 +379,7 @@
       font-weight: 1000;
       letter-spacing: 0.09em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.82);
+      color: rgba(255,255,255,0.92);
     }
 
     #timer {
@@ -408,7 +403,7 @@
       text-align: center;
       padding: 14px 20px;
       border-radius: 20px;
-      background: rgba(5,6,13,0.55);
+      background: rgba(60, 34, 17, 0.55);
       border: 1px solid rgba(255,255,255,0.16);
       font-size: clamp(18px, 3vw, 34px);
       font-weight: 1000;
@@ -431,14 +426,14 @@
       align-items: flex-end;
       justify-content: space-between;
       gap: 14px;
-      color: rgba(255,255,255,0.76);
+      color: rgba(255,255,255,0.88);
       font-size: 12px;
       text-shadow: 0 2px 12px rgba(0,0,0,0.7);
       pointer-events: none;
     }
 
     #controls {
-      max-width: 680px;
+      max-width: 700px;
       line-height: 1.45;
     }
 
@@ -472,8 +467,9 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            Literal online-board chess icons fighting on a giant board. White uses white chess glyphs,
-            black uses black chess glyphs. Pawn promotion is harder to earn and much shorter.
+            Literal online-board chess piece icons fighting on a classic brown chessboard.
+            The bishop now has real diagonal rushes, the knight has an L-shaped aerial heavy,
+            and pawn promotion lasts longer once earned.
           </p>
         </div>
 
@@ -548,7 +544,8 @@
               <b>Move:</b> A / D · <b>Jump:</b> W · <b>Crouch / Fast Fall:</b> S ·
               <b>Light:</b> J · <b>Heavy:</b> K · <b>Special:</b> L ·
               <b>Block / Dash / Parry:</b> Shift ·
-              <b>King Grab:</b> S + L
+              <b>King Grab:</b> S + L ·
+              <b>Knight Air Heavy:</b> Jump, then K with directional input
             </div>
             <button id="leaveBtn" class="danger">Leave</button>
           </div>
@@ -674,21 +671,25 @@
       if (f?.side === "black") {
         return {
           main: "#050505",
-          light: "#3d3d3d",
-          stroke: "rgba(255,255,255,0.52)",
+          inner: "#232323",
+          light: "#6f6f6f",
+          stroke: "rgba(255,255,255,0.45)",
           shadow: "rgba(0,0,0,0.92)",
           dust: "110,110,110",
-          trail: "rgba(0,0,0,0.52)"
+          trail: "rgba(30,30,30,0.96)",
+          sparkle: "rgba(255,255,255,0.7)"
         };
       }
 
       return {
-        main: "#f9f4dc",
+        main: "#fbf4df",
+        inner: "#efe2c7",
         light: "#ffffff",
-        stroke: "rgba(40,34,24,0.75)",
-        shadow: "rgba(0,0,0,0.72)",
-        dust: "218,208,184",
-        trail: "rgba(255,255,255,0.34)"
+        stroke: "rgba(56,40,24,0.72)",
+        shadow: "rgba(0,0,0,0.7)",
+        dust: "210,190,160",
+        trail: "rgba(250,239,216,0.96)",
+        sparkle: "rgba(255,255,255,0.95)"
       };
     }
 
@@ -1065,7 +1066,6 @@
 
     function drawRoundRect(x, y, w, h, r) {
       r = Math.min(r, w / 2, h / 2);
-
       ctx.beginPath();
       ctx.moveTo(x + r, y);
       ctx.lineTo(x + w - r, y);
@@ -1079,111 +1079,74 @@
       ctx.closePath();
     }
 
-    function drawBackground(game) {
-      const floorY = game?.floorY ?? 430;
-
-      const sky = ctx.createLinearGradient(0, 0, 0, 540);
-      sky.addColorStop(0, "#0f142d");
-      sky.addColorStop(0.48, "#161121");
-      sky.addColorStop(1, "#090a10");
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, 960, 540);
-
+    function drawCheckerPattern(x, y, w, h, tile, light, dark, alpha = 1, offsetX = 0, offsetY = 0) {
       ctx.save();
-      ctx.globalAlpha = 0.15;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
 
-      for (let i = 0; i < 75; i++) {
-        const x = (i * 119 + state.t * 0.08) % 990 - 10;
-        const y = 34 + ((i * 77) % 220);
-        const r = 0.8 + (i % 4) * 0.45;
-
-        ctx.fillStyle = i % 2 ? "#f7f0d0" : "#c5d8ff";
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-
-      drawChessCastleLayer(0, 346, 0.56, "#17182d");
-      drawChessCastleLayer(25, 372, 0.78, "#111321");
-      drawChessCastleLayer(-18, 398, 1.02, "#0c0d17");
-
-      drawBoardFloor(floorY);
-      drawWallFiles(floorY);
-
-      const vignette = ctx.createRadialGradient(480, 250, 100, 480, 250, 620);
-      vignette.addColorStop(0, "rgba(255,255,255,0)");
-      vignette.addColorStop(1, "rgba(0,0,0,0.72)");
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, 960, 540);
-    }
-
-    function drawChessCastleLayer(offset, baseY, scale, color) {
-      ctx.save();
-      ctx.translate(offset, 0);
-      ctx.fillStyle = color;
-
-      for (let i = -1; i < 9; i++) {
-        const x = i * 145 * scale;
-        const w = 96 * scale;
-        const h = (84 + (i % 4) * 26) * scale;
-
-        ctx.fillRect(x, baseY - h, w, h);
-
-        ctx.fillRect(x + w * 0.1, baseY - h - 26 * scale, w * 0.18, 26 * scale);
-        ctx.fillRect(x + w * 0.41, baseY - h - 18 * scale, w * 0.18, 18 * scale);
-        ctx.fillRect(x + w * 0.72, baseY - h - 26 * scale, w * 0.18, 26 * scale);
-
-        ctx.fillRect(x + w * 0.34, baseY - h - 48 * scale, w * 0.32, 28 * scale);
-      }
-
-      ctx.restore();
-    }
-
-    function drawBoardFloor(floorY) {
-      const tileSize = 60;
-
-      for (let y = floorY; y < 540; y += tileSize) {
-        for (let x = 0; x < 960; x += tileSize) {
-          const dark = ((x / tileSize) + (y / tileSize)) % 2 === 0;
-          ctx.fillStyle = dark ? "#20192e" : "#352b48";
-          ctx.fillRect(x, y, tileSize, tileSize);
+      for (let yy = y - tile; yy < y + h + tile; yy += tile) {
+        for (let xx = x - tile; xx < x + w + tile; xx += tile) {
+          const ix = Math.floor((xx - x + offsetX) / tile);
+          const iy = Math.floor((yy - y + offsetY) / tile);
+          ctx.fillStyle = (ix + iy) % 2 === 0 ? light : dark;
+          ctx.fillRect(xx, yy, tile, tile);
         }
       }
 
-      const shine = ctx.createLinearGradient(0, floorY, 0, 540);
-      shine.addColorStop(0, "rgba(255,255,255,0.08)");
-      shine.addColorStop(1, "rgba(0,0,0,0.25)");
-      ctx.fillStyle = shine;
-      ctx.fillRect(0, floorY, 960, 540 - floorY);
-
-      ctx.strokeStyle = "rgba(255,255,255,0.16)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, floorY + 1);
-      ctx.lineTo(960, floorY + 1);
-      ctx.stroke();
+      ctx.restore();
     }
 
-    function drawWallFiles(floorY) {
-      ctx.save();
-      ctx.globalAlpha = 0.3;
-      ctx.strokeStyle = "rgba(255,255,255,0.14)";
-      ctx.lineWidth = 3;
+    function drawBackground(game) {
+      const floorY = game?.floorY ?? 430;
 
+      const bg = ctx.createLinearGradient(0, 0, 0, 540);
+      bg.addColorStop(0, "#e8d7b9");
+      bg.addColorStop(0.38, "#d0b08b");
+      bg.addColorStop(1, "#8d633c");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 960, 540);
+
+      ctx.fillStyle = "#6d4427";
+      ctx.fillRect(0, 0, 960, 18);
+      ctx.fillRect(0, 522, 960, 18);
+      ctx.fillRect(0, 0, 18, 540);
+      ctx.fillRect(942, 0, 18, 540);
+
+      drawCheckerPattern(46, 42, 868, 242, 64, "#f0dec2", "#a97745", 0.66, 0, state.t * 0.05);
+      ctx.strokeStyle = "rgba(89,55,28,0.6)";
+      ctx.lineWidth = 10;
+      ctx.strokeRect(46, 42, 868, 242);
+
+      ctx.globalAlpha = 0.12;
+      for (let i = 0; i < 14; i++) {
+        ctx.fillStyle = i % 2 === 0 ? "#6a4728" : "#f6e5c9";
+        ctx.fillRect(60 + i * 60, 56, 30, 10);
+      }
+      ctx.globalAlpha = 1;
+
+      const floorTop = floorY - 4;
+      drawCheckerPattern(0, floorTop, 960, 540 - floorTop, 60, "#f7e5c9", "#9f6b3a", 1, 0, 0);
+
+      const shine = ctx.createLinearGradient(0, floorTop, 0, 540);
+      shine.addColorStop(0, "rgba(255,255,255,0.15)");
+      shine.addColorStop(1, "rgba(0,0,0,0.18)");
+      ctx.fillStyle = shine;
+      ctx.fillRect(0, floorTop, 960, 540 - floorTop);
+
+      ctx.strokeStyle = "rgba(80,52,28,0.85)";
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(22, floorY);
-      ctx.lineTo(22, 120);
-      ctx.moveTo(938, floorY);
-      ctx.lineTo(938, 120);
+      ctx.moveTo(0, floorTop + 1);
+      ctx.lineTo(960, floorTop + 1);
       ctx.stroke();
 
-      ctx.fillStyle = "rgba(255,255,255,0.08)";
-      ctx.fillRect(16, 120, 12, floorY - 120);
-      ctx.fillRect(932, 120, 12, floorY - 120);
-
-      ctx.restore();
+      const v = ctx.createLinearGradient(0, 0, 0, 540);
+      v.addColorStop(0, "rgba(0,0,0,0)");
+      v.addColorStop(1, "rgba(0,0,0,0.28)");
+      ctx.fillStyle = v;
+      ctx.fillRect(0, 0, 960, 540);
     }
 
     function fighterCenter(f) {
@@ -1199,14 +1162,14 @@
       const air = clamp((floorY - (f.y + f.height)) / 150, 0, 1);
 
       ctx.save();
-      ctx.globalAlpha = 0.44 * (1 - air * 0.65);
+      ctx.globalAlpha = 0.34 * (1 - air * 0.65);
       ctx.fillStyle = "#000";
       ctx.beginPath();
       ctx.ellipse(
         c.x,
         floorY + 8,
-        f.width * (0.95 - air * 0.28),
-        17 * (1 - air * 0.25),
+        f.width * (0.92 - air * 0.28),
+        16 * (1 - air * 0.25),
         0,
         0,
         Math.PI * 2
@@ -1222,7 +1185,7 @@
       const c = fighterCenter(f);
       const hurt = f.hurtTimer > 0;
       const pulse = f.attack ? 1 : 0;
-      const bob = Math.sin(state.t * 0.08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1.0 : 0.4);
+      const bob = Math.sin(state.t * 0.08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1.0 : 0.45);
 
       drawShadow(f);
       drawPieceFloorContact(f, mat);
@@ -1234,10 +1197,10 @@
       ctx.save();
 
       if (hurt) {
-        ctx.translate((Math.random() - 0.5) * 2.8, 0);
+        ctx.translate((Math.random() - 0.5) * 2.2, 0);
       }
 
-      drawChessGlyph(f, c.x, c.y + bob, mat, 1 + pulse * 0.025);
+      drawChessGlyph(f, c.x, c.y + bob, mat, 1 + pulse * 0.018);
 
       if (f.blocking) drawBlockShell(f, mat);
       if (f.armorTimer > 0) drawArmorShell(f, mat);
@@ -1249,67 +1212,67 @@
       drawCooldownDots(f);
     }
 
-    function drawChessGlyph(f, x, y, mat, scale = 1) {
+    function drawChessGlyph(f, x, y, mat, scale = 1, alpha = 1) {
       const glyph = glyphFor(f);
       const fontSize = Math.round(f.height * 1.18 * scale);
 
       ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `900 ${fontSize}px Georgia, "Times New Roman", "Segoe UI Symbol", serif`;
 
-      ctx.shadowColor = "rgba(0,0,0,0.72)";
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetY = 7;
+      ctx.shadowColor = "rgba(0,0,0,0.58)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 5;
 
       if (f.side === "white") {
-        ctx.lineWidth = 7;
-        ctx.strokeStyle = "rgba(42,34,20,0.82)";
+        ctx.lineWidth = 4.2;
+        ctx.strokeStyle = "rgba(64,48,30,0.74)";
         ctx.strokeText(glyph, x, y);
 
-        ctx.fillStyle = "#fbf5df";
+        const grad = ctx.createLinearGradient(x, y - fontSize * 0.5, x, y + fontSize * 0.4);
+        grad.addColorStop(0, "#ffffff");
+        grad.addColorStop(0.46, "#fbf4df");
+        grad.addColorStop(1, "#e9d8b5");
+        ctx.fillStyle = grad;
         ctx.fillText(glyph, x, y);
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(255,255,255,0.88)";
-        ctx.strokeText(glyph, x - 1, y - 1);
       } else {
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = "rgba(255,255,255,0.46)";
+        ctx.lineWidth = 4.6;
+        ctx.strokeStyle = "rgba(255,255,255,0.34)";
         ctx.strokeText(glyph, x, y);
 
-        ctx.fillStyle = "#050505";
+        const grad = ctx.createLinearGradient(x, y - fontSize * 0.5, x, y + fontSize * 0.4);
+        grad.addColorStop(0, "#5a5a5a");
+        grad.addColorStop(0.35, "#111111");
+        grad.addColorStop(1, "#000000");
+        ctx.fillStyle = grad;
         ctx.fillText(glyph, x, y);
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(0,0,0,0.9)";
-        ctx.strokeText(glyph, x + 1, y + 1);
       }
 
       if (f.promoted) {
-        ctx.globalAlpha = 0.55;
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = f.side === "white" ? "rgba(255,230,150,0.95)" : "rgba(255,255,255,0.72)";
+        ctx.globalAlpha = 0.42;
+        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = f.side === "white" ? "rgba(255,220,120,0.95)" : "rgba(255,255,255,0.7)";
         ctx.strokeText(glyph, x, y);
       }
 
       ctx.restore();
     }
 
+    function drawAfterimage(f, x, y, scale = 1, alpha = 0.24) {
+      drawChessGlyph(f, x, y, materialOf(f), scale, alpha);
+    }
+
     function drawPieceFloorContact(f, mat) {
       const c = fighterCenter(f);
 
       ctx.save();
-
-      ctx.globalAlpha = f.side === "white" ? 0.13 : 0.24;
-      ctx.fillStyle = f.side === "white"
-        ? "rgba(255,255,255,0.20)"
-        : "rgba(0,0,0,0.40)";
-
+      ctx.globalAlpha = f.side === "white" ? 0.10 : 0.18;
+      ctx.fillStyle = f.side === "white" ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.26)";
       ctx.beginPath();
-      ctx.ellipse(c.x, f.y + f.height + 9, f.width * 0.9, 10, 0, 0, Math.PI * 2);
+      ctx.ellipse(c.x, f.y + f.height + 9, f.width * 0.85, 10, 0, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.restore();
     }
 
@@ -1317,15 +1280,14 @@
       const c = fighterCenter(f);
 
       ctx.save();
-      ctx.globalCompositeOperation = "source-over";
       ctx.strokeStyle = f.side === "white"
-        ? "rgba(245,245,235,0.9)"
-        : "rgba(30,30,30,0.95)";
-      ctx.shadowColor = "rgba(0,0,0,0.45)";
-      ctx.shadowBlur = 10;
-      ctx.lineWidth = 5;
+        ? "rgba(248,244,234,0.9)"
+        : "rgba(18,18,18,0.95)";
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(c.x, c.y, Math.max(f.width, f.height) * 0.55, -1.2, 1.2);
+      ctx.arc(c.x, c.y, Math.max(f.width, f.height) * 0.54, -1.2, 1.2);
       ctx.stroke();
       ctx.restore();
     }
@@ -1334,13 +1296,13 @@
       const c = fighterCenter(f);
 
       ctx.save();
-      ctx.globalAlpha = 0.45;
+      ctx.globalAlpha = 0.36;
       ctx.strokeStyle = f.side === "white"
         ? "rgba(255,255,255,0.85)"
-        : "rgba(0,0,0,0.85)";
-      ctx.lineWidth = 3;
+        : "rgba(0,0,0,0.92)";
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.ellipse(c.x, c.y, f.width * 0.72, f.height * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(c.x, c.y, f.width * 0.7, f.height * 0.57, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -1351,13 +1313,12 @@
       ctx.save();
       ctx.globalAlpha = 0.9;
       ctx.strokeStyle = "#f0e5b8";
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
 
       for (let i = 0; i < 3; i++) {
         const a = state.t * 0.08 + i * ((Math.PI * 2) / 3);
         const x = c.x + Math.cos(a) * 26;
         const y = c.y - f.height * 0.5 + Math.sin(a) * 8;
-
         drawStar(x, y, 5, 8, 4);
       }
 
@@ -1387,7 +1348,7 @@
       ctx.save();
       ctx.font = "700 11px system-ui";
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.82)";
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.shadowColor = "rgba(0,0,0,0.8)";
       ctx.shadowBlur = 6;
       ctx.fillText(f.name || "", c.x, f.y - 12);
@@ -1424,17 +1385,80 @@
       ctx.restore();
     }
 
-    function drawAttackVfx(f, mat) {
-      const piece = pieceOf(f);
-      const attack = f.attack;
-      const aim = f.attackAim || "forward";
+    function drawPolyline(points, mat, width = 8) {
+      if (!points || points.length < 2) return;
 
-      if (piece === "king") drawKingVfx(f, mat, attack, aim);
-      else if (piece === "rook") drawRookVfx(f, mat, attack, aim);
-      else if (piece === "bishop") drawBishopVfx(f, mat, attack, aim);
-      else if (piece === "knight") drawKnightVfx(f, mat, attack, aim);
-      else if (piece === "pawn") drawPawnVfx(f, mat, attack, aim);
-      else if (piece === "queen") drawQueenVfx(f, mat, attack, aim);
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = width + 6;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.strokeStyle = mat.trail;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.strokeStyle = mat.sparkle;
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = Math.max(2, width * 0.28);
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawArcStroke(cx, cy, r, start, end, mat, width = 10) {
+      ctx.save();
+      ctx.lineCap = "round";
+
+      ctx.strokeStyle = "rgba(0,0,0,0.28)";
+      ctx.lineWidth = width + 5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end);
+      ctx.stroke();
+
+      ctx.strokeStyle = mat.trail;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end);
+      ctx.stroke();
+
+      ctx.strokeStyle = mat.sparkle;
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = Math.max(2, width * 0.25);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 2, start, end);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawSparkBurst(x, y, mat, len = 22, rays = 7) {
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.strokeStyle = mat.sparkle;
+      ctx.lineWidth = 2.2;
+      ctx.globalAlpha = 0.8;
+
+      for (let i = 0; i < rays; i++) {
+        const a = (Math.PI * 2 * i) / rays + state.t * 0.01;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len);
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
     function drawImpactDust(x, y, dir, mat, count = 4) {
@@ -1459,47 +1483,17 @@
       ctx.restore();
     }
 
-    function drawMotionBox(x, y, w, h, dir, mat, alpha = 0.32) {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(dir, 1);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = mat.trail;
-      ctx.strokeStyle = mat.stroke;
-      ctx.lineWidth = 3;
-      drawRoundRect(-w / 2, -h / 2, w, h, 12);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
+    function drawAttackVfx(f, mat) {
+      const piece = pieceOf(f);
+      const attack = f.attack;
+      const aim = f.attackAim || "forward";
 
-    function drawSlash(x1, y1, x2, y2, mat, width = 8) {
-      ctx.save();
-      ctx.lineCap = "round";
-
-      ctx.strokeStyle = "rgba(0,0,0,0.55)";
-      ctx.lineWidth = width + 5;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      ctx.strokeStyle = mat.main;
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      ctx.strokeStyle = mat.light;
-      ctx.globalAlpha = mat.main === "#050505" ? 0.35 : 0.75;
-      ctx.lineWidth = Math.max(2, width * 0.3);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      ctx.restore();
+      if (piece === "king") drawKingVfx(f, mat, attack, aim);
+      else if (piece === "rook") drawRookVfx(f, mat, attack, aim);
+      else if (piece === "bishop") drawBishopVfx(f, mat, attack, aim);
+      else if (piece === "knight") drawKnightVfx(f, mat, attack, aim);
+      else if (piece === "pawn") drawPawnVfx(f, mat, attack, aim);
+      else if (piece === "queen") drawQueenVfx(f, mat, attack, aim);
     }
 
     function drawKingVfx(f, mat, attack, aim) {
@@ -1507,33 +1501,56 @@
       const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlash(c.x + dir * 8, c.y - 8, c.x + dir * 96, c.y - 14, mat, 8);
+        drawPolyline([
+          { x: c.x - dir * 10, y: c.y + 2 },
+          { x: c.x + dir * 34, y: c.y - 8 },
+          { x: c.x + dir * 96, y: c.y - 12 }
+        ], mat, 8);
+        drawSparkBurst(c.x + dir * 92, c.y - 12, mat, 14, 6);
       }
 
-      if (attack === "heavy" || attack === "airHeavy") {
-        drawMotionBox(c.x + dir * 86, c.y + 8, 112, 70, dir, mat, 0.34);
-        drawImpactDust(c.x + dir * 78, f.y + f.height + 4, dir, mat, 5);
+      if (attack === "heavy") {
+        drawArcStroke(c.x + dir * 20, c.y + 8, 78, dir === 1 ? -1.05 : Math.PI + 0.06, dir === 1 ? 0.68 : Math.PI - 0.68, mat, 14);
+        drawAfterimage(f, c.x + dir * 58, c.y, 1.03, 0.16);
       }
 
       if (attack === "crouchHeavy") {
-        drawMotionBox(c.x + dir * 70, f.y + f.height * 0.78, 128, 42, dir, mat, 0.34);
-        drawImpactDust(c.x + dir * 72, f.y + f.height + 4, dir, mat, 6);
+        drawPolyline([
+          { x: c.x - dir * 12, y: c.y + 22 },
+          { x: c.x + dir * 28, y: c.y + 32 },
+          { x: c.x + dir * 112, y: c.y + 42 }
+        ], mat, 12);
+        drawImpactDust(c.x + dir * 80, f.y + f.height + 4, dir, mat, 7);
+      }
+
+      if (attack === "airHeavy") {
+        drawArcStroke(c.x, c.y + 10, 58, dir === 1 ? -0.95 : Math.PI + 0.15, dir === 1 ? 1.15 : Math.PI - 1.15, mat, 12);
       }
 
       if (attack === "special" || attack === "airSpecial") {
         if (aim === "forward") {
-          drawMotionBox(c.x + dir * 116, c.y, 180, 108, dir, mat, 0.42);
-          drawImpactDust(c.x + dir * 70, f.y + f.height + 4, dir, mat, 8);
+          drawAfterimage(f, c.x + dir * 36, c.y, 1.02, 0.2);
+          drawAfterimage(f, c.x + dir * 74, c.y, 1.06, 0.12);
+          drawPolyline([
+            { x: c.x - dir * 16, y: c.y + 12 },
+            { x: c.x + dir * 58, y: c.y + 5 },
+            { x: c.x + dir * 140, y: c.y }
+          ], mat, 18);
+          drawImpactDust(c.x + dir * 86, f.y + f.height + 4, dir, mat, 10);
         }
 
         if (aim === "up") {
-          drawSlash(c.x, c.y + 28, c.x, c.y - 190, mat, 16);
-          drawChessGlyph({ ...f, characterKey: "king" }, c.x, c.y - 148, mat, 0.55);
+          drawPolyline([
+            { x: c.x, y: c.y + 28 },
+            { x: c.x, y: c.y - 42 },
+            { x: c.x, y: c.y - 194 }
+          ], mat, 16);
+          drawAfterimage({ ...f, characterKey: "king" }, c.x, c.y - 146, 0.58, 0.22);
         }
 
         if (aim === "down") {
-          drawMotionBox(c.x + dir * 52, c.y + 20, 92, 90, dir, mat, 0.48);
-          drawImpactDust(c.x + dir * 52, f.y + f.height + 4, dir, mat, 10);
+          drawArcStroke(c.x + dir * 14, c.y + 8, 48, dir === 1 ? -0.3 : Math.PI - 0.85, dir === 1 ? 1.15 : Math.PI + 0.3, mat, 14);
+          drawSparkBurst(c.x + dir * 46, c.y + 34, mat, 20, 8);
         }
       }
     }
@@ -1543,28 +1560,55 @@
       const dir = visualDir(f);
 
       if (attack === "light") {
-        drawMotionBox(c.x + dir * 78, c.y + 6, 88, 72, dir, mat, 0.34);
+        drawPolyline([
+          { x: c.x + dir * 16, y: c.y + 18 },
+          { x: c.x + dir * 46, y: c.y + 14 },
+          { x: c.x + dir * 118, y: c.y + 14 }
+        ], mat, 12);
       }
 
-      if (attack === "heavy" || attack === "crouchHeavy" || attack === "airHeavy") {
-        const y = attack === "crouchHeavy" ? f.y + f.height * 0.72 : c.y + 4;
-        drawMotionBox(c.x + dir * 122, y, 166, 62, dir, mat, 0.42);
-        drawImpactDust(c.x + dir * 80, f.y + f.height + 5, dir, mat, 8);
+      if (attack === "heavy" || attack === "crouchHeavy") {
+        const y = attack === "crouchHeavy" ? c.y + 32 : c.y + 10;
+        drawAfterimage(f, c.x + dir * 44, c.y + 3, 1.02, 0.14);
+        drawPolyline([
+          { x: c.x + dir * 18, y },
+          { x: c.x + dir * 90, y },
+          { x: c.x + dir * 176, y }
+        ], mat, 18);
+        drawImpactDust(c.x + dir * 90, f.y + f.height + 5, dir, mat, 8);
+      }
+
+      if (attack === "airHeavy") {
+        drawArcStroke(c.x + dir * 8, c.y + 10, 60, dir === 1 ? -0.4 : Math.PI - 0.9, dir === 1 ? 1.05 : Math.PI + 0.4, mat, 12);
       }
 
       if (attack === "special") {
         if (aim === "forward") {
-          drawMotionBox(c.x + dir * 148, c.y + 10, 218, 118, dir, mat, 0.45);
-          drawImpactDust(c.x + dir * 88, f.y + f.height + 5, dir, mat, 11);
+          drawAfterimage(f, c.x + dir * 52, c.y + 2, 1.04, 0.18);
+          drawAfterimage(f, c.x + dir * 94, c.y + 2, 1.08, 0.12);
+          drawPolyline([
+            { x: c.x + dir * 20, y: c.y + 18 },
+            { x: c.x + dir * 118, y: c.y + 18 },
+            { x: c.x + dir * 236, y: c.y + 18 }
+          ], mat, 24);
+          drawImpactDust(c.x + dir * 108, f.y + f.height + 5, dir, mat, 12);
         }
 
         if (aim === "up") {
-          drawMotionBox(c.x, c.y - 112, 84, 250, dir, mat, 0.38);
+          drawPolyline([
+            { x: c.x, y: c.y + 44 },
+            { x: c.x, y: c.y - 50 },
+            { x: c.x, y: c.y - 246 }
+          ], mat, 22);
         }
 
         if (aim === "down") {
-          drawMotionBox(c.x + dir * 128, f.y + f.height * 0.75, 240, 50, dir, mat, 0.45);
-          drawImpactDust(c.x + dir * 92, f.y + f.height + 5, dir, mat, 12);
+          drawPolyline([
+            { x: c.x + dir * 16, y: c.y + 40 },
+            { x: c.x + dir * 120, y: c.y + 40 },
+            { x: c.x + dir * 240, y: c.y + 40 }
+          ], mat, 22);
+          drawImpactDust(c.x + dir * 110, f.y + f.height + 5, dir, mat, 12);
         }
       }
     }
@@ -1574,34 +1618,96 @@
       const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlash(c.x - dir * 8, c.y + 34, c.x + dir * 112, c.y - 58, mat, 8);
+        drawPolyline([
+          { x: c.x - dir * 10, y: c.y + 36 },
+          { x: c.x + dir * 48, y: c.y - 4 },
+          { x: c.x + dir * 114, y: c.y - 62 }
+        ], mat, 9);
       }
 
-      if (attack === "heavy" || attack === "airHeavy") {
-        drawSlash(c.x - dir * 22, c.y + 64, c.x + dir * 164, c.y - 78, mat, 12);
+      if (attack === "heavy") {
+        drawAfterimage(f, c.x - dir * 18, c.y + 16, 0.98, 0.16);
+        drawAfterimage(f, c.x + dir * 28, c.y - 12, 1.0, 0.14);
+        drawAfterimage(f, c.x + dir * 72, c.y - 42, 1.04, 0.12);
+        drawPolyline([
+          { x: c.x - dir * 14, y: c.y + 24 },
+          { x: c.x + dir * 44, y: c.y - 12 },
+          { x: c.x + dir * 126, y: c.y - 104 }
+        ], mat, 16);
+        drawSparkBurst(c.x + dir * 128, c.y - 104, mat, 18, 8);
       }
 
       if (attack === "crouchLight") {
-        drawSlash(c.x - dir * 8, f.y + f.height * 0.78, c.x + dir * 104, f.y + f.height * 0.58, mat, 7);
+        drawPolyline([
+          { x: c.x - dir * 6, y: c.y + 36 },
+          { x: c.x + dir * 48, y: c.y + 24 },
+          { x: c.x + dir * 102, y: c.y + 8 }
+        ], mat, 7);
       }
 
       if (attack === "crouchHeavy") {
-        drawSlash(c.x - dir * 12, f.y + f.height * 0.78, c.x + dir * 140, f.y + f.height * 0.42, mat, 11);
+        drawPolyline([
+          { x: c.x - dir * 16, y: c.y + 32 },
+          { x: c.x + dir * 42, y: c.y + 6 },
+          { x: c.x + dir * 128, y: c.y - 52 }
+        ], mat, 11);
       }
 
-      if (attack === "special" || attack === "airSpecial") {
+      if (attack === "airHeavy") {
+        drawAfterimage(f, c.x - dir * 12, c.y - 14, 0.98, 0.16);
+        drawAfterimage(f, c.x + dir * 34, c.y + 18, 1.02, 0.14);
+        drawAfterimage(f, c.x + dir * 80, c.y + 52, 1.05, 0.12);
+        drawPolyline([
+          { x: c.x - dir * 10, y: c.y - 20 },
+          { x: c.x + dir * 56, y: c.y + 24 },
+          { x: c.x + dir * 132, y: c.y + 112 }
+        ], mat, 16);
+        drawSparkBurst(c.x + dir * 132, c.y + 112, mat, 18, 8);
+      }
+
+      if (attack === "special") {
         if (aim === "forward") {
-          drawSlash(c.x - dir * 26, c.y + 78, c.x + dir * 220, c.y - 110, mat, 15);
+          drawPolyline([
+            { x: c.x - dir * 22, y: c.y + 78 },
+            { x: c.x + dir * 38, y: c.y + 26 },
+            { x: c.x + dir * 124, y: c.y - 42 },
+            { x: c.x + dir * 210, y: c.y - 108 }
+          ], mat, 14);
         }
 
         if (aim === "up") {
-          drawSlash(c.x - dir * 12, c.y + 28, c.x + dir * 140, c.y - 168, mat, 14);
+          drawPolyline([
+            { x: c.x - dir * 10, y: c.y + 32 },
+            { x: c.x + dir * 42, y: c.y - 12 },
+            { x: c.x + dir * 108, y: c.y - 92 },
+            { x: c.x + dir * 146, y: c.y - 168 }
+          ], mat, 14);
         }
 
         if (aim === "down") {
-          drawSlash(c.x - dir * 12, c.y - 26, c.x + dir * 160, c.y + 126, mat, 14);
-          drawImpactDust(c.x + dir * 116, f.y + f.height + 5, dir, mat, 7);
+          drawPolyline([
+            { x: c.x - dir * 10, y: c.y - 20 },
+            { x: c.x + dir * 44, y: c.y + 26 },
+            { x: c.x + dir * 112, y: c.y + 78 },
+            { x: c.x + dir * 166, y: c.y + 126 }
+          ], mat, 14);
+          drawImpactDust(c.x + dir * 118, f.y + f.height + 5, dir, mat, 8);
         }
+      }
+
+      if (attack === "airSpecial") {
+        const pts = [
+          { x: c.x - dir * 8, y: c.y - 32 },
+          { x: c.x + dir * 34, y: c.y - 8 },
+          { x: c.x + dir * 12, y: c.y + 26 },
+          { x: c.x + dir * 68, y: c.y + 50 },
+          { x: c.x + dir * 44, y: c.y + 86 },
+          { x: c.x + dir * 112, y: c.y + 118 }
+        ];
+        drawPolyline(pts, mat, 13);
+        drawAfterimage(f, c.x + dir * 40, c.y + 22, 0.96, 0.14);
+        drawAfterimage(f, c.x + dir * 74, c.y + 70, 1.0, 0.12);
+        drawSparkBurst(c.x + dir * 112, c.y + 118, mat, 18, 8);
       }
     }
 
@@ -1610,50 +1716,73 @@
       const dir = visualDir(f);
 
       if (attack === "light") {
-        drawMotionBox(c.x + dir * 58, c.y + 12, 60, 34, dir, mat, 0.34);
+        drawArcStroke(c.x + dir * 20, c.y + 10, 42, dir === 1 ? -0.85 : Math.PI - 0.28, dir === 1 ? 0.45 : Math.PI + 0.85, mat, 9);
       }
 
-      if (attack === "heavy" || attack === "airHeavy") {
-        drawSlash(c.x - dir * 18, c.y + 52, c.x + dir * 104, c.y - 74, mat, 12);
+      if (attack === "heavy") {
+        drawPolyline([
+          { x: c.x - dir * 8, y: c.y + 24 },
+          { x: c.x + dir * 20, y: c.y - 16 },
+          { x: c.x + dir * 64, y: c.y - 92 }
+        ], mat, 12);
       }
 
       if (attack === "crouchHeavy") {
-        drawSlash(c.x - dir * 28, c.y + 32, c.x + dir * 82, c.y + 74, mat, 10);
+        drawPolyline([
+          { x: c.x + dir * 12, y: c.y + 32 },
+          { x: c.x - dir * 10, y: c.y + 12 },
+          { x: c.x - dir * 42, y: c.y - 4 }
+        ], mat, 10);
+      }
+
+      if (attack === "airHeavy") {
+        const sm = f.scriptedMove;
+        if (sm && sm.type === "knightL") {
+          const pLen = 92;
+          const sLen = 58;
+          const sx = sm.secondary.x;
+          const sy = sm.secondary.y;
+          const px = sm.primary.x;
+          const py = sm.primary.y;
+
+          const start = { x: c.x - px * pLen * 0.55 - sx * sLen * 0.5, y: c.y - py * pLen * 0.55 - sy * sLen * 0.5 };
+          const corner = { x: start.x + px * pLen, y: start.y + py * pLen };
+          const end = { x: corner.x + sx * sLen, y: corner.y + sy * sLen };
+
+          drawPolyline([start, corner, end], mat, 15);
+          drawAfterimage(f, corner.x, corner.y, 0.92, 0.14);
+          drawAfterimage(f, end.x, end.y, 0.98, 0.12);
+          drawSparkBurst(end.x, end.y, mat, 16, 7);
+        } else {
+          drawArcStroke(c.x + dir * 10, c.y, 54, dir === 1 ? -0.8 : Math.PI - 0.25, dir === 1 ? 1.1 : Math.PI + 0.8, mat, 12);
+        }
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        ctx.save();
-        ctx.strokeStyle = mat.main;
-        ctx.lineWidth = 13;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-
         if (aim === "forward") {
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y + 30);
-          ctx.lineTo(c.x + dir * 86, c.y + 30);
-          ctx.lineTo(c.x + dir * 86, c.y - 58);
-          ctx.stroke();
+          drawPolyline([
+            { x: c.x, y: c.y + 28 },
+            { x: c.x + dir * 90, y: c.y + 28 },
+            { x: c.x + dir * 90, y: c.y - 54 }
+          ], mat, 14);
         }
 
         if (aim === "up") {
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y + 40);
-          ctx.lineTo(c.x, c.y - 106);
-          ctx.lineTo(c.x + dir * 72, c.y - 106);
-          ctx.stroke();
+          drawPolyline([
+            { x: c.x, y: c.y + 40 },
+            { x: c.x, y: c.y - 104 },
+            { x: c.x + dir * 72, y: c.y - 104 }
+          ], mat, 14);
         }
 
         if (aim === "down") {
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y - 28);
-          ctx.lineTo(c.x + dir * 102, c.y - 28);
-          ctx.lineTo(c.x + dir * 102, c.y + 84);
-          ctx.stroke();
+          drawPolyline([
+            { x: c.x, y: c.y - 28 },
+            { x: c.x + dir * 104, y: c.y - 28 },
+            { x: c.x + dir * 104, y: c.y + 86 }
+          ], mat, 14);
           drawImpactDust(c.x + dir * 94, f.y + f.height + 5, dir, mat, 8);
         }
-
-        ctx.restore();
       }
     }
 
@@ -1662,36 +1791,49 @@
       const dir = visualDir(f);
 
       if (attack === "light" || attack === "crouchLight") {
-        const y = attack === "crouchLight" ? f.y + f.height * 0.74 : c.y + 8;
-        drawSlash(c.x + dir * 2, y, c.x + dir * 92, y, mat, 7);
+        const y = attack === "crouchLight" ? c.y + 36 : c.y + 10;
+        drawPolyline([
+          { x: c.x - dir * 4, y },
+          { x: c.x + dir * 34, y },
+          { x: c.x + dir * 92, y }
+        ], mat, 7);
       }
 
-      if (attack === "heavy" || attack === "airHeavy") {
-        drawSlash(c.x - dir * 18, c.y + 34, c.x + dir * 114, c.y - 10, mat, 9);
+      if (attack === "heavy") {
+        drawPolyline([
+          { x: c.x - dir * 8, y: c.y + 16 },
+          { x: c.x + dir * 44, y: c.y + 2 },
+          { x: c.x + dir * 114, y: c.y - 10 }
+        ], mat, 9);
       }
 
       if (attack === "crouchHeavy") {
-        drawSlash(c.x, c.y + 40, c.x + dir * 92, c.y - 30, mat, 8);
+        drawPolyline([
+          { x: c.x, y: c.y + 24 },
+          { x: c.x + dir * 34, y: c.y },
+          { x: c.x + dir * 92, y: c.y - 36 }
+        ], mat, 9);
+      }
+
+      if (attack === "airHeavy") {
+        drawArcStroke(c.x + dir * 6, c.y + 12, 44, dir === 1 ? -0.8 : Math.PI - 0.35, dir === 1 ? 0.95 : Math.PI + 0.8, mat, 9);
       }
 
       if (attack === "special" || attack === "airSpecial") {
-        const sx = c.x + dir * 8;
-        const sy = aim === "up" ? c.y - 10 : aim === "down" ? c.y + 18 : c.y;
-
-        let ex = sx + dir * 148;
-        let ey = sy;
+        const pts = [{ x: c.x + dir * 4, y: c.y }];
 
         if (aim === "up") {
-          ex = sx + dir * 42;
-          ey = sy - 126;
+          pts.push({ x: c.x + dir * 20, y: c.y - 42 });
+          pts.push({ x: c.x + dir * 44, y: c.y - 126 });
+        } else if (aim === "down") {
+          pts.push({ x: c.x + dir * 40, y: c.y + 16 });
+          pts.push({ x: c.x + dir * 118, y: c.y + 42 });
+        } else {
+          pts.push({ x: c.x + dir * 52, y: c.y });
+          pts.push({ x: c.x + dir * 144, y: c.y });
         }
 
-        if (aim === "down") {
-          ex = sx + dir * 124;
-          ey = sy + 42;
-        }
-
-        drawSlash(sx, sy, ex, ey, mat, 11);
+        drawPolyline(pts, mat, 11);
         drawImpactDust(c.x + dir * 40, f.y + f.height + 5, dir, mat, 5);
       }
     }
@@ -1701,26 +1843,50 @@
       const dir = visualDir(f);
 
       if (attack === "light") {
-        drawSlash(c.x - dir * 12, c.y + 40, c.x + dir * 150, c.y - 40, mat, 9);
+        drawPolyline([
+          { x: c.x - dir * 12, y: c.y + 36 },
+          { x: c.x + dir * 54, y: c.y + 4 },
+          { x: c.x + dir * 152, y: c.y - 42 }
+        ], mat, 10);
       }
 
-      if (attack === "heavy" || attack === "airHeavy" || attack === "crouchHeavy") {
-        drawSlash(c.x - dir * 20, c.y + 60, c.x + dir * 198, c.y - 58, mat, 13);
+      if (attack === "heavy" || attack === "crouchHeavy") {
+        drawArcStroke(c.x + dir * 28, c.y + 10, 116, dir === 1 ? -1.0 : Math.PI + 0.06, dir === 1 ? 0.78 : Math.PI - 0.78, mat, 16);
+      }
+
+      if (attack === "airHeavy") {
+        drawArcStroke(c.x + dir * 12, c.y, 86, dir === 1 ? -0.9 : Math.PI - 0.22, dir === 1 ? 1.0 : Math.PI + 0.9, mat, 14);
       }
 
       if (attack === "special" || attack === "airSpecial") {
         if (aim === "forward") {
-          drawSlash(c.x - dir * 35, c.y + 80, c.x + dir * 296, c.y - 88, mat, 17);
+          drawAfterimage(f, c.x + dir * 42, c.y, 1.02, 0.18);
+          drawAfterimage(f, c.x + dir * 94, c.y, 1.08, 0.12);
+          drawPolyline([
+            { x: c.x - dir * 24, y: c.y + 56 },
+            { x: c.x + dir * 72, y: c.y + 14 },
+            { x: c.x + dir * 188, y: c.y - 36 },
+            { x: c.x + dir * 300, y: c.y - 88 }
+          ], mat, 18);
         }
 
         if (aim === "up") {
-          drawSlash(c.x, c.y + 40, c.x, c.y - 266, mat, 17);
-          drawChessGlyph({ ...f, characterKey: "queen" }, c.x, c.y - 188, mat, 0.55);
+          drawPolyline([
+            { x: c.x, y: c.y + 38 },
+            { x: c.x, y: c.y - 46 },
+            { x: c.x, y: c.y - 266 }
+          ], mat, 18);
+          drawAfterimage({ ...f, characterKey: "queen" }, c.x, c.y - 188, 0.58, 0.24);
         }
 
         if (aim === "down") {
-          drawSlash(c.x - dir * 20, c.y + 20, c.x + dir * 270, c.y + 86, mat, 17);
-          drawImpactDust(c.x + dir * 135, f.y + f.height + 5, dir, mat, 11);
+          drawPolyline([
+            { x: c.x - dir * 16, y: c.y + 20 },
+            { x: c.x + dir * 88, y: c.y + 38 },
+            { x: c.x + dir * 192, y: c.y + 60 },
+            { x: c.x + dir * 282, y: c.y + 88 }
+          ], mat, 18);
+          drawImpactDust(c.x + dir * 136, f.y + f.height + 5, dir, mat, 11);
         }
       }
     }
@@ -1746,7 +1912,6 @@
       }
 
       ctx.restore();
-
       state.particles = state.particles.filter((p) => p.life > 0);
     }
 
@@ -1865,20 +2030,20 @@
 
     function drawWaitingScreen() {
       ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.38)";
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.fillRect(0, 0, 960, 540);
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "1000 54px system-ui";
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 18;
+      ctx.fillStyle = "rgba(70,40,20,0.95)";
+      ctx.shadowColor = "rgba(255,255,255,0.5)";
+      ctx.shadowBlur = 12;
       ctx.fillText("WAITING FOR BOARD", 480, 238);
 
       ctx.font = "500 18px system-ui";
-      ctx.fillStyle = "rgba(255,255,255,0.68)";
-      ctx.fillText("Online-board chess piece icons only.", 480, 286);
+      ctx.fillStyle = "rgba(70,40,20,0.78)";
+      ctx.fillText("Classic board theme. Literal chess piece icons.", 480, 286);
 
       ctx.restore();
     }
@@ -1888,15 +2053,15 @@
       if (!winner) return;
 
       ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.24)";
+      ctx.fillStyle = "rgba(90,60,34,0.22)";
       ctx.fillRect(0, 0, 960, 540);
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "1000 66px system-ui";
-      ctx.fillStyle = winner === "white" ? "#f4f0df" : "#ffffff";
-      ctx.shadowColor = "#000000";
-      ctx.shadowBlur = 26;
+      ctx.fillStyle = winner === "white" ? "#fff7ec" : "#2b1a10";
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = 20;
       ctx.fillText(`${winner.toUpperCase()} TAKES THE ROUND`, 480, 270);
 
       ctx.restore();
