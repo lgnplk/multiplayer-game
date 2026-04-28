@@ -459,9 +459,9 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 18, dmg: 10, kb: 26, lift: 12, stamina: 10, cd: 52 });
 
     if (attack === "special") {
-      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 16, kb: 46, stamina: 36, cd: 250, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
+      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 8, kb: 46, stamina: 36, cd: 250, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
       else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 8, kb: 20, lift: -33, stamina: 24, cd: 180, multi: true, interval: 10 });
-      else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 13, kb: 38, stamina: 25, cd: 185, armor: 36, breakArmor: true, wall: 46 });
+      else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 8, kb: 38, stamina: 25, cd: 185, armor: 36, breakArmor: true, wall: 46 });
     }
   }
 
