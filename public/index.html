@@ -1571,7 +1571,7 @@
       ctx.restore();
 
       drawUltimateVisual(f);
-      if (isBishopSword(f)) drawBishopIdleSword(f);
+      if (isBishopSword(f) && !f.attack) drawBishopIdleSword(f);
       drawWeapon(f);
       drawPiece(f, c.x, c.y, 1, 1);
 
