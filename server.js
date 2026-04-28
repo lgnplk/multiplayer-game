@@ -28,25 +28,25 @@ const ULTIMATE_MAX = 100;
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Hammer bruiser. Ultimate: Crownbreaker Verdict.",
+    title: "Simple Bruiser",
     hp: 780,
-    speed: 5.8,
-    jump: 14,
+    speed: 7.0,
+    jump: 15,
     w: 72,
     h: 124
   },
   rook: {
     name: "Rook",
-    title: "Siege weapon. Ultimate: Siege Engine Overdrive.",
-    hp: 750,
-    speed: 5.4,
-    jump: 12.8,
+    title: "Tanky Zoner",
+    hp: 820,
+    speed: 6.0,
+    jump: 14.8,
     w: 82,
     h: 128
   },
   bishop: {
     name: "Bishop",
-    title: "Diagonal caster. Ultimate: Ascended Blade.",
+    title: "Diagonal Zoner.",
     hp: 650,
     speed: 7.8,
     jump: 18.2,
@@ -55,19 +55,19 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Lance assassin. Ultimate: chained cavalry L-charge.",
+    title: "Swift Evader.",
     hp: 660,
-    speed: 7.6,
+    speed: 8.6,
     jump: 20.5,
     w: 66,
     h: 116
   },
   pawn: {
     name: "Pawn",
-    title: "Spear soldier. Ultimate: Last Stand Uprising.",
-    hp: 590,
+    title: "Promotable Underdog.",
+    hp: 540,
     speed: 7.2,
-    jump: 15,
+    jump: 17,
     w: 56,
     h: 106
   }
