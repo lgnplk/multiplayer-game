@@ -1582,19 +1582,100 @@
 
     function greatSword(c, d, m, p = 1, angle = -0.75, len = 190, width = 18) {
       if (!c) return;
+
       const finalAngle = d === 1 ? angle : Math.PI - angle;
       const q = ease(p);
 
-      ctx.save();
-      ctx.shadowColor = "rgba(255,215,70,.65)";
-      ctx.shadowBlur = 18;
-      blade(c.x - d * 18, c.y + 18, finalAngle, len, { ...m, weapon: m.sword, weapon2: m.sword2 }, q, width);
+      const baseX = c.x - d * 18;
+      const baseY = c.y + 18;
 
-      const tx = c.x - d * 18 + Math.cos(finalAngle) * len * q;
-      const ty = c.y + 18 + Math.sin(finalAngle) * len * q;
-      spark(tx, ty, { magic: m.sword2 }, 18 + 8 * q, 8);
+      const tipX = baseX + Math.cos(finalAngle) * len * q;
+      const tipY = baseY + Math.sin(finalAngle) * len * q;
+
+      ctx.save();
+      ctx.translate(baseX, baseY);
+      ctx.rotate(finalAngle);
+
+      // === HANDLE ===
+      ctx.fillStyle = "#1a1a1a";
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+
+      rr(-6, -10, 12, 55, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // === POMMEL ===
+      ctx.beginPath();
+      ctx.arc(0, 48, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "#2b2b2b";
+      ctx.fill();
+      ctx.stroke();
+
+      // === CROSSGUARD ===
+      ctx.fillStyle = "#2a2a2a";
+      rr(-34, -6, 68, 12, 5);
+      ctx.fill();
+      ctx.stroke();
+
+      // === BLADE BASE SHAPE ===
+      const bladeLen = len * q;
+
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-6, -bladeLen);
+      ctx.lineTo(6, -bladeLen);
+      ctx.lineTo(10, 0);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, 0, 0, -bladeLen);
+      grad.addColorStop(0, "#2f2f2f");
+      grad.addColorStop(0.5, "#1a1a1a");
+      grad.addColorStop(1, "#0a0a0a");
+
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // === EDGE HIGHLIGHTS ===
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 1.2;
+
+      ctx.beginPath();
+      ctx.moveTo(-6, -bladeLen);
+      ctx.lineTo(-2, 0);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(6, -bladeLen);
+      ctx.lineTo(2, 0);
+      ctx.stroke();
+
+      // === CENTER FULLER (groove) ===
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+      ctx.moveTo(0, -bladeLen + 20);
+      ctx.lineTo(0, -10);
+      ctx.stroke();
+
       ctx.restore();
-    }
+
+      // === TIP SPARK (very subtle, not magical spam) ===
+      if (q > 0.7) {
+        ctx.save();
+        ctx.globalAlpha = 0.4 * (q - 0.7);
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+}
 
     function drawBishopIdleSword(f) {
       if (!isBishopSword(f)) return;
