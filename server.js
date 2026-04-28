@@ -20,7 +20,7 @@ const GRAVITY = 0.9;
 const ROUND_TIME = 99 * FPS;
 const ROUNDS_TO_WIN = 3;
 
-const PROMOTION_MAX = 190;
+const PROMOTION_MAX = 140;
 const QUEEN_TIME = 6 * FPS;
 const BISHOP_SWORD_TIME = QUEEN_TIME;
 const ULTIMATE_MAX = 100;
@@ -46,7 +46,7 @@ const CHARACTERS = {
   },
   bishop: {
     name: "Bishop",
-    title: "Diagonal Zoner.",
+    title: "Diagonal Zoner",
     hp: 650,
     speed: 7.8,
     jump: 18.2,
@@ -55,7 +55,7 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Swift Evader.",
+    title: "Swift Evader",
     hp: 660,
     speed: 8.6,
     jump: 20.5,
@@ -64,7 +64,7 @@ const CHARACTERS = {
   },
   pawn: {
     name: "Pawn",
-    title: "Promotable Underdog.",
+    title: "Promotable Underdog",
     hp: 540,
     speed: 7.2,
     jump: 17,
@@ -413,7 +413,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (p === "bishop") Object.assign(m, { dmg: sword ? 14 : 10, kb: sword ? 38 : 28, lift: sword ? -30 : -25, cd: sword ? 72 : 118, breakArmor: sword });
     if (p === "knight") Object.assign(m, { dmg: 10, kb: 31, lift: -18, cd: 110 });
     if (p === "pawn") Object.assign(m, { dmg: 8, kb: 24, cd: 92 });
-    if (p === "queen") Object.assign(m, { dmg: 14, kb: 42, lift: -20, cd: 150, breakArmor: true });
+    if (p === "queen") Object.assign(m, { dmg: 16, kb: 24, lift: -20, cd: 92, breakArmor: true });
 
     return m;
   }
@@ -552,14 +552,14 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "queen") {
-    if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 11, dmg: 7, kb: 18, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 12, kb: 32, stamina: 10, cd: 42, breakArmor: true });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 11, kb: 28, lift: -18, stamina: 10, cd: 42 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 16, dmg: 11, kb: 26, lift: 16, stamina: 10, cd: 42 });
+    if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 11, dmg: 12, kb: 18, cd: 13 });
+    if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 16, kb: 32, stamina: 10, cd: 42, breakArmor: true });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 16, kb: 28, lift: -18, stamina: 10, cd: 42 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 16, dmg: 16, kb: 26, lift: 16, stamina: 10, cd: 42 });
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 12, kb: 23, lift: -40, stamina: 22, cd: 185, breakArmor: true });
-      else if (aim === "down") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 13, kb: 36, lift: 14, stamina: 22, cd: 185, breakArmor: true });
-      else Object.assign(m, { duration: 56, activeA: 13, activeB: 28, dmg: 14, kb: 40, stamina: 22, cd: 190, breakArmor: true });
+      if (aim === "up") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 18, kb: 23, lift: -40, stamina: 22, cd: 185, breakArmor: true });
+      else if (aim === "down") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 18, kb: 36, lift: 14, stamina: 22, cd: 185, breakArmor: true });
+      else Object.assign(m, { duration: 56, activeA: 13, activeB: 28, dmg: 18, kb: 40, stamina: 22, cd: 190, breakArmor: true });
     }
   }
 
@@ -1456,7 +1456,7 @@ function updateKnightUltimate(f, enemy, game, input, u) {
       u.slamDone = true;
 
       const hb = makeHitbox(f, f.x - 105, f.y + f.h - 38, f.w + 210, 128, {
-        dmg: 5 + Math.min(u.hits * 2, 12),
+        dmg: 1 + Math.min(u.hits * 2, 12),
         kb: 52,
         lift: -25,
         wall: 90,
