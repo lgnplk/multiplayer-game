@@ -1020,9 +1020,9 @@ function makeUltimateState(f, input) {
       currentDir: firstDir,
       previousDir: null,
       segment: 0,
-      maxSegments: 48,
+      maxSegments: 24,
       segmentTimer: 0,
-      segmentLength: 3,
+      segmentLength: 6,
 
       queuedDir: null,
       lastTurnTick: 0,
@@ -1456,7 +1456,7 @@ function updateKnightUltimate(f, enemy, game, input, u) {
       u.slamDone = true;
 
       const hb = makeHitbox(f, f.x - 105, f.y + f.h - 38, f.w + 210, 128, {
-        dmg: 18 + Math.min(u.hits * 2, 12),
+        dmg: 5 + Math.min(u.hits * 2, 12),
         kb: 52,
         lift: -25,
         wall: 90,
