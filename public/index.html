@@ -1009,10 +1009,18 @@
         }
 
         if (e.type === "hit") {
-          burst(e.x, e.y, e.ultimate || e.sword ? "255,211,71" : "255,235,200", e.ultimate || e.sword ? 54 : 24, e.ultimate || e.sword ? 13 : 8);
-          addFx(e.ultimate || e.sword ? "ultimateImpact" : "impact", e.x, e.y, { life: e.ultimate || e.sword ? 30 : 18 });
-          state.shake = Math.max(state.shake, e.ultimate || e.sword ? 16 : 8);
-          state.flash = Math.max(state.flash, e.ultimate || e.sword ? .2 : .1);
+          if (e.sword) {
+            metalSparks(e.x, e.y, e.dir || 1, 34);
+            addFx("swordImpact", e.x, e.y, { life: 22, dir: e.dir || 1 });
+            state.shake = Math.max(state.shake, 13);
+            state.flash = Math.max(state.flash, .08);
+          } else {
+            burst(e.x, e.y, e.ultimate ? "255,211,71" : "255,235,200", e.ultimate ? 54 : 24, e.ultimate ? 13 : 8);
+            addFx(e.ultimate ? "ultimateImpact" : "impact", e.x, e.y, { life: e.ultimate ? 30 : 18 });
+            state.shake = Math.max(state.shake, e.ultimate ? 16 : 8);
+            state.flash = Math.max(state.flash, e.ultimate ? .2 : .1);
+          }
+        }
         }
 
         if (e.type === "grab") {
@@ -1131,7 +1139,7 @@
         if (e.type === "queenEnd") addFx("queenEnd", e.x, e.y, { life: 34 });
         if (e.type === "roundWin") addFx("roundWin", e.x, e.y, { life: 64 });
       }
-    }
+    
 
         function addParticle(x, y, o = {}) {
       if (!Number.isFinite(x)) x = 480;
@@ -1591,7 +1599,7 @@
 
       const tipX = baseX + Math.cos(finalAngle) * len * q;
       const tipY = baseY + Math.sin(finalAngle) * len * q;
-
+      
       ctx.save();
       ctx.translate(baseX, baseY);
       ctx.rotate(finalAngle);
@@ -1662,6 +1670,24 @@
       ctx.moveTo(0, -bladeLen + 20);
       ctx.lineTo(0, -10);
       ctx.stroke();
+      
+      function metalSparks(x, y, dir = 1, count = 18) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+        for (let i = 0; i < count; i++) {
+          const a = Math.PI + (Math.random() - .5) * 1.4;
+          const s = 2 + Math.random() * 8;
+
+          addParticle(x, y, {
+            vx: Math.cos(a) * s * dir,
+            vy: Math.sin(a) * s - Math.random() * 3,
+            color: Math.random() > .35 ? "255,220,120" : "255,255,235",
+            life: 10 + Math.random() * 14,
+            r: 1.2 + Math.random() * 2.2,
+            g: .18
+          });
+        }
+      }
 
       ctx.restore();
 
@@ -1683,13 +1709,20 @@
       const c = center(f);
       const d = f.facing || 1;
       const m = mat(f);
-      const sway = Math.sin(state.t * .08) * .08;
+      const sway = Math.sin(state.t * .055) * .045;
 
       ctx.save();
-      ctx.globalAlpha = .95;
-      ctx.shadowColor = "rgba(255,215,70,.7)";
-      ctx.shadowBlur = 18;
-      greatSword(c, d, m, .95, -1.18 + sway, 185, 14);
+      ctx.globalAlpha = .96;
+      ctx.shadowColor = "rgba(0,0,0,.55)";
+      ctx.shadowBlur = 6;
+
+      const swordPoint = {
+        x: c.x - d * 34,
+        y: c.y + 38
+      };
+
+      greatSword(swordPoint, d, m, .95, -1.36 + sway, 176, 15);
+
       ctx.restore();
     }
 
@@ -2240,7 +2273,7 @@
       ctx.restore();
 
       drawUltimateVisual(f);
-      if (isBishopSword(f) && !f.attack) drawBishopIdleSword(f);
+      if (isBishopSword(f)) drawBishopIdleSword(f);
       drawWeapon(f);
 
       ctx.save();
@@ -2349,6 +2382,31 @@
         const p = 1 - fx.life / fx.max;
         const a = clamp(fx.life / fx.max, 0, 1);
 
+        if (fx.type === "swordImpact") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,245,190,${a})`;
+          ctx.lineWidth = 3;
+          ctx.lineCap = "round";
+
+          for (let i = 0; i < 7; i++) {
+            const ang = Math.PI + (i - 3) * .22;
+            ctx.beginPath();
+            ctx.moveTo(fx.x, fx.y);
+            ctx.lineTo(
+              fx.x + Math.cos(ang) * (18 + p * 48) * (fx.dir || 1),
+              fx.y + Math.sin(ang) * (18 + p * 48)
+            );
+            ctx.stroke();
+          }
+
+          ctx.strokeStyle = `rgba(255,255,255,${.65 * a})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(fx.x - 20 * (fx.dir || 1), fx.y + 18);
+          ctx.lineTo(fx.x + 42 * (fx.dir || 1), fx.y - 18);
+          ctx.stroke();
+        }
+
         if (fx.type === "impact") {
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,238,205,${a})`;
@@ -2371,21 +2429,31 @@
 
         if (fx.type === "bishopSwordAwaken") {
           ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,215,70,${.16 * a})`;
-          ctx.strokeStyle = `rgba(255,235,150,${a})`;
-          ctx.lineWidth = 7;
 
+          ctx.fillStyle = `rgba(255,230,150,${.12 * a})`;
           ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 50 + p * 190, 0, Math.PI * 2);
+          ctx.arc(fx.x, fx.y, 45 + p * 155, 0, Math.PI * 2);
           ctx.fill();
-          ctx.stroke();
+
+          ctx.strokeStyle = `rgba(255,240,190,${a})`;
+          ctx.lineWidth = 5;
+          for (let i = 0; i < 10; i++) {
+            const ang = i * Math.PI * 2 / 10 + p * 1.5;
+            ctx.beginPath();
+            ctx.moveTo(fx.x + Math.cos(ang) * 24, fx.y + Math.sin(ang) * 24);
+            ctx.lineTo(fx.x + Math.cos(ang) * (70 + p * 80), fx.y + Math.sin(ang) * (70 + p * 80));
+            ctx.stroke();
+          }
 
           ctx.save();
-          ctx.translate(fx.x, fx.y);
-          ctx.rotate(-Math.PI / 4 + p * Math.PI);
-          ctx.shadowColor = "rgba(255,215,70,.8)";
-          ctx.shadowBlur = 25;
-          blade(-70, 40, -Math.PI / 2, 190 + p * 90, { weapon: "#ffd84e", weapon2: "#fff7cc", edge: "#55300f" }, 1, 24);
+          ctx.globalAlpha = a;
+          ctx.font = "900 92px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(255,245,200,${a})`;
+          ctx.strokeStyle = "rgba(50,30,10,.85)";
+          ctx.lineWidth = 3;
+          ctx.strokeText("♗", fx.x, fx.y + 26);
+          ctx.fillText("♗", fx.x, fx.y + 26);
           ctx.restore();
         }
 
