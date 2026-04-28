@@ -504,7 +504,7 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            Chess as a fighting game.
+            Bishop now awakens a giant sword, Knight chains fast L-charges, and every piece fights like a weaponized chess icon.
           </p>
         </div>
 
@@ -677,6 +677,16 @@
       return f.characterKey || "king";
     }
 
+    function isBishopSword(f) {
+      return !!(
+        f &&
+        f.characterKey === "bishop" &&
+        f.ultimateState &&
+        f.ultimateState.type === "bishopSword" &&
+        f.ultimateState.phase === "active"
+      );
+    }
+
     function glyph(f) {
       return GLYPHS[pieceOf(f)] || "♙";
     }
@@ -693,6 +703,8 @@
           edge: "#f5ead7",
           magic: "rgba(95,95,95,.9)",
           ult: "rgba(255,214,80,.85)",
+          sword: "rgba(255,214,80,.95)",
+          sword2: "rgba(255,245,180,.95)",
           dust: "80,70,60"
         };
       }
@@ -707,6 +719,8 @@
         edge: "#503018",
         magic: "rgba(255,232,170,.9)",
         ult: "rgba(255,211,71,.95)",
+        sword: "rgba(255,230,120,.98)",
+        sword2: "rgba(255,255,235,.98)",
         dust: "210,185,145"
       };
     }
@@ -982,7 +996,8 @@
         messageEl.classList.remove("show");
       }
     }
-        function consumeFx(gs) {
+
+    function consumeFx(gs) {
       const fx = gs?.game?.effects || [];
 
       for (const e of fx) {
@@ -993,36 +1008,11 @@
           state.seenFx = new Set(Array.from(state.seenFx).slice(-450));
         }
 
-        if (e.type === "knightWindup") {
-          addFx("knightWindup", e.x, e.y, {
-            life: 30,
-            piece: e.piece,
-            dir: e.dir
-          });
-        }
-
-        if (e.type === "knightChoice") {
-          addFx("knightChoice", e.x, e.y, {
-            life: 34,
-            piece: e.piece,
-            dir: e.dir
-          });
-        }
-
-        if (e.type === "knightBurst") {
-          addFx("knightBurst", e.x, e.y, {
-            life: 20,
-            piece: e.piece,
-            dir: e.dir
-          });
-          burst(e.x, e.y, "255,211,71", 34, 8);
-        }
-
         if (e.type === "hit") {
-          burst(e.x, e.y, e.ultimate ? "255,211,71" : "255,235,200", e.ultimate ? 54 : 24, e.ultimate ? 13 : 8);
-          addFx(e.ultimate ? "ultimateImpact" : "impact", e.x, e.y, { life: e.ultimate ? 30 : 18 });
-          state.shake = Math.max(state.shake, e.ultimate ? 16 : 8);
-          state.flash = Math.max(state.flash, e.ultimate ? .2 : .1);
+          burst(e.x, e.y, e.ultimate || e.sword ? "255,211,71" : "255,235,200", e.ultimate || e.sword ? 54 : 24, e.ultimate || e.sword ? 13 : 8);
+          addFx(e.ultimate || e.sword ? "ultimateImpact" : "impact", e.x, e.y, { life: e.ultimate || e.sword ? 30 : 18 });
+          state.shake = Math.max(state.shake, e.ultimate || e.sword ? 16 : 8);
+          state.flash = Math.max(state.flash, e.ultimate || e.sword ? .2 : .1);
         }
 
         if (e.type === "grab") {
@@ -1049,6 +1039,42 @@
           state.flash = Math.max(state.flash, .18);
         }
 
+        if (e.type === "bishopSwordAwaken") {
+          addFx("bishopSwordAwaken", e.x, e.y, { life: 80, dir: e.dir });
+          burst(e.x, e.y, "255,230,120", 120, 14);
+          state.shake = Math.max(state.shake, 16);
+          state.flash = Math.max(state.flash, .25);
+        }
+
+        if (e.type === "bishopSwordReady") {
+          addFx("bishopSwordReady", e.x, e.y, { life: 46, dir: e.dir });
+          burst(e.x, e.y, "255,245,190", 70, 10);
+        }
+
+        if (e.type === "bishopSwordPulse") {
+          addFx("bishopSwordPulse", e.x, e.y, { life: 18, dir: e.dir });
+        }
+
+        if (e.type === "bishopSwordEnd") {
+          addFx("bishopSwordEnd", e.x, e.y, { life: 34, dir: e.dir });
+        }
+
+        if (e.type === "bishopSwordMove") {
+          addFx("bishopSwordMove", e.x, e.y, {
+            life: 16,
+            attack: e.attack,
+            aim: e.aim,
+            dir: e.dir
+          });
+        }
+
+        if (e.type === "bishopSwordParry") {
+          addFx("bishopSwordParry", e.x, e.y, { life: 34, dir: e.dir });
+          burst(e.x, e.y, "255,245,190", 70, 13);
+          state.shake = Math.max(state.shake, 15);
+          state.flash = Math.max(state.flash, .22);
+        }
+
         if (e.type === "ultimateLock") {
           addFx("ultimateLock", e.x, e.y, { life: 34, piece: e.piece, dir: e.dir });
           state.shake = Math.max(state.shake, 8);
@@ -1064,16 +1090,17 @@
           addFx("rookShell", e.x, e.y, { life: 20, piece: e.piece, dir: e.dir });
         }
 
-        if (e.type === "bishopTrail") {
-          addFx("bishopTrail", e.x, e.y, { life: 18 });
+        if (e.type === "knightWindup") {
+          addFx("knightWindup", e.x, e.y, { life: 20, piece: e.piece, dir: e.dir });
         }
 
-        if (e.type === "bishopFinish") {
-          addFx("bishopFinish", e.x, e.y, { life: 30, dir: e.dir });
+        if (e.type === "knightBurst") {
+          addFx("knightBurst", e.x, e.y, { life: 16, piece: e.piece, dir: e.dir });
+          burst(e.x, e.y, "255,211,71", 34, 8);
         }
 
         if (e.type === "knightSlam") {
-          addFx("knightSlam", e.x, e.y, { life: 32, dir: e.dir });
+          addFx("knightSlam", e.x, e.y, { life: 36, dir: e.dir });
           burst(e.x, e.y, "255,211,71", 48, 11);
           state.shake = Math.max(state.shake, 14);
         }
@@ -1106,7 +1133,7 @@
       }
     }
 
-    function addParticle(x, y, o = {}) {
+        function addParticle(x, y, o = {}) {
       if (!Number.isFinite(x)) x = 480;
       if (!Number.isFinite(y)) y = 270;
 
@@ -1154,8 +1181,8 @@
         ...data
       });
 
-      if (state.localFx.length > 260) {
-        state.localFx.splice(0, state.localFx.length - 260);
+      if (state.localFx.length > 280) {
+        state.localFx.splice(0, state.localFx.length - 280);
       }
     }
 
@@ -1284,7 +1311,7 @@
       ctx.fillStyle = grad;
       ctx.fillText(glyph(f), x, y);
 
-      if (f.promoted) {
+      if (f.promoted || isBishopSword(f)) {
         ctx.globalAlpha = alpha * .46;
         ctx.lineWidth = 2.4;
         ctx.strokeStyle = "rgba(255,220,115,.95)";
@@ -1553,6 +1580,38 @@
       blade(c.x - d * 8, c.y - 26, d === 1 ? .35 : Math.PI - .35, 150, m, clamp(p - .12, 0, 1), 8);
     }
 
+    function greatSword(c, d, m, p = 1, angle = -0.75, len = 190, width = 18) {
+      if (!c) return;
+      const finalAngle = d === 1 ? angle : Math.PI - angle;
+      const q = ease(p);
+
+      ctx.save();
+      ctx.shadowColor = "rgba(255,215,70,.65)";
+      ctx.shadowBlur = 18;
+      blade(c.x - d * 18, c.y + 18, finalAngle, len, { ...m, weapon: m.sword, weapon2: m.sword2 }, q, width);
+
+      const tx = c.x - d * 18 + Math.cos(finalAngle) * len * q;
+      const ty = c.y + 18 + Math.sin(finalAngle) * len * q;
+      spark(tx, ty, { magic: m.sword2 }, 18 + 8 * q, 8);
+      ctx.restore();
+    }
+
+    function drawBishopIdleSword(f) {
+      if (!isBishopSword(f)) return;
+
+      const c = center(f);
+      const d = f.facing || 1;
+      const m = mat(f);
+      const sway = Math.sin(state.t * .08) * .08;
+
+      ctx.save();
+      ctx.globalAlpha = .95;
+      ctx.shadowColor = "rgba(255,215,70,.7)";
+      ctx.shadowBlur = 18;
+      greatSword(c, d, m, .95, -1.18 + sway, 185, 14);
+      ctx.restore();
+    }
+
     function drawUltimateVisual(f) {
       const u = f.ultimateState;
       if (!u) return;
@@ -1563,6 +1622,35 @@
       const d = f.facing || 1;
 
       ctx.save();
+
+      if (u.type === "bishopSword") {
+        const active = u.phase === "active";
+        const q = active ? 1 : clamp(u.timer / 34, 0, 1);
+
+        ctx.globalAlpha = active ? .18 + Math.sin(state.t * .12) * .05 : .35 * q;
+        ctx.fillStyle = m.ult;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, active ? 96 + Math.sin(state.t * .07) * 10 : 40 + q * 120, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = active ? .85 : q;
+        ctx.strokeStyle = m.ult;
+        ctx.lineWidth = active ? 3 : 6;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, active ? 76 + Math.sin(state.t * .1) * 8 : 54 + q * 105, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (!active) {
+          ctx.font = "900 86px Georgia";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = m.ult;
+          ctx.strokeStyle = "rgba(60,35,10,.85)";
+          ctx.lineWidth = 3;
+          ctx.strokeText("♗", c.x, c.y);
+          ctx.fillText("♗", c.x, c.y);
+        }
+      }
 
       if (u.type === "kingVerdict") {
         const pulse = .55 + Math.sin(state.t * .22) * .18;
@@ -1620,32 +1708,15 @@
         }
       }
 
-      if (u.type === "bishopPhase") {
-        const trails = u.trails || [];
-        for (const tr of trails) {
-          const alpha = tr.delay > 0 ? .25 : .9;
-          line(
-            [{ x: tr.x1, y: tr.y1 }, { x: tr.x2, y: tr.y2 }],
-            { ...m, weapon: tr.delay > 0 ? "rgba(255,255,255,.45)" : m.ult },
-            tr.delay > 0 ? 8 : 18,
-            alpha
-          );
-        }
-
-        ctx.globalAlpha = .45;
-        drawPiece(f, c.x, c.y, 1.2, .25);
-        spark(c.x, c.y, { ...m, magic: m.ult }, 28, 10);
-      }
-
       if (u.type === "knightCharge") {
         const trail = Array.isArray(u.trail) ? u.trail : [];
 
         if (trail.length > 1) {
-          line(trail, { ...m, weapon: m.ult }, u.phase === "choice" ? 12 : 22, u.phase === "choice" ? .35 : .78);
+          line(trail, { ...m, weapon: m.ult }, u.phase === "rush" ? 22 : 12, u.phase === "rush" ? .78 : .45);
         }
 
         if (u.phase === "windup") {
-          const q = clamp(u.timer / 24, 0, 1);
+          const q = clamp(u.timer / 14, 0, 1);
 
           ctx.globalAlpha = .55 + Math.sin(state.t * .35) * .12;
           ctx.strokeStyle = m.ult;
@@ -1654,20 +1725,15 @@
           ctx.arc(c.x, c.y, 42 + q * 34, 0, Math.PI * 2);
           ctx.stroke();
 
-          ctx.font = "900 54px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = m.ult;
-          ctx.fillText("♘", c.x, c.y - 72);
-
-          lance(c, u.firstDir?.x || d, { ...m, weapon: m.ult }, q, u.firstDir?.y < 0 ? -1.15 : u.firstDir?.y > 0 ? 1.15 : 0);
+          lance(c, u.currentDir?.x || d, { ...m, weapon: m.ult }, q, u.currentDir?.y < 0 ? -1.15 : u.currentDir?.y > 0 ? 1.15 : 0);
         }
 
-        if (u.phase === "first" || u.phase === "second") {
-          const moveDir = u.phase === "first" ? u.firstDir : u.secondDir;
+        if (u.phase === "rush") {
+          const moveDir = u.currentDir || { x: d, y: 0 };
           const angle =
-            moveDir?.y < 0 ? -Math.PI / 2 :
-            moveDir?.y > 0 ? Math.PI / 2 :
-            (moveDir?.x || f.attackFacing || d) === 1 ? 0 : Math.PI;
+            moveDir.y < 0 ? -Math.PI / 2 :
+            moveDir.y > 0 ? Math.PI / 2 :
+            (moveDir.x || f.attackFacing || d) === 1 ? 0 : Math.PI;
 
           blade(c.x, c.y + 12, angle, 210, { ...m, weapon: m.ult }, .95, 18);
 
@@ -1677,69 +1743,6 @@
           ctx.beginPath();
           ctx.arc(c.x, c.y, 54 + Math.sin(state.t * .22) * 7, 0, Math.PI * 2);
           ctx.stroke();
-
-          ctx.font = "900 38px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = m.ult;
-          ctx.fillText(u.phase === "first" ? "I" : "II", c.x, f.y - 42);
-        }
-
-        if (u.phase === "choice") {
-          const open = (u.choiceTimer || 0) >= 12;
-          const q = clamp((u.choiceTimer || 0) / 34, 0, 1);
-
-          ctx.globalAlpha = open ? .82 : .42;
-          ctx.strokeStyle = open ? m.ult : "rgba(255,255,255,.45)";
-          ctx.lineWidth = open ? 5 : 3;
-          ctx.setLineDash(open ? [12, 8] : [5, 10]);
-
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 62 + Math.sin(state.t * .25) * 8, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.setLineDash([]);
-
-          ctx.font = "900 28px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = open ? m.ult : "rgba(255,255,255,.55)";
-          ctx.fillText(open ? "CHOOSE" : "WAIT", c.x, c.y - 74);
-
-          const first = u.firstDir || { x: d, y: 0 };
-
-          ctx.globalAlpha = .55 + q * .35;
-          ctx.lineWidth = 7;
-          ctx.strokeStyle = m.ult;
-          ctx.lineCap = "round";
-
-          if (first.x !== 0) {
-            ctx.beginPath();
-            ctx.moveTo(c.x, c.y);
-            ctx.lineTo(c.x, c.y - 86);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(c.x, c.y);
-            ctx.lineTo(c.x, c.y + 86);
-            ctx.stroke();
-
-            ctx.font = "900 24px Georgia";
-            ctx.fillText("↑", c.x, c.y - 100);
-            ctx.fillText("↓", c.x, c.y + 112);
-          } else {
-            ctx.beginPath();
-            ctx.moveTo(c.x, c.y);
-            ctx.lineTo(c.x - 106, c.y);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(c.x, c.y);
-            ctx.lineTo(c.x + 106, c.y);
-            ctx.stroke();
-
-            ctx.font = "900 24px Georgia";
-            ctx.fillText("←", c.x - 124, c.y + 8);
-            ctx.fillText("→", c.x + 124, c.y + 8);
-          }
         }
 
         if (u.phase === "slam") {
@@ -1809,6 +1812,7 @@
       const d = dir(f);
       const e = elapsed(f);
       const swing = clamp((e - 3) / 16, 0, 1);
+      const sword = isBishopSword(f);
 
       if (f.attack === "counter") {
         drawCounter(f, m);
@@ -1896,31 +1900,86 @@
       }
 
       if (p === "bishop") {
-        if (f.attack === "light") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
-        if (f.attack === "heavy") {
-          const s = clamp((e - 2) / 16, 0, 1);
-          after(f, c.x + d * 35 * s, c.y - 24 * s, 1, .14);
-          staff(c, d, m, s, -.78, 172, 16);
-        }
-        if (f.attack === "crouchLight") staff(c, d, m, swing, -.18, 110, 7);
-        if (f.attack === "crouchHeavy") staff(c, d, m, swing, -.55, 146, 11);
-        if (f.attack === "airHeavy") staff(c, d, m, swing, .82, 172, 16);
+        if (sword) {
+          if (f.attack === "light") {
+            const q = clamp((e - 2) / 10, 0, 1);
+            greatSword(c, d, m, q, -0.34, 215, 18);
+            arc(c.x + d * 30, c.y + 5, 88, d === 1 ? -0.65 : Math.PI + .05, d === 1 ? -0.65 + 1.2 * q : Math.PI + .05 - 1.2 * q, { ...m, weapon: m.sword }, 12, q);
+          }
 
-        if (f.attack === "airSpecial") {
-          const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-          for (let i = 0; i < trail.length - 1; i++) {
-            const a = (i + 1) / trail.length;
-            line([trail[i], trail[i + 1]], m, 6 + a * 15, .18 + a * .62);
+          if (f.attack === "heavy") {
+            const q = clamp((e - 4) / 17, 0, 1);
+            after(f, c.x + d * 45 * q, c.y - 22 * q, 1.06, .16);
+            greatSword(c, d, m, q, -0.95, 310, 24);
+            line([
+              { x: c.x - d * 40, y: c.y + 72 },
+              { x: c.x + d * 120 * q, y: c.y - 95 * q },
+              { x: c.x + d * 245 * q, y: c.y - 155 * q }
+            ], { ...m, weapon: m.sword }, 20, q);
           }
-          for (let i = 0; i < trail.length; i += 4) {
-            after(f, trail[i].x, trail[i].y, .9, .12);
+
+          if (f.attack === "crouchLight") {
+            const q = clamp((e - 1) / 8, 0, 1);
+            greatSword({ x: c.x, y: c.y + 28 }, d, m, q, 0.05, 180, 15);
           }
-          spark(c.x, c.y, m, 18, 8);
-        } else if (f.attack === "special") {
-          const s = clamp((e - 4) / 18, 0, 1);
-          if (f.attackAim === "up") staff(c, d, m, s, -.96, 218, 14);
-          else if (f.attackAim === "down") staff(c, d, m, s, .78, 222, 14);
-          else staff(c, d, m, s, -.68, 258, 14);
+
+          if (f.attack === "crouchHeavy") {
+            const q = clamp((e - 3) / 13, 0, 1);
+            greatSword({ x: c.x, y: c.y + 36 }, d, m, q, 0.32, 245, 21);
+            dust(c.x + d * 95, f.y + f.h + 5, d, m, Math.ceil(7 * q));
+          }
+
+          if (f.attack === "airHeavy") {
+            const q = clamp((e - 2) / 14, 0, 1);
+            greatSword(c, d, m, q, 0.92, 285, 23);
+            line([
+              { x: c.x - d * 30, y: c.y - 70 },
+              { x: c.x + d * 90 * q, y: c.y + 55 * q },
+              { x: c.x + d * 215 * q, y: c.y + 130 * q }
+            ], { ...m, weapon: m.sword }, 18, q);
+          }
+
+          if (f.attack === "airSpecial") {
+            const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
+            for (let i = 0; i < trail.length - 1; i++) {
+              const a = (i + 1) / trail.length;
+              line([trail[i], trail[i + 1]], { ...m, weapon: m.sword }, 12 + a * 18, .25 + a * .65);
+            }
+            for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
+            greatSword(c, d, m, .95, -0.75, 250, 19);
+          } else if (f.attack === "special") {
+            const q = clamp((e - 4) / 16, 0, 1);
+            if (f.attackAim === "up") greatSword(c, d, m, q, -1.28, 330, 24);
+            else if (f.attackAim === "down") greatSword(c, d, m, q, 0.82, 335, 24);
+            else greatSword(c, d, m, q, -0.6, 365, 24);
+
+            spark(c.x + d * 140 * q, c.y - 40 * q, { magic: m.sword2 }, 30 * q, 10);
+          }
+        } else {
+          if (f.attack === "light") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
+          if (f.attack === "heavy") {
+            const s = clamp((e - 2) / 16, 0, 1);
+            after(f, c.x + d * 35 * s, c.y - 24 * s, 1, .14);
+            staff(c, d, m, s, -.78, 172, 16);
+          }
+          if (f.attack === "crouchLight") staff(c, d, m, swing, -.18, 110, 7);
+          if (f.attack === "crouchHeavy") staff(c, d, m, swing, -.55, 146, 11);
+          if (f.attack === "airHeavy") staff(c, d, m, swing, .82, 172, 16);
+
+          if (f.attack === "airSpecial") {
+            const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
+            for (let i = 0; i < trail.length - 1; i++) {
+              const a = (i + 1) / trail.length;
+              line([trail[i], trail[i + 1]], m, 6 + a * 15, .18 + a * .62);
+            }
+            for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
+            spark(c.x, c.y, m, 18, 8);
+          } else if (f.attack === "special") {
+            const s = clamp((e - 4) / 18, 0, 1);
+            if (f.attackAim === "up") staff(c, d, m, s, -.96, 218, 14);
+            else if (f.attackAim === "down") staff(c, d, m, s, .78, 222, 14);
+            else staff(c, d, m, s, -.68, 258, 14);
+          }
         }
       }
 
@@ -2018,19 +2077,22 @@
       const d = dir(f);
       const e = elapsed(f);
       const p = pieceOf(f);
+      const sword = isBishopSword(f);
 
       if (e < 14) {
         ctx.save();
         ctx.globalAlpha = .55 + Math.sin(state.t * .6) * .12;
-        ctx.strokeStyle = m.magic;
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = sword ? m.sword : m.magic;
+        ctx.lineWidth = sword ? 6 : 4;
         ctx.beginPath();
         ctx.arc(c.x, c.y, 40 + e * 2, 0, Math.PI * 2);
         ctx.stroke();
 
+        if (sword) greatSword(c, d, m, .55, -1.1, 190, 15);
+
         ctx.font = "900 36px Georgia";
         ctx.textAlign = "center";
-        ctx.fillStyle = m.magic;
+        ctx.fillStyle = sword ? m.sword : m.magic;
         ctx.fillText(GLYPHS[p], c.x, c.y - 62);
         ctx.restore();
         return;
@@ -2045,8 +2107,13 @@
         cannon(c, d, m, s);
         for (let i = 0; i < 6; i++) castleBrick(c.x + d * (35 + i * 28) * s, c.y - 34 + i * 9, m, d * .18, s);
       } else if (p === "bishop") {
-        staff(c, d, m, s, -.88, 166, 15);
-        staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
+        if (sword) {
+          greatSword(c, d, m, s, -0.4, 270, 23);
+          arc(c.x + d * 16, c.y, 120 * s, d === 1 ? -1.2 : Math.PI + .1, d === 1 ? .9 : Math.PI - .9, { ...m, weapon: m.sword }, 18, s);
+        } else {
+          staff(c, d, m, s, -.88, 166, 15);
+          staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
+        }
       } else if (p === "knight") {
         line([{ x: c.x - d * 46, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y - 60 * s }], m, 16, s);
         lance(c, d, m, s, -.2);
@@ -2092,6 +2159,7 @@
       ctx.restore();
 
       drawUltimateVisual(f);
+      if (isBishopSword(f) && !f.attack) drawBishopIdleSword(f);
       drawWeapon(f);
 
       ctx.save();
@@ -2107,7 +2175,16 @@
         ctx.stroke();
       }
 
-      if ((f.ultimate || 0) >= (f.ultimateMax || 100)) {
+      if (isBishopSword(f)) {
+        ctx.globalAlpha = .48 + Math.sin(state.t * .18) * .12;
+        ctx.strokeStyle = m.sword;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "rgba(255,215,70,.6)";
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, f.w * 1.05, f.h * .78, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if ((f.ultimate || 0) >= (f.ultimateMax || 100)) {
         ctx.globalAlpha = .4 + Math.sin(state.t * .18) * .14;
         ctx.strokeStyle = m.ult;
         ctx.lineWidth = 3;
@@ -2200,51 +2277,6 @@
           ctx.stroke();
         }
 
-        if (fx.type === "knightWindup") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 4 + p * 8;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 28 + p * 70, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.font = "900 58px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,215,70,${a})`;
-          ctx.fillText("♘", fx.x, fx.y + 18);
-        }
-
-        if (fx.type === "knightChoice") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 4;
-          ctx.setLineDash([12, 8]);
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 54 + Math.sin(state.t * .2) * 8, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          ctx.font = "900 24px system-ui";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,235,150,${a})`;
-          ctx.fillText("L-SHAPE", fx.x, fx.y - 64);
-        }
-
-        if (fx.type === "knightBurst") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 6;
-          ctx.lineCap = "round";
-
-          for (let i = 0; i < 8; i++) {
-            const ang = i * Math.PI / 4;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (24 + p * 85), fx.y + Math.sin(ang) * (24 + p * 85));
-            ctx.stroke();
-          }
-        }
-
         if (fx.type === "ultimateImpact") {
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,215,70,${a})`;
@@ -2253,6 +2285,93 @@
           ctx.beginPath();
           ctx.arc(fx.x, fx.y, 22 + p * 94, 0, Math.PI * 2);
           ctx.fill();
+          ctx.stroke();
+        }
+
+        if (fx.type === "bishopSwordAwaken") {
+          ctx.globalAlpha = a;
+          ctx.fillStyle = `rgba(255,215,70,${.16 * a})`;
+          ctx.strokeStyle = `rgba(255,235,150,${a})`;
+          ctx.lineWidth = 7;
+
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 50 + p * 190, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.save();
+          ctx.translate(fx.x, fx.y);
+          ctx.rotate(-Math.PI / 4 + p * Math.PI);
+          ctx.shadowColor = "rgba(255,215,70,.8)";
+          ctx.shadowBlur = 25;
+          blade(-70, 40, -Math.PI / 2, 190 + p * 90, { weapon: "#ffd84e", weapon2: "#fff7cc", edge: "#55300f" }, 1, 24);
+          ctx.restore();
+        }
+
+        if (fx.type === "bishopSwordReady") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,245,190,${a})`;
+          ctx.lineWidth = 5;
+          for (let i = 0; i < 8; i++) {
+            const ang = i * Math.PI / 4 + state.t * .02;
+            ctx.beginPath();
+            ctx.moveTo(fx.x, fx.y);
+            ctx.lineTo(fx.x + Math.cos(ang) * (40 + p * 90), fx.y + Math.sin(ang) * (40 + p * 90));
+            ctx.stroke();
+          }
+        }
+
+        if (fx.type === "bishopSwordPulse") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,215,70,${a})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 28 + p * 55, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        if (fx.type === "bishopSwordEnd") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,230,150,${a})`;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 80 * p, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        if (fx.type === "bishopSwordMove") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,235,150,${a})`;
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+
+          const d = fx.dir || 1;
+          const angle =
+            fx.aim === "up" ? -1.18 :
+            fx.aim === "down" ? .8 :
+            fx.attack === "airHeavy" ? .95 :
+            fx.attack === "heavy" ? -.75 :
+            -.25;
+
+          const a2 = d === 1 ? angle : Math.PI - angle;
+          ctx.beginPath();
+          ctx.moveTo(fx.x - d * 25, fx.y + 30);
+          ctx.lineTo(fx.x + Math.cos(a2) * (120 + p * 150), fx.y + 30 + Math.sin(a2) * (120 + p * 150));
+          ctx.stroke();
+        }
+
+        if (fx.type === "bishopSwordParry") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,245,190,${a})`;
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 35 + p * 90, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.lineWidth = 12;
+          ctx.beginPath();
+          ctx.moveTo(fx.x - 95, fx.y + 70);
+          ctx.lineTo(fx.x + 95, fx.y - 70);
           ctx.stroke();
         }
 
@@ -2334,19 +2453,33 @@
           castleBrick(fx.x + (fx.dir || 1) * p * 120, fx.y, { weapon: "#ffd347", edge: "#55300f" }, p * 2, a);
         }
 
-        if (fx.type === "bishopTrail") {
-          ctx.globalAlpha = a;
-          spark(fx.x, fx.y, { magic: "#ffd347" }, 30 + p * 20, 12);
-        }
-
-        if (fx.type === "bishopFinish") {
+        if (fx.type === "knightWindup") {
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 10;
+          ctx.lineWidth = 4 + p * 8;
           ctx.beginPath();
-          ctx.moveTo(fx.x - (fx.dir || 1) * 130, fx.y + 100);
-          ctx.lineTo(fx.x + (fx.dir || 1) * 170, fx.y - 120);
+          ctx.arc(fx.x, fx.y, 28 + p * 70, 0, Math.PI * 2);
           ctx.stroke();
+
+          ctx.font = "900 58px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(255,215,70,${a})`;
+          ctx.fillText("♘", fx.x, fx.y + 18);
+        }
+
+        if (fx.type === "knightBurst") {
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = `rgba(255,215,70,${a})`;
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+
+          for (let i = 0; i < 8; i++) {
+            const ang = i * Math.PI / 4;
+            ctx.beginPath();
+            ctx.moveTo(fx.x, fx.y);
+            ctx.lineTo(fx.x + Math.cos(ang) * (24 + p * 85), fx.y + Math.sin(ang) * (24 + p * 85));
+            ctx.stroke();
+          }
         }
 
         if (fx.type === "knightSlam") {

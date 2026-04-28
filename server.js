@@ -21,31 +21,32 @@ const ROUND_TIME = 99 * FPS;
 const ROUNDS_TO_WIN = 3;
 
 const PROMOTION_MAX = 190;
-const QUEEN_TIME = 10 * FPS;
-const ULTIMATE_MAX = 130;
+const QUEEN_TIME = 6 * FPS;
+const BISHOP_SWORD_TIME = QUEEN_TIME;
+const ULTIMATE_MAX = 100;
 
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Hammer bruiser.",
+    title: "Hammer bruiser. Ultimate: Crownbreaker Verdict.",
     hp: 780,
-    speed: 6.8,
-    jump: 16,
+    speed: 5.8,
+    jump: 14,
     w: 72,
     h: 124
   },
   rook: {
     name: "Rook",
-    title: "Siege weapon.",
-    hp: 800,
-    speed: 6.1,
-    jump: 15,
+    title: "Siege weapon. Ultimate: Siege Engine Overdrive.",
+    hp: 750,
+    speed: 5.4,
+    jump: 12.8,
     w: 82,
     h: 128
   },
   bishop: {
     name: "Bishop",
-    title: "Diagonal zoner.",
+    title: "Diagonal caster. Ultimate: Ascended Blade.",
     hp: 650,
     speed: 7.8,
     jump: 18.2,
@@ -54,19 +55,19 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Swift striker.",
+    title: "Lance assassin. Ultimate: chained cavalry L-charge.",
     hp: 660,
-    speed: 8,
+    speed: 7.6,
     jump: 20.5,
     w: 66,
     h: 116
   },
   pawn: {
     name: "Pawn",
-    title: "Quick underdog.",
+    title: "Spear soldier. Ultimate: Last Stand Uprising.",
     hp: 590,
     speed: 7.2,
-    jump: 18,
+    jump: 15,
     w: 56,
     h: 106
   }
@@ -98,6 +99,16 @@ function pieceOf(f) {
   return f.characterKey;
 }
 
+function isBishopSword(f) {
+  return !!(
+    f &&
+    f.characterKey === "bishop" &&
+    f.ultimateState &&
+    f.ultimateState.type === "bishopSword" &&
+    f.ultimateState.phase === "active"
+  );
+}
+
 function makeFighter(id, side, key) {
   const c = charData(key);
 
@@ -120,6 +131,7 @@ function makeFighter(id, side, key) {
     hp: c.hp,
     maxHp: c.hp,
     speed: c.speed,
+    baseSpeed: c.speed,
     jump: c.jump,
 
     facing: side === "white" ? 1 : -1,
@@ -223,8 +235,8 @@ function fx(game, type, x, y, extra = {}) {
     ...extra
   });
 
-  if (game.effects.length > 300) {
-    game.effects.splice(0, game.effects.length - 300);
+  if (game.effects.length > 320) {
+    game.effects.splice(0, game.effects.length - 320);
   }
 }
 
@@ -358,6 +370,7 @@ function moveName(base, f) {
 
 function meta(f, attack = f.attack, aim = f.attackAim) {
   const p = pieceOf(f);
+  const sword = isBishopSword(f);
 
   const m = {
     duration: 18,
@@ -397,10 +410,10 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
 
     if (p === "king") Object.assign(m, { dmg: 13, kb: 34, grab: true, throwPower: 34, cd: 140 });
     if (p === "rook") Object.assign(m, { dmg: 12, kb: 40, armor: 24, wall: 48, cd: 150 });
-    if (p === "bishop") Object.assign(m, { dmg: 10, kb: 28, lift: -25, cd: 118 });
+    if (p === "bishop") Object.assign(m, { dmg: sword ? 14 : 10, kb: sword ? 38 : 28, lift: sword ? -30 : -25, cd: sword ? 72 : 118, breakArmor: sword });
     if (p === "knight") Object.assign(m, { dmg: 10, kb: 31, lift: -18, cd: 110 });
     if (p === "pawn") Object.assign(m, { dmg: 8, kb: 24, cd: 92 });
-    if (p === "queen") Object.assign(m, { dmg: 16, kb: 42, lift: -20, cd: 100, breakArmor: true });
+    if (p === "queen") Object.assign(m, { dmg: 14, kb: 42, lift: -20, cd: 150, breakArmor: true });
 
     return m;
   }
@@ -427,7 +440,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "king") {
-    if (attack === "light") Object.assign(m, { duration: 19, activeA: 5, activeB: 11, dmg: 9, kb: 14, cd: 16 });
+    if (attack === "light") Object.assign(m, { duration: 19, activeA: 5, activeB: 11, dmg: 6, kb: 14, cd: 16 });
     if (attack === "heavy") Object.assign(m, { duration: 36, activeA: 11, activeB: 20, dmg: 13, kb: 30, stamina: 13, cd: 50, armor: 22, breakArmor: true, wall: 38 });
     if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 10, activeB: 18, dmg: 11, kb: 27, lift: -14, stamina: 11, cd: 48, armor: 14, wall: 32 });
     if (attack === "airHeavy") Object.assign(m, { duration: 31, activeA: 8, activeB: 17, dmg: 10, kb: 23, lift: 13, stamina: 10, cd: 44 });
@@ -442,36 +455,82 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   if (p === "rook") {
     if (attack === "light") Object.assign(m, { duration: 20, activeA: 6, activeB: 12, dmg: 5, kb: 17, cd: 18 });
     if (attack === "heavy") Object.assign(m, { duration: 36, activeA: 11, activeB: 21, dmg: 12, kb: 32, stamina: 13, cd: 56, armor: 26, breakArmor: true, wall: 44 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 10, activeB: 18, dmg: 15, kb: 30, stamina: 11, cd: 72, wall: 38 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 18, dmg: 15, kb: 26, lift: 12, stamina: 10, cd: 72 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 10, activeB: 18, dmg: 10, kb: 30, stamina: 11, cd: 54, wall: 38 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 18, dmg: 10, kb: 26, lift: 12, stamina: 10, cd: 52 });
 
     if (attack === "special") {
-      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 20, kb: 46, stamina: 36, cd: 250, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
-      else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 20, kb: 20, lift: -33, stamina: 24, cd: 180, multi: true, interval: 10 });
+      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 16, kb: 46, stamina: 36, cd: 250, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
+      else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 8, kb: 20, lift: -33, stamina: 24, cd: 180, multi: true, interval: 10 });
       else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 13, kb: 38, stamina: 25, cd: 185, armor: 36, breakArmor: true, wall: 46 });
     }
   }
 
   if (p === "bishop") {
-    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 10, dmg: 8, kb: 14, lift: -8, cd: 14 });
-    if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 6, activeB: 17, dmg: 10, kb: 26, lift: -21, stamina: 9, cd: 38 });
-    if (attack === "crouchLight") Object.assign(m, { duration: 15, activeA: 4, activeB: 9, dmg: 4, kb: 11, cd: 14 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 28, activeA: 8, activeB: 16, dmg: 8, kb: 21, lift: -12, stamina: 8, cd: 38 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 5, activeB: 17, dmg: 10, kb: 25, lift: 18, stamina: 9, cd: 38 });
+    if (attack === "light") {
+      Object.assign(m, sword
+        ? { duration: 18, activeA: 4, activeB: 12, dmg: 9, kb: 24, lift: -12, cd: 7, wall: 34 }
+        : { duration: 17, activeA: 4, activeB: 10, dmg: 5, kb: 14, lift: -8, cd: 14 }
+      );
+    }
 
-    if (attack === "airSpecial") Object.assign(m, { duration: 58, activeA: 5, activeB: 46, dmg: 12, kb: 22, stamina: 23, cd: 170, multi: true, interval: 12, wall: 30 });
-    else if (attack === "special") {
-      if (aim === "up") Object.assign(m, { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 20, lift: -34, stamina: 17, cd: 140 });
-      else if (aim === "down") Object.assign(m, { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 29, lift: 13, stamina: 17, cd: 140, breakArmor: true });
-      else Object.assign(m, { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 28, lift: -12, stamina: 17, cd: 140 });
+    if (attack === "heavy") {
+      Object.assign(m, sword
+        ? { duration: 29, activeA: 5, activeB: 19, dmg: 16, kb: 38, lift: -26, stamina: 8, cd: 24, breakArmor: true, wall: 54 }
+        : { duration: 30, activeA: 6, activeB: 17, dmg: 10, kb: 26, lift: -21, stamina: 9, cd: 38 }
+      );
+    }
+
+    if (attack === "crouchLight") {
+      Object.assign(m, sword
+        ? { duration: 14, activeA: 3, activeB: 10, dmg: 7, kb: 20, lift: -8, cd: 7 }
+        : { duration: 15, activeA: 4, activeB: 9, dmg: 4, kb: 11, cd: 14 }
+      );
+    }
+
+    if (attack === "crouchHeavy") {
+      Object.assign(m, sword
+        ? { duration: 25, activeA: 6, activeB: 16, dmg: 13, kb: 32, lift: -18, stamina: 7, cd: 23, breakArmor: true, wall: 42 }
+        : { duration: 28, activeA: 8, activeB: 16, dmg: 8, kb: 21, lift: -12, stamina: 8, cd: 38 }
+      );
+    }
+
+    if (attack === "airHeavy") {
+      Object.assign(m, sword
+        ? { duration: 28, activeA: 4, activeB: 18, dmg: 15, kb: 34, lift: 22, stamina: 8, cd: 23, breakArmor: true, wall: 48 }
+        : { duration: 30, activeA: 5, activeB: 17, dmg: 10, kb: 25, lift: 18, stamina: 9, cd: 38 }
+      );
+    }
+
+    if (attack === "airSpecial") {
+      Object.assign(m, sword
+        ? { duration: 48, activeA: 4, activeB: 38, dmg: 10, kb: 28, lift: -10, stamina: 18, cd: 82, multi: true, interval: 10, wall: 48, breakArmor: true }
+        : { duration: 58, activeA: 5, activeB: 46, dmg: 7, kb: 22, stamina: 23, cd: 170, multi: true, interval: 12, wall: 30 }
+      );
+    } else if (attack === "special") {
+      if (aim === "up") {
+        Object.assign(m, sword
+          ? { duration: 36, activeA: 7, activeB: 21, dmg: 14, kb: 26, lift: -44, stamina: 14, cd: 62, breakArmor: true, wall: 44 }
+          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 20, lift: -34, stamina: 17, cd: 140 }
+        );
+      } else if (aim === "down") {
+        Object.assign(m, sword
+          ? { duration: 36, activeA: 7, activeB: 21, dmg: 15, kb: 42, lift: 18, stamina: 14, cd: 62, breakArmor: true, wall: 58 }
+          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 29, lift: 13, stamina: 17, cd: 140, breakArmor: true }
+        );
+      } else {
+        Object.assign(m, sword
+          ? { duration: 36, activeA: 7, activeB: 22, dmg: 15, kb: 40, lift: -16, stamina: 14, cd: 62, breakArmor: true, wall: 54 }
+          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 28, lift: -12, stamina: 17, cd: 140 }
+        );
+      }
     }
   }
 
   if (p === "knight") {
-    if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 10, dmg: 8, kb: 13, lift: -5, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 10, kb: 22, lift: -23, stamina: 8, cd: 34 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 10, kb: 20, lift: -17, stamina: 8, cd: 34 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 4, activeB: 22, dmg: 12, kb: 25, stamina: 10, cd: 40 });
+    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 11, dmg: 5, kb: 14, lift: -5, cd: 13 });
+    if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 8, kb: 22, lift: -23, stamina: 8, cd: 34 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 8, kb: 20, lift: -17, stamina: 8, cd: 34 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 4, activeB: 22, dmg: 10, kb: 25, stamina: 10, cd: 40 });
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 9, kb: 20, lift: -38, stamina: 17, cd: 140 });
       else if (aim === "down") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 11, kb: 34, lift: 18, stamina: 18, cd: 145, breakArmor: true });
@@ -493,14 +552,14 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "queen") {
-    if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 11, dmg: 9, kb: 18, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 17, kb: 32, stamina: 10, cd: 42, breakArmor: true });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 17, kb: 28, lift: -18, stamina: 10, cd: 42 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 16, dmg: 17, kb: 26, lift: 16, stamina: 10, cd: 42 });
+    if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 11, dmg: 7, kb: 18, cd: 13 });
+    if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 12, kb: 32, stamina: 10, cd: 42, breakArmor: true });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 11, kb: 28, lift: -18, stamina: 10, cd: 42 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 16, dmg: 11, kb: 26, lift: 16, stamina: 10, cd: 42 });
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 20, kb: 23, lift: -40, stamina: 22, cd: 185, breakArmor: true });
-      else if (aim === "down") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 20, kb: 36, lift: 14, stamina: 22, cd: 185, breakArmor: true });
-      else Object.assign(m, { duration: 56, activeA: 13, activeB: 28, dmg: 20, kb: 40, stamina: 22, cd: 190, breakArmor: true });
+      if (aim === "up") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 12, kb: 23, lift: -40, stamina: 22, cd: 185, breakArmor: true });
+      else if (aim === "down") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 13, kb: 36, lift: 14, stamina: 22, cd: 185, breakArmor: true });
+      else Object.assign(m, { duration: 56, activeA: 13, activeB: 28, dmg: 14, kb: 40, stamina: 22, cd: 190, breakArmor: true });
     }
   }
 
@@ -525,6 +584,7 @@ function box(f) {
   const a = f.attack;
   const aim = f.attackAim;
   const d = f.attackFacing || f.facing || 1;
+  const sword = isBishopSword(f);
 
   function forward(w, h, y = 0, gap = 0) {
     return {
@@ -566,7 +626,7 @@ function box(f) {
   if (a === "counter") {
     if (p === "king") return forward(120, 96, 18);
     if (p === "rook") return body(200, 120, 4, 0);
-    if (p === "bishop") return diag(190, 140, -54);
+    if (p === "bishop") return sword ? body(275, 180, -54, d * 40) : diag(190, 140, -54);
     if (p === "knight") return body(160, 112, -10, 36);
     if (p === "pawn") return forward(126, 54, 34);
     return body(260, 156, -14, 26);
@@ -599,21 +659,23 @@ function box(f) {
   }
 
   if (p === "bishop") {
-    if (a === "light") return forward(132, 82, 16);
-    if (a === "heavy") return diag(170, 140, -88, 16);
-    if (a === "crouchLight") return forward(120, 36, f.h * 0.65);
-    if (a === "crouchHeavy") return forward(150, 64, f.h * 0.45);
-    if (a === "airHeavy") return diag(170, 150, 18, 16);
-    if (a === "airSpecial") return { x: f.x - 48, y: f.y - 42, w: f.w + 96, h: f.h + 84 };
+    if (a === "light") return sword ? forward(205, 104, -2) : forward(132, 82, 16);
+    if (a === "heavy") return sword ? diag(285, 210, -125, 20) : diag(170, 140, -88, 16);
+    if (a === "crouchLight") return sword ? forward(180, 56, f.h * 0.56) : forward(120, 36, f.h * 0.65);
+    if (a === "crouchHeavy") return sword ? forward(240, 92, f.h * 0.38) : forward(150, 64, f.h * 0.45);
+    if (a === "airHeavy") return sword ? diag(280, 220, -4, 20) : diag(170, 150, 18, 16);
+    if (a === "airSpecial") return sword
+      ? { x: f.x - 110, y: f.y - 95, w: f.w + 220, h: f.h + 190 }
+      : { x: f.x - 48, y: f.y - 42, w: f.w + 96, h: f.h + 84 };
     if (a === "special") {
-      if (aim === "up") return diag(198, 180, -145, 30);
-      if (aim === "down") return diag(198, 180, 42, 30);
-      return diag(235, 145, -12, 28);
+      if (aim === "up") return sword ? diag(310, 260, -210, 30) : diag(198, 180, -145, 30);
+      if (aim === "down") return sword ? diag(320, 235, 26, 30) : diag(198, 180, 42, 30);
+      return sword ? diag(350, 190, -42, 24) : diag(235, 145, -12, 28);
     }
   }
 
   if (p === "knight") {
-    if (a === "light") return forward(80, 56, 30);
+    if (a === "light") return forward(104, 60, 28);
     if (a === "heavy") return body(112, 104, -12, 30);
     if (a === "crouchHeavy") return forward(102, 74, f.h * 0.43);
     if (a === "airHeavy") return { x: f.x - 32, y: f.y - 28, w: f.w + 64, h: f.h + 56 };
@@ -673,7 +735,7 @@ function promote(f) {
 
   f.maxHp = Math.round(f.maxHp * 1.45);
   f.hp = Math.max(1, Math.ceil(f.maxHp * f.savedPawnStats.hpRatio));
-  f.speed *= 1.75;
+  f.speed *= 1.12;
   f.jump *= 1.08;
   f.w += 8;
   f.standH += 16;
@@ -933,18 +995,16 @@ function makeUltimateState(f, input) {
 
   if (p === "bishop") {
     return {
-      type: "bishopPhase",
-      phase: "dash",
+      type: "bishopSword",
+      phase: "awakening",
       timer: 0,
-      dashesLeft: 4,
-      dashTimer: 0,
-      dir: d,
-      trails: [],
-      currentStart: null
+      duration: BISHOP_SWORD_TIME,
+      speedBonus: 1.16,
+      pulse: 0
     };
   }
 
-if (p === "knight") {
+  if (p === "knight") {
     let firstDir = { x: d, y: 0 };
 
     if (input.up && !input.down) firstDir = { x: 0, y: -1 };
@@ -957,15 +1017,17 @@ if (p === "knight") {
       phase: "windup",
       timer: 0,
 
-      firstDir,
-      secondDir: null,
+      currentDir: firstDir,
+      previousDir: null,
+      segment: 0,
+      maxSegments: 6,
+      segmentTimer: 0,
+      segmentLength: 13,
 
-      choiceOpen: false,
-      choiceTimer: 0,
-      storedInput: null,
+      queuedDir: null,
+      lastTurnTick: 0,
 
-      hitFirst: false,
-      hitSecond: false,
+      hits: 0,
       slamDone: false,
 
       trail: []
@@ -1011,6 +1073,12 @@ function startUltimate(f, input, game) {
   f.invuln = Math.max(f.invuln, 24);
   f.armor = Math.max(f.armor, 36);
 
+  if (f.ultimateState.type === "bishopSword") {
+    f.ultimateCd = 300;
+    f.invuln = Math.max(f.invuln, 36);
+    f.armor = Math.max(f.armor, 28);
+  }
+
   fx(game, "ultimateStart", f.x + f.w / 2, f.y + f.h / 2, {
     piece: pieceOf(f),
     dir: f.facing,
@@ -1018,11 +1086,23 @@ function startUltimate(f, input, game) {
     timer: 80
   });
 
+  if (f.ultimateState.type === "bishopSword") {
+    fx(game, "bishopSwordAwaken", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: "bishop",
+      dir: f.facing,
+      timer: 80
+    });
+  }
+
   game.shake = Math.max(game.shake, 14);
   return true;
 }
 
 function endUltimate(f) {
+  if (f.ultimateState?.type === "bishopSword") {
+    f.speed = f.baseSpeed || charData("bishop").speed;
+  }
+
   f.ultimateState = null;
 }
 
@@ -1067,7 +1147,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
 
     if (u.timer === 22) {
       const hb = makeHitbox(f, f.x + f.w / 2 - 155, f.y - 25, 310, 190, {
-        dmg: 48,
+        dmg: 36,
         kb: 62,
         lift: -22,
         wall: 92,
@@ -1091,7 +1171,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
       u.shockwaveDone = true;
 
       const hb = makeHitbox(f, f.x + f.w / 2 - 170, f.y + 4, 340, 116, {
-        dmg: 48,
+        dmg: 18,
         kb: 42,
         lift: -16,
         wall: 58,
@@ -1179,130 +1259,60 @@ function updateRookUltimate(f, enemy, game, input, u) {
 
 function updateBishopUltimate(f, enemy, game, input, u) {
   u.timer++;
-  f.invuln = Math.max(f.invuln, 4);
-  f.armor = Math.max(f.armor, 18);
+  u.pulse++;
 
-  for (const trail of u.trails) {
-    trail.delay--;
+  if (u.phase === "awakening") {
+    f.vx *= 0.38;
+    f.vy *= 0.38;
+    f.invuln = Math.max(f.invuln, 3);
+    f.armor = Math.max(f.armor, 34);
 
-    if (trail.delay === 0) {
-      fx(game, "bishopTrail", (trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, {
+    if (u.timer >= 34) {
+      u.phase = "active";
+      u.timer = 0;
+      f.speed = (f.baseSpeed || charData("bishop").speed) * u.speedBonus;
+
+      fx(game, "bishopSwordReady", f.x + f.w / 2, f.y + f.h / 2, {
         piece: "bishop",
+        dir: f.facing,
+        timer: 46
+      });
+    }
+
+    return true;
+  }
+
+  if (u.phase === "active") {
+    f.speed = (f.baseSpeed || charData("bishop").speed) * u.speedBonus;
+    f.stamina = Math.min(f.maxStamina, f.stamina + 0.35);
+
+    if (u.timer % 32 === 0) {
+      fx(game, "bishopSwordPulse", f.x + f.w / 2, f.y + f.h / 2, {
+        piece: "bishop",
+        dir: f.facing,
         timer: 18
       });
     }
 
-    if (trail.delay <= 0 && trail.active > 0) {
-      trail.active--;
-
-      const x = Math.min(trail.x1, trail.x2) - 42;
-      const y = Math.min(trail.y1, trail.y2) - 42;
-      const w = Math.abs(trail.x2 - trail.x1) + 84;
-      const h = Math.abs(trail.y2 - trail.y1) + 84;
-
-      const hb = makeHitbox(f, x, y, w, h, {
-        dmg: 20,
-        kb: 17,
-        lift: -16,
-        wall: 42,
-        hitstop: 4,
-        ultimate: true,
-        breakArmor: true,
-        once: true,
-        dir: f.attackFacing,
-        hitKey: `bishopTrail:${f.attackId}:${trail.id}`
-      });
-
-      applyHitbox(f, enemy, hb, game);
-    }
-  }
-
-  u.trails = u.trails.filter((t) => t.delay > -t.active - 2);
-
-  if (u.phase === "dash") {
-    if (!u.currentStart) {
-      u.currentStart = {
-        x: f.x + f.w / 2,
-        y: f.y + f.h / 2
-      };
-
-      let xDir = f.facing || 1;
-      let yDir = input.down && !input.up ? 1 : -1;
-
-      if (input.left && !input.right) xDir = -1;
-      if (input.right && !input.left) xDir = 1;
-
-      u.dashDir = { x: xDir, y: yDir };
-      u.dashTimer = 12;
-      f.attackFacing = xDir;
-      f.facing = xDir;
-    }
-
-    f.grounded = false;
-    f.vx = u.dashDir.x * 13;
-    f.vy = u.dashDir.y * 10;
-
-    u.dashTimer--;
-
-    if (u.dashTimer <= 0) {
-      const end = {
-        x: f.x + f.w / 2,
-        y: f.y + f.h / 2
-      };
-
-      u.trails.push({
-        id: `${u.dashesLeft}:${game.tick}`,
-        x1: u.currentStart.x,
-        y1: u.currentStart.y,
-        x2: end.x,
-        y2: end.y,
-        delay: 10,
-        active: 10
-      });
-
-      u.currentStart = null;
-      u.dashesLeft--;
-
-      if (u.dashesLeft <= 0) {
-        u.phase = "finish";
-        u.timer = 0;
-      }
-    }
-  }
-
-  if (u.phase === "finish") {
-    f.vx *= 0.82;
-    f.vy *= 0.82;
-
-    if (u.timer === 12) {
-      const d = f.attackFacing || f.facing || 1;
-      const hb = makeHitbox(f, d === 1 ? f.x + f.w - 20 : f.x - 230, f.y - 95, 250, 210, {
-        dmg: 28,
-        kb: 36,
-        lift: -24,
-        wall: 60,
-        hitstop: 9,
-        ultimate: true,
-        breakArmor: true,
-        dir: d,
-        hitKey: `bishopFinish:${f.attackId}`
-      });
-
-      applyHitbox(f, enemy, hb, game);
-
-      fx(game, "bishopFinish", f.x + f.w / 2, f.y + f.h / 2, {
+    if (u.timer >= u.duration) {
+      fx(game, "bishopSwordEnd", f.x + f.w / 2, f.y + f.h / 2, {
         piece: "bishop",
-        dir: d,
-        timer: 30
+        dir: f.facing,
+        timer: 34
       });
+
+      endUltimate(f);
     }
 
-    if (u.timer > 35) endUltimate(f);
+    return false;
   }
+
+  return false;
 }
 
 function updateKnightUltimate(f, enemy, game, input, u) {
   u.timer++;
+  u.segmentTimer++;
 
   if (!Array.isArray(u.trail)) u.trail = [];
 
@@ -1311,19 +1321,42 @@ function updateKnightUltimate(f, enemy, game, input, u) {
     y: f.y + f.h / 2
   });
 
-  if (u.trail.length > 36) u.trail.shift();
+  if (u.trail.length > 46) u.trail.shift();
 
   f.grounded = false;
-  f.armor = Math.max(f.armor, 50);
+  f.armor = Math.max(f.armor, 48);
   f.invuln = Math.max(f.invuln, 2);
 
-  function bodyHit(key, dmg, kb, lift, extraW = 74, extraH = 70) {
+  function inputDir() {
+    if (input.up && !input.down) return { x: 0, y: -1 };
+    if (input.down && !input.up) return { x: 0, y: 1 };
+    if (input.left && !input.right) return { x: -1, y: 0 };
+    if (input.right && !input.left) return { x: 1, y: 0 };
+    return null;
+  }
+
+  function perpendicularize(wanted, current) {
+    if (!wanted) {
+      if (current.x !== 0) return { x: 0, y: -1 };
+      return { x: f.facing || 1, y: 0 };
+    }
+
+    if (current.x !== 0) {
+      if (wanted.y !== 0) return wanted;
+      return { x: 0, y: -1 };
+    }
+
+    if (wanted.x !== 0) return wanted;
+    return { x: f.facing || 1, y: 0 };
+  }
+
+  function bodyHit(key, dmg, kb, lift, extraW = 86, extraH = 82) {
     const hb = makeHitbox(f, f.x - extraW / 2, f.y - extraH / 2, f.w + extraW, f.h + extraH, {
       dmg,
       kb,
       lift,
       wall: 78,
-      hitstop: 7,
+      hitstop: 6,
       ultimate: true,
       breakArmor: true,
       once: true,
@@ -1332,147 +1365,87 @@ function updateKnightUltimate(f, enemy, game, input, u) {
     });
 
     if (applyHitbox(f, enemy, hb, game)) {
-      if (key.includes("first")) u.hitFirst = true;
-      if (key.includes("second")) u.hitSecond = true;
+      u.hits++;
     }
-  }
-
-  function perpendicularChoice() {
-    if (u.firstDir.x !== 0) {
-      if (input.down && !input.up) return { x: 0, y: 1 };
-      if (input.up && !input.down) return { x: 0, y: -1 };
-      return { x: 0, y: -1 };
-    }
-
-    if (input.left && !input.right) return { x: -1, y: 0 };
-    if (input.right && !input.left) return { x: 1, y: 0 };
-    return { x: f.facing || 1, y: 0 };
   }
 
   if (u.phase === "windup") {
-    f.vx *= 0.42;
-    f.vy *= 0.42;
+    f.vx *= 0.5;
+    f.vy *= 0.5;
 
     if (u.timer === 1) {
       fx(game, "knightWindup", f.x + f.w / 2, f.y + f.h / 2, {
         piece: "knight",
         dir: f.facing,
-        timer: 30
+        timer: 20
       });
     }
 
-    if (u.timer >= 24) {
-      u.phase = "first";
+    if (u.timer >= 14) {
+      u.phase = "rush";
       u.timer = 0;
+      u.segmentTimer = 0;
 
-      if (u.firstDir.x) {
-        f.attackFacing = u.firstDir.x;
-        f.facing = u.firstDir.x;
+      if (u.currentDir.x) {
+        f.attackFacing = u.currentDir.x;
+        f.facing = u.currentDir.x;
       }
 
       fx(game, "knightBurst", f.x + f.w / 2, f.y + f.h / 2, {
         piece: "knight",
         dir: f.attackFacing,
-        timer: 20
+        timer: 16
       });
     }
 
-    return;
+    return true;
   }
 
-  if (u.phase === "first") {
-    f.vx = u.firstDir.x * 18.5;
-    f.vy = u.firstDir.y * 18.5;
+  if (u.phase === "rush") {
+    const wanted = inputDir();
 
-    if (u.firstDir.x) {
-      f.attackFacing = u.firstDir.x;
-      f.facing = u.firstDir.x;
+    if (wanted) {
+      u.queuedDir = wanted;
     }
 
-    bodyHit(`knightUlt:first:${f.attackId}`, 12, 33, -17);
+    const speed = 18.8;
 
-    if (u.timer >= 26) {
-      u.phase = "choice";
-      u.timer = 0;
-      u.choiceOpen = true;
-      u.choiceTimer = 0;
-      u.storedInput = null;
+    f.vx = u.currentDir.x * speed;
+    f.vy = u.currentDir.y * speed;
 
-      f.vx *= 0.18;
-      f.vy *= 0.18;
-
-      fx(game, "knightChoice", f.x + f.w / 2, f.y + f.h / 2, {
-        piece: "knight",
-        dir: f.attackFacing,
-        timer: 34
-      });
+    if (u.currentDir.x) {
+      f.attackFacing = u.currentDir.x;
+      f.facing = u.currentDir.x;
     }
 
-    return;
-  }
+    bodyHit(`knightUlt:segment:${f.attackId}:${u.segment}`, 8 + Math.min(u.segment, 3), 25 + u.segment * 3, -12 - u.segment);
 
-  if (u.phase === "choice") {
-    f.vx *= 0.68;
-    f.vy *= 0.68;
+    if (u.segmentTimer >= u.segmentLength) {
+      u.previousDir = u.currentDir;
+      u.currentDir = perpendicularize(u.queuedDir, u.currentDir);
+      u.queuedDir = null;
 
-    u.choiceTimer++;
+      u.segment++;
+      u.segmentTimer = 0;
 
-    if (u.choiceTimer >= 12) {
-      u.choiceOpen = true;
-
-      if (
-        (input.up && !input.down) ||
-        (input.down && !input.up) ||
-        (input.left && !input.right) ||
-        (input.right && !input.left)
-      ) {
-        u.storedInput = perpendicularChoice();
-      }
-    }
-
-    if (u.choiceTimer >= 34) {
-      u.secondDir = u.storedInput || perpendicularChoice();
-      u.phase = "second";
-      u.timer = 0;
-      u.choiceOpen = false;
-
-      if (u.secondDir.x) {
-        f.attackFacing = u.secondDir.x;
-        f.facing = u.secondDir.x;
+      if (u.currentDir.x) {
+        f.attackFacing = u.currentDir.x;
+        f.facing = u.currentDir.x;
       }
 
       fx(game, "knightBurst", f.x + f.w / 2, f.y + f.h / 2, {
         piece: "knight",
         dir: f.attackFacing,
-        timer: 20
+        timer: 14
       });
-    }
 
-    return;
-  }
-
-  if (u.phase === "second") {
-    f.vx = u.secondDir.x * 18.5;
-    f.vy = u.secondDir.y * 18.5;
-
-    if (u.secondDir.x) {
-      f.attackFacing = u.secondDir.x;
-      f.facing = u.secondDir.x;
-    }
-
-    bodyHit(`knightUlt:second:${f.attackId}`, 14, 39, -19);
-
-    if (u.timer >= 28) {
-      if (u.hitFirst && u.hitSecond) {
-        u.phase = "slam";
-        u.timer = 0;
-      } else {
-        u.phase = "recover";
+      if (u.segment >= u.maxSegments) {
+        u.phase = u.hits >= 2 ? "slam" : "recover";
         u.timer = 0;
       }
     }
 
-    return;
+    return true;
   }
 
   if (u.phase === "slam") {
@@ -1482,11 +1455,11 @@ function updateKnightUltimate(f, enemy, game, input, u) {
     if (!u.slamDone) {
       u.slamDone = true;
 
-      const hb = makeHitbox(f, f.x - 95, f.y + f.h - 35, f.w + 190, 120, {
-        dmg: 22,
-        kb: 50,
-        lift: -24,
-        wall: 88,
+      const hb = makeHitbox(f, f.x - 105, f.y + f.h - 38, f.w + 210, 128, {
+        dmg: 18 + Math.min(u.hits * 2, 12),
+        kb: 52,
+        lift: -25,
+        wall: 90,
         hitstop: 13,
         ultimate: true,
         breakArmor: true,
@@ -1505,15 +1478,18 @@ function updateKnightUltimate(f, enemy, game, input, u) {
     }
 
     if (u.timer > 30) endUltimate(f);
-    return;
+    return true;
   }
 
   if (u.phase === "recover") {
     f.vx *= 0.78;
     f.vy *= 0.82;
 
-    if (u.timer > 28) endUltimate(f);
+    if (u.timer > 20) endUltimate(f);
+    return true;
   }
+
+  return true;
 }
 
 function updatePawnUltimate(f, enemy, game, input, u) {
@@ -1575,6 +1551,8 @@ function updatePawnUltimate(f, enemy, game, input, u) {
       endUltimate(f);
     }
   }
+
+  return false;
 }
 
 function updateQueenUltimate(f, enemy, game, input, u) {
@@ -1638,21 +1616,23 @@ function updateQueenUltimate(f, enemy, game, input, u) {
 
     if (u.timer > 58) endUltimate(f);
   }
+
+  return u.phase === "finisher";
 }
 
 function updateUltimate(f, enemy, game, input) {
   const u = f.ultimateState;
   if (!u) return false;
 
-  if (u.type === "kingVerdict") updateKingUltimate(f, enemy, game, input, u);
-  else if (u.type === "rookSiege") updateRookUltimate(f, enemy, game, input, u);
-  else if (u.type === "bishopPhase") updateBishopUltimate(f, enemy, game, input, u);
-  else if (u.type === "knightCharge") updateKnightUltimate(f, enemy, game, input, u);
-  else if (u.type === "pawnUprising") updatePawnUltimate(f, enemy, game, input, u);
-  else if (u.type === "queenDominion") updateQueenUltimate(f, enemy, game, input, u);
-  else endUltimate(f);
+  if (u.type === "kingVerdict") return updateKingUltimate(f, enemy, game, input, u);
+  if (u.type === "rookSiege") return updateRookUltimate(f, enemy, game, input, u);
+  if (u.type === "bishopSword") return updateBishopUltimate(f, enemy, game, input, u);
+  if (u.type === "knightCharge") return updateKnightUltimate(f, enemy, game, input, u);
+  if (u.type === "pawnUprising") return updatePawnUltimate(f, enemy, game, input, u);
+  if (u.type === "queenDominion") return updateQueenUltimate(f, enemy, game, input, u);
 
-  return true;
+  endUltimate(f);
+  return false;
 }
 
 function scriptMove(f) {
@@ -1732,7 +1712,10 @@ function startAttack(f, base, input, game) {
     return startUltimate(f, input, game);
   }
 
-  if (f.attack || f.ultimateState || f.hurt > 8 || f.stun > 0) return false;
+  const swordModeOk = f.ultimateState?.type === "bishopSword" && f.ultimateState.phase === "active";
+  const blockedByUlt = f.ultimateState && !swordModeOk && f.ultimateState.type !== "pawnUprising" && f.ultimateState.type !== "queenDominion";
+
+  if (f.attack || blockedByUlt || f.hurt > 8 || f.stun > 0) return false;
 
   const attack = moveName(base, f);
   const aim = base === "special" ? aimFromInput(input) : "forward";
@@ -1771,13 +1754,14 @@ function startAttack(f, base, input, game) {
   if (base === "counter") f.invuln = Math.max(f.invuln, m.counterWindow);
 
   const p = pieceOf(f);
+  const sword = isBishopSword(f);
 
   if (base === "counter") {
     if (p === "king") f.vx -= f.facing * 2;
     if (p === "rook") f.vx *= 0.1;
     if (p === "bishop") {
-      f.vx -= f.facing * 4;
-      f.vy = Math.min(f.vy, -4);
+      f.vx -= f.facing * (sword ? 1.8 : 4);
+      f.vy = Math.min(f.vy, sword ? -8 : -4);
     }
     if (p === "knight") {
       f.vx -= f.facing * 7;
@@ -1786,7 +1770,11 @@ function startAttack(f, base, input, game) {
     if (p === "pawn") f.vx -= f.facing * 3;
     if (p === "queen") f.vx += f.facing * 2;
 
-    fx(game, "counterStart", f.x + f.w / 2, f.y + f.h / 2, { piece: p, dir: f.attackFacing, timer: 22 });
+    fx(game, sword ? "bishopSwordParry" : "counterStart", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: p,
+      dir: f.attackFacing,
+      timer: 22
+    });
     return true;
   }
 
@@ -1829,35 +1817,49 @@ function startAttack(f, base, input, game) {
   }
 
   if (p === "bishop") {
-    if (attack === "light") f.vx += f.facing * 1.8;
+    if (attack === "light") f.vx += f.facing * (sword ? 3.2 : 1.8);
     if (attack === "heavy") {
-      f.script = fixed(f.facing * 10, -8.4, 11);
+      f.script = fixed(f.facing * (sword ? 13.6 : 10), sword ? -7.8 : -8.4, sword ? 13 : 11);
       f.grounded = false;
     }
     if (attack === "airHeavy") {
-      f.script = fixed(f.facing * 9.8, 8.8, 11);
+      f.script = fixed(f.facing * (sword ? 12.8 : 9.8), sword ? 10.4 : 8.8, sword ? 13 : 11);
     }
     if (attack === "airSpecial") {
       f.script = bishopZigzag(f, input);
+      if (sword) {
+        f.script.sx = 14.5;
+        f.script.sy = 11.8;
+      }
       f.grounded = false;
     } else if (attack === "special") {
       if (aim === "up") {
-        f.vx += f.facing * 5.2;
-        f.vy = -14;
+        f.vx += f.facing * (sword ? 7.2 : 5.2);
+        f.vy = sword ? -16 : -14;
         f.grounded = false;
       } else if (aim === "down") {
-        f.vx += f.facing * 7.2;
-        f.vy += 8.5;
+        f.vx += f.facing * (sword ? 9.4 : 7.2);
+        f.vy += sword ? 10.5 : 8.5;
       } else {
-        f.vx += f.facing * 9.5;
-        f.vy = -4.8;
+        f.vx += f.facing * (sword ? 12.5 : 9.5);
+        f.vy = sword ? -5.5 : -4.8;
         f.grounded = false;
       }
+    }
+
+    if (sword) {
+      fx(game, "bishopSwordMove", f.x + f.w / 2, f.y + f.h / 2, {
+        piece: "bishop",
+        attack,
+        aim,
+        dir: f.attackFacing,
+        timer: 16
+      });
     }
   }
 
   if (p === "knight") {
-    if (attack === "light") f.vx += f.facing * 1.7;
+    if (attack === "light") f.vx += f.facing * 2.2;
     if (attack === "heavy") {
       f.vy = -11.2;
       f.vx += f.facing * 1.5;
@@ -1932,6 +1934,7 @@ function startAttack(f, base, input, game) {
     attack,
     aim,
     dir: f.attackFacing,
+    sword,
     timer: 12
   });
 
@@ -1961,10 +1964,11 @@ function triggerCounter(defender, attacker, game) {
     attacker.vx = d * 40;
     attacker.vy = -8;
   } else if (p === "bishop") {
-    defender.vx = d * 10;
-    defender.vy = -12;
-    attacker.vx = d * 25;
-    attacker.vy = -25;
+    const sword = isBishopSword(defender);
+    defender.vx = d * (sword ? 13 : 10);
+    defender.vy = sword ? -16 : -12;
+    attacker.vx = d * (sword ? 38 : 25);
+    attacker.vy = sword ? -30 : -25;
   } else if (p === "knight") {
     defender.vx = d * 12;
     defender.vy = -9;
@@ -1978,10 +1982,10 @@ function triggerCounter(defender, attacker, game) {
     attacker.vy = -22;
   }
 
-  game.hitstop = Math.max(game.hitstop, 10);
-  game.shake = Math.max(game.shake, 12);
+  game.hitstop = Math.max(game.hitstop, isBishopSword(defender) ? 14 : 10);
+  game.shake = Math.max(game.shake, isBishopSword(defender) ? 16 : 12);
 
-  fx(game, "counterSuccess", defender.x + defender.w / 2, defender.y + defender.h / 2, {
+  fx(game, isBishopSword(defender) ? "bishopSwordParry" : "counterSuccess", defender.x + defender.w / 2, defender.y + defender.h / 2, {
     piece: p,
     dir: d,
     timer: 34
@@ -2091,13 +2095,14 @@ function handleHit(attacker, defender, game) {
   }
 
   game.hitstop = Math.max(game.hitstop, m.multi ? 3 : damage >= 12 ? 9 : damage >= 8 ? 6 : 4);
-  game.shake = Math.max(game.shake, damage >= 12 ? 10 : damage >= 8 ? 7 : 4);
+  game.shake = Math.max(game.shake, isBishopSword(attacker) ? 14 : damage >= 12 ? 10 : damage >= 8 ? 7 : 4);
 
   fx(game, "hit", clamp(b.x + b.w / 2, defender.x, defender.x + defender.w), clamp(b.y + b.h / 2, defender.y, defender.y + defender.h), {
     piece: pieceOf(attacker),
     attack: attacker.attack,
     dir: attacker.attackFacing,
     damage,
+    sword: isBishopSword(attacker),
     timer: m.multi ? 8 : 18
   });
 
@@ -2127,6 +2132,10 @@ function updateFighter(f, enemy, input, game) {
   if (!Number.isFinite(f.stamina)) f.stamina = 50;
   if (!Number.isFinite(f.ultimate)) f.ultimate = 0;
 
+  if (!isBishopSword(f) && f.characterKey === "bishop" && f.speed !== (f.baseSpeed || charData("bishop").speed)) {
+    f.speed = f.baseSpeed || charData("bishop").speed;
+  }
+
   if (f.promoted) {
     f.queenTimer--;
     if (f.queenTimer <= 0 && f.ultimateState?.type !== "pawnUprising") {
@@ -2151,6 +2160,10 @@ function updateFighter(f, enemy, input, game) {
 
   const oldH = f.h;
   f.crouching = !!input.down && f.grounded && !f.attack && !f.ultimateState && f.hurt <= 8;
+  if (isBishopSword(f)) {
+    f.crouching = !!input.down && f.grounded && !f.attack && f.hurt <= 8;
+  }
+
   f.h = f.crouching ? f.crouchH : f.standH;
   f.y += oldH - f.h;
 
@@ -2165,6 +2178,7 @@ function updateFighter(f, enemy, input, game) {
   }
 
   const ultTakingOver = updateUltimate(f, enemy, game, input);
+  const bishopSwordActive = isBishopSword(f);
 
   const wantsDash =
     !ultTakingOver &&
@@ -2190,13 +2204,13 @@ function updateFighter(f, enemy, input, game) {
   }
 
   const airCtrl =
-    pieceOf(f) === "bishop" ? 1.18 :
+    pieceOf(f) === "bishop" ? (bishopSwordActive ? 1.33 : 1.18) :
     pieceOf(f) === "knight" ? 1.22 :
     pieceOf(f) === "queen" ? 1.12 :
     1;
 
   const queenHyper = f.ultimateState?.type === "queenDominion" && f.ultimateState.phase === "hyper";
-  const movementAllowed = !ultTakingOver || queenHyper || f.ultimateState?.type === "pawnUprising";
+  const movementAllowed = !ultTakingOver || queenHyper || f.ultimateState?.type === "pawnUprising" || bishopSwordActive;
 
   if (movementAllowed && !f.attack && !stunned) {
     if (input.left && !input.right) {
@@ -2252,6 +2266,11 @@ function updateFighter(f, enemy, input, game) {
   if (f.x + f.w > RIGHT) f.x = RIGHT - f.w;
 
   if (!f.attack && !f.ultimateState) {
+    f.facing = f.x < enemy.x ? 1 : -1;
+    f.attackFacing = f.facing;
+  }
+
+  if (!f.attack && bishopSwordActive) {
     f.facing = f.x < enemy.x ? 1 : -1;
     f.attackFacing = f.facing;
   }
