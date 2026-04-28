@@ -1020,7 +1020,7 @@ function makeUltimateState(f, input) {
       currentDir: firstDir,
       previousDir: null,
       segment: 0,
-      maxSegments: 6,
+      maxSegments: 24,
       segmentTimer: 0,
       segmentLength: 13,
 
