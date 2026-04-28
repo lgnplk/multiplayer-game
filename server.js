@@ -21,31 +21,31 @@ const ROUND_TIME = 99 * FPS;
 const ROUNDS_TO_WIN = 3;
 
 const PROMOTION_MAX = 190;
-const QUEEN_TIME = 6 * FPS;
-const ULTIMATE_MAX = 100;
+const QUEEN_TIME = 10 * FPS;
+const ULTIMATE_MAX = 130;
 
 const CHARACTERS = {
   king: {
     name: "King",
-    title: "Hammer bruiser. Ultimate: Crownbreaker Verdict.",
+    title: "Hammer bruiser.",
     hp: 780,
-    speed: 5.8,
-    jump: 14,
+    speed: 6.8,
+    jump: 16,
     w: 72,
     h: 124
   },
   rook: {
     name: "Rook",
-    title: "Siege weapon. Ultimate: Siege Engine Overdrive.",
-    hp: 750,
-    speed: 5.4,
-    jump: 12.8,
+    title: "Siege weapon.",
+    hp: 800,
+    speed: 6.1,
+    jump: 15,
     w: 82,
     h: 128
   },
   bishop: {
     name: "Bishop",
-    title: "Diagonal caster. Ultimate: Phase Rift.",
+    title: "Diagonal zoner.",
     hp: 650,
     speed: 7.8,
     jump: 18.2,
@@ -54,19 +54,19 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Lance assassin. Ultimate: Full Charge Cavalry.",
+    title: "Swift striker.",
     hp: 660,
-    speed: 7.6,
+    speed: 8,
     jump: 20.5,
     w: 66,
     h: 116
   },
   pawn: {
     name: "Pawn",
-    title: "Spear soldier. Ultimate: Last Stand Uprising.",
+    title: "Quick underdog.",
     hp: 590,
     speed: 7.2,
-    jump: 15,
+    jump: 18,
     w: 56,
     h: 106
   }
@@ -673,7 +673,7 @@ function promote(f) {
 
   f.maxHp = Math.round(f.maxHp * 1.45);
   f.hp = Math.max(1, Math.ceil(f.maxHp * f.savedPawnStats.hpRatio));
-  f.speed *= 1.12;
+  f.speed *= 1.75;
   f.jump *= 1.08;
   f.w += 8;
   f.standH += 16;
