@@ -459,9 +459,9 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 18, dmg: 10, kb: 26, lift: 12, stamina: 10, cd: 52 });
 
     if (attack === "special") {
-      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 8, kb: 46, stamina: 36, cd: 250, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
-      else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 8, kb: 20, lift: -33, stamina: 24, cd: 180, multi: true, interval: 10 });
-      else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 8, kb: 38, stamina: 25, cd: 185, armor: 36, breakArmor: true, wall: 46 });
+      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 5, kb: 46, stamina: 36, cd: 300, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
+      else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 5, kb: 20, lift: -33, stamina: 24, cd: 300, multi: true, interval: 10 });
+      else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 5, kb: 38, stamina: 25, cd: 300, armor: 36, breakArmor: true, wall: 46 });
     }
   }
 
@@ -735,8 +735,8 @@ function promote(f) {
 
   f.maxHp = Math.round(f.maxHp * 1.45);
   f.hp = Math.max(1, Math.ceil(f.maxHp * f.savedPawnStats.hpRatio));
-  f.speed *= 1.12;
-  f.jump *= 1.08;
+  f.speed *= 1.4;
+  f.jump *= 1.4;
   f.w += 8;
   f.standH += 16;
   f.crouchH = Math.floor(f.standH * 0.72);
@@ -972,7 +972,7 @@ function makeUltimateState(f, input) {
       type: "kingVerdict",
       phase: "hunt",
       timer: 0,
-      duration: 155,
+      duration: 150,
       grabRange: 96,
       dir: d,
       grabbed: false,
@@ -1147,7 +1147,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
 
     if (u.timer === 22) {
       const hb = makeHitbox(f, f.x + f.w / 2 - 155, f.y - 25, 310, 190, {
-        dmg: 36,
+        dmg: 20,
         kb: 62,
         lift: -22,
         wall: 92,
@@ -1171,7 +1171,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
       u.shockwaveDone = true;
 
       const hb = makeHitbox(f, f.x + f.w / 2 - 170, f.y + 4, 340, 116, {
-        dmg: 18,
+        dmg: 50,
         kb: 42,
         lift: -16,
         wall: 58,
