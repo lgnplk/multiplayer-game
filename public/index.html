@@ -13,9 +13,7 @@
       --cream: #f2dfbd;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -25,10 +23,7 @@
       background: #3b2110;
     }
 
-    button,
-    input {
-      font: inherit;
-    }
+    button, input { font: inherit; }
 
     button {
       border: 0;
@@ -141,9 +136,7 @@
       font-weight: 1000;
     }
 
-    .title span {
-      color: var(--gold);
-    }
+    .title span { color: var(--gold); }
 
     .subtitle {
       margin: 0;
@@ -314,14 +307,8 @@
       align-items: start;
     }
 
-    .hudSide {
-      display: grid;
-      gap: 7px;
-    }
-
-    .hudSide.right {
-      text-align: right;
-    }
+    .hudSide { display: grid; gap: 7px; }
+    .hudSide.right { text-align: right; }
 
     .nameLine {
       display: flex;
@@ -331,9 +318,7 @@
       text-shadow: 0 2px 12px rgba(0,0,0,.8);
     }
 
-    .hudSide.right .nameLine {
-      justify-content: flex-end;
-    }
+    .hudSide.right .nameLine { justify-content: flex-end; }
 
     .barShell,
     .meterShell,
@@ -345,13 +330,8 @@
       box-shadow: inset 0 2px 8px rgba(0,0,0,.4);
     }
 
-    .barShell {
-      height: 18px;
-    }
-
-    .meterShell {
-      height: 8px;
-    }
+    .barShell { height: 18px; }
+    .meterShell { height: 8px; }
 
     .ultimateShell {
       height: 11px;
@@ -367,21 +347,10 @@
       transition: width .08s linear;
     }
 
-    .whiteHp {
-      background: linear-gradient(90deg, #fff7dc, #d8c49a, #8b6d45);
-    }
-
-    .blackHp {
-      background: linear-gradient(90deg, #646464, #222, #050505);
-    }
-
-    .stamina {
-      background: linear-gradient(90deg, #f4f0df, #a9936f);
-    }
-
-    .promo {
-      background: linear-gradient(90deg, #ffe36d, #d8a63b);
-    }
+    .whiteHp { background: linear-gradient(90deg, #fff7dc, #d8c49a, #8b6d45); }
+    .blackHp { background: linear-gradient(90deg, #646464, #222, #050505); }
+    .stamina { background: linear-gradient(90deg, #f4f0df, #a9936f); }
+    .promo { background: linear-gradient(90deg, #ffe36d, #d8a63b); }
 
     .ultimate {
       background: linear-gradient(90deg, #fff1a8, #ffd347, #f2952e);
@@ -433,9 +402,7 @@
       transition: opacity .18s ease;
     }
 
-    #message.show {
-      opacity: 1;
-    }
+    #message.show { opacity: 1; }
 
     #debugNotice {
       position: absolute;
@@ -451,9 +418,7 @@
       transition: opacity .15s ease;
     }
 
-    #debugNotice.show {
-      opacity: 1;
-    }
+    #debugNotice.show { opacity: 1; }
 
     #bottomHud {
       position: absolute;
@@ -487,13 +452,8 @@
         overflow: auto;
       }
 
-      .setup {
-        grid-template-columns: 1fr;
-      }
-
-      .character-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .setup { grid-template-columns: 1fr; }
+      .character-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -504,7 +464,7 @@
         <div>
           <h1 class="title">CHESS<br><span>BRAWL</span></h1>
           <p class="subtitle">
-            Bishop now awakens a giant sword, Knight chains fast L-charges, and every piece fights like a weaponized chess icon.
+            Bishop summons a physical greatsword, Knight chains sharp L-charges, and every piece fights like a weaponized chess icon.
           </p>
         </div>
 
@@ -703,8 +663,8 @@
           edge: "#f5ead7",
           magic: "rgba(95,95,95,.9)",
           ult: "rgba(255,214,80,.85)",
-          sword: "rgba(255,214,80,.95)",
-          sword2: "rgba(255,245,180,.95)",
+          sword: "#111111",
+          sword2: "#444444",
           dust: "80,70,60"
         };
       }
@@ -719,8 +679,8 @@
         edge: "#503018",
         magic: "rgba(255,232,170,.9)",
         ult: "rgba(255,211,71,.95)",
-        sword: "rgba(255,230,120,.98)",
-        sword2: "rgba(255,255,235,.98)",
+        sword: "#1a1a1a",
+        sword2: "#555555",
         dust: "210,185,145"
       };
     }
@@ -731,11 +691,6 @@
 
     function center(f) {
       return { x: f.x + f.w / 2, y: f.y + f.h / 2 };
-    }
-
-    function progress(f) {
-      if (!f.attackDuration) return 0;
-      return clamp((f.attackDuration - f.attackTimer) / f.attackDuration, 0, 1);
     }
 
     function elapsed(f) {
@@ -795,18 +750,14 @@
       if (!k) return;
       e.preventDefault();
 
-      if (k[0] === "hold") {
-        state.input[k[1]] = true;
-      }
+      if (k[0] === "hold") state.input[k[1]] = true;
 
       if (k[0] === "jump") {
         if (!state.input.up) pressAction("jump");
         state.input.up = true;
       }
 
-      if (k[0] === "action" && !e.repeat) {
-        pressAction(k[1]);
-      }
+      if (k[0] === "action" && !e.repeat) pressAction(k[1]);
 
       sendInput();
     });
@@ -1021,7 +972,6 @@
             state.flash = Math.max(state.flash, e.ultimate ? .2 : .1);
           }
         }
-        }
 
         if (e.type === "grab") {
           burst(e.x, e.y, "255,255,255", 36, 10);
@@ -1049,14 +999,14 @@
 
         if (e.type === "bishopSwordAwaken") {
           addFx("bishopSwordAwaken", e.x, e.y, { life: 80, dir: e.dir });
-          burst(e.x, e.y, "255,230,120", 120, 14);
-          state.shake = Math.max(state.shake, 16);
-          state.flash = Math.max(state.flash, .25);
+          burst(e.x, e.y, "255,230,120", 80, 10);
+          state.shake = Math.max(state.shake, 13);
+          state.flash = Math.max(state.flash, .18);
         }
 
         if (e.type === "bishopSwordReady") {
           addFx("bishopSwordReady", e.x, e.y, { life: 46, dir: e.dir });
-          burst(e.x, e.y, "255,245,190", 70, 10);
+          metalSparks(e.x, e.y, e.dir || 1, 36);
         }
 
         if (e.type === "bishopSwordPulse") {
@@ -1078,9 +1028,9 @@
 
         if (e.type === "bishopSwordParry") {
           addFx("bishopSwordParry", e.x, e.y, { life: 34, dir: e.dir });
-          burst(e.x, e.y, "255,245,190", 70, 13);
+          metalSparks(e.x, e.y, e.dir || 1, 58);
           state.shake = Math.max(state.shake, 15);
-          state.flash = Math.max(state.flash, .22);
+          state.flash = Math.max(state.flash, .14);
         }
 
         if (e.type === "ultimateLock") {
@@ -1139,9 +1089,9 @@
         if (e.type === "queenEnd") addFx("queenEnd", e.x, e.y, { life: 34 });
         if (e.type === "roundWin") addFx("roundWin", e.x, e.y, { life: 64 });
       }
-    
+    }
 
-        function addParticle(x, y, o = {}) {
+    function addParticle(x, y, o = {}) {
       if (!Number.isFinite(x)) x = 480;
       if (!Number.isFinite(y)) y = 270;
 
@@ -1172,6 +1122,24 @@
           color,
           life: 14 + Math.random() * 22,
           r: 2 + Math.random() * 6
+        });
+      }
+    }
+
+    function metalSparks(x, y, dir = 1, count = 18) {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+      for (let i = 0; i < count; i++) {
+        const a = Math.PI + (Math.random() - .5) * 1.4;
+        const s = 2 + Math.random() * 8;
+
+        addParticle(x, y, {
+          vx: Math.cos(a) * s * dir,
+          vy: Math.sin(a) * s - Math.random() * 3,
+          color: Math.random() > .35 ? "255,220,120" : "255,255,235",
+          life: 10 + Math.random() * 14,
+          r: 1.2 + Math.random() * 2.2,
+          g: .18
         });
       }
     }
@@ -1235,7 +1203,7 @@
       ctx.restore();
     }
 
-    function drawBackground(game) {
+        function drawBackground(game) {
       const floor = game?.floorY || 430;
 
       const bg = ctx.createLinearGradient(0, 0, 0, 540);
@@ -1251,24 +1219,7 @@
       ctx.lineWidth = 10;
       ctx.strokeRect(42, 38, 876, 245);
 
-      ctx.save();
-      ctx.globalAlpha = .15;
-      ctx.font = "900 46px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#5b3218";
-      for (let i = 0; i < 12; i++) {
-        const g = ["♔", "♕", "♖", "♗", "♘", "♙"][i % 6];
-        ctx.fillText(g, 58 + i * 82, 174 + Math.sin(state.t * .025 + i) * 9);
-      }
-      ctx.restore();
-
       checker(0, floor - 4, 960, 540 - floor + 4, 60, "#f7e5c9", "#9f6b3a");
-
-      const shine = ctx.createLinearGradient(0, floor - 4, 0, 540);
-      shine.addColorStop(0, "rgba(255,255,255,.16)");
-      shine.addColorStop(1, "rgba(0,0,0,.20)");
-      ctx.fillStyle = shine;
-      ctx.fillRect(0, floor - 4, 960, 540 - floor + 4);
 
       ctx.strokeStyle = "rgba(75,45,20,.85)";
       ctx.lineWidth = 4;
@@ -1276,21 +1227,12 @@
       ctx.moveTo(0, floor - 3);
       ctx.lineTo(960, floor - 3);
       ctx.stroke();
-
-      const vignette = ctx.createRadialGradient(480, 260, 160, 480, 260, 620);
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, "rgba(0,0,0,.38)");
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, 960, 540);
     }
 
     function drawPiece(f, x, y, scale = 1, alpha = 1) {
       if (!f || !Number.isFinite(x) || !Number.isFinite(y)) return;
-
       const m = mat(f);
       const size = Math.round(f.h * 1.18 * scale);
-
-      if (!Number.isFinite(size) || size <= 0) return;
 
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -1300,71 +1242,23 @@
       ctx.shadowColor = "rgba(0,0,0,.55)";
       ctx.shadowBlur = 10;
       ctx.shadowOffsetY = 5;
-
       ctx.lineWidth = f.side === "white" ? 4.2 : 4.6;
       ctx.strokeStyle = m.outline;
       ctx.strokeText(glyph(f), x, y);
-
-      const grad = ctx.createLinearGradient(x, y - size * .5, x, y + size * .45);
-      if (f.side === "white") {
-        grad.addColorStop(0, "#fff");
-        grad.addColorStop(.5, "#fff3db");
-        grad.addColorStop(1, "#dfc18f");
-      } else {
-        grad.addColorStop(0, "#5a5a5a");
-        grad.addColorStop(.35, "#111");
-        grad.addColorStop(1, "#000");
-      }
-
-      ctx.fillStyle = grad;
+      ctx.fillStyle = f.side === "white" ? "#fff3db" : "#080808";
       ctx.fillText(glyph(f), x, y);
-
-      if (f.promoted || isBishopSword(f)) {
-        ctx.globalAlpha = alpha * .46;
-        ctx.lineWidth = 2.4;
-        ctx.strokeStyle = "rgba(255,220,115,.95)";
-        ctx.strokeText(glyph(f), x, y);
-      }
-
-      ctx.restore();
-    }
-
-    function shadow(f) {
-      if (!f) return;
-
-      const c = center(f);
-      const floor = state.gameState?.game?.floorY || 430;
-      const air = clamp((floor - (f.y + f.h)) / 150, 0, 1);
-
-      ctx.save();
-      ctx.globalAlpha = .32 * (1 - air * .65);
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.ellipse(c.x, floor + 8, f.w * (.92 - air * .28), 16 * (1 - air * .25), 0, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
     }
 
     function line(points, m, w = 8, alpha = 1) {
       if (!points || points.length < 2) return;
-
-      points = points.filter(p =>
-        p &&
-        Number.isFinite(p.x) &&
-        Number.isFinite(p.y)
-      );
-
+      points = points.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y));
       if (points.length < 2) return;
-
-      w = Number.isFinite(w) ? Math.max(1, w) : 8;
-      alpha = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1;
-      m = m || {};
 
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-
       ctx.strokeStyle = "rgba(0,0,0,.35)";
       ctx.lineWidth = w + 6;
       ctx.beginPath();
@@ -1378,92 +1272,18 @@
       ctx.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
-
-      ctx.strokeStyle = m.edge || "#000";
-      ctx.lineWidth = Math.max(2, w * .25);
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-      ctx.stroke();
-
       ctx.restore();
     }
 
     function blade(x, y, angle, len, m, p, width = 10) {
-      if (![x, y, angle, len, p, width].every(Number.isFinite)) return;
-      if (len <= 0) return;
-
-      m = m || {};
       const q = ease(p);
-      const tip = {
-        x: x + Math.cos(angle) * len * q,
-        y: y + Math.sin(angle) * len * q
-      };
-
       line([
         { x, y },
-        {
-          x: x + Math.cos(angle) * len * q * .56,
-          y: y + Math.sin(angle) * len * q * .56
-        },
-        tip
-      ], m, width, clamp(.15 + q, 0, 1));
-
-      if (!Number.isFinite(tip.x) || !Number.isFinite(tip.y)) return;
-
-      ctx.save();
-      ctx.translate(tip.x, tip.y);
-      ctx.rotate(angle);
-      ctx.globalAlpha = clamp(q, 0, 1);
-      ctx.fillStyle = m.weapon2 || "#ccc";
-      ctx.strokeStyle = m.edge || "#000";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(20, 0);
-      ctx.lineTo(-8, -8);
-      ctx.lineTo(-3, 0);
-      ctx.lineTo(-8, 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function arc(cx, cy, r, a1, a2, m, width, alpha = 1) {
-      if (![cx, cy, r, a1, a2, width, alpha].every(Number.isFinite)) return;
-      if (r <= 0) return;
-
-      m = m || {};
-
-      ctx.save();
-      ctx.globalAlpha = clamp(alpha, 0, 1);
-      ctx.lineCap = "round";
-
-      ctx.strokeStyle = "rgba(0,0,0,.3)";
-      ctx.lineWidth = width + 6;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, a1, a2);
-      ctx.stroke();
-
-      ctx.strokeStyle = m.weapon || "#eee";
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, a1, a2);
-      ctx.stroke();
-
-      ctx.strokeStyle = m.edge || "#000";
-      ctx.lineWidth = Math.max(2, width * .25);
-      ctx.beginPath();
-      ctx.arc(cx, cy, Math.max(1, r - 2), a1, a2);
-      ctx.stroke();
-
-      ctx.restore();
+        { x: x + Math.cos(angle) * len * q, y: y + Math.sin(angle) * len * q }
+      ], m, width, q);
     }
 
     function spark(x, y, m, len = 20, rays = 7) {
-      if (![x, y, len, rays].every(Number.isFinite)) return;
-      m = m || {};
-
       ctx.save();
       ctx.strokeStyle = m.magic || "rgba(255,255,255,.8)";
       ctx.lineWidth = 2.2;
@@ -1478,133 +1298,19 @@
       ctx.restore();
     }
 
-    function dust(x, y, d, m, count = 5) {
-      if (![x, y, d, count].every(Number.isFinite)) return;
-      m = m || {};
-
-      ctx.save();
-      ctx.fillStyle = `rgba(${m.dust || "200,180,150"},.65)`;
-      for (let i = 0; i < count; i++) {
-        ctx.beginPath();
-        ctx.ellipse(x - d * (i * 16 + 8), y + Math.sin(i) * 3, 14 + i * 2, 6 + i, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    function after(f, x, y, s = 1, a = .16) {
-      drawPiece(f, x, y, s, a);
-    }
-
-    function hammer(c, d, m, p) {
-      if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y)) return;
-      const q = ease(p);
-      const x = c.x + d * (20 + 70 * q);
-      const y = c.y - 28 + 40 * q;
-
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(d * (-.8 + 1.4 * q));
-      ctx.fillStyle = m.weapon;
-      ctx.strokeStyle = m.edge;
-      ctx.lineWidth = 3;
-
-      rr(-12, -48, 24, 76, 6);
-      ctx.fill();
-      ctx.stroke();
-
-      rr(-36, -62, 72, 30, 7);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function spear(c, d, m, p, len = 126, width = 7, angle = 0) {
-      if (!c) return;
-      blade(c.x - d * 6, c.y, d === 1 ? angle : Math.PI - angle, len, m, p, width);
-    }
-
-    function staff(c, d, m, p, angle, len = 150, width = 10) {
-      if (!c) return;
-      const finalAngle = d === 1 ? angle : Math.PI - angle;
-
-      blade(c.x - d * 10, c.y + 30, finalAngle, len, m, p, width);
-
-      const q = ease(p);
-      const tx = c.x - d * 10 + Math.cos(finalAngle) * len * q;
-      const ty = c.y + 30 + Math.sin(finalAngle) * len * q;
-      spark(tx, ty, m, 16 * q, 8);
-    }
-
-    function castleBrick(x, y, m, rot = 0, alpha = 1) {
-      if (![x, y, rot, alpha].every(Number.isFinite)) return;
-
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(rot);
-      ctx.globalAlpha = clamp(alpha, 0, 1);
-      ctx.fillStyle = m.weapon;
-      ctx.strokeStyle = m.edge;
-      ctx.lineWidth = 2;
-      rr(-15, -10, 30, 20, 4);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function cannon(c, d, m, p) {
-      if (!c) return;
-      const q = ease(p);
-
-      ctx.save();
-      ctx.translate(c.x + d * 46, c.y + 10);
-      ctx.scale(d, 1);
-      ctx.fillStyle = m.weapon;
-      ctx.strokeStyle = m.edge;
-      ctx.lineWidth = 3;
-
-      rr(-24, -18, 78 * q, 36, 9);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = m.weapon2;
-      ctx.beginPath();
-      ctx.arc(-18, 22, 13, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function lance(c, d, m, p, angle = 0) {
-      if (!c) return;
-      blade(c.x - d * 10, c.y + 16, d === 1 ? angle : Math.PI - angle, 142, m, p, 9);
-    }
-
-    function twin(c, d, m, p) {
-      if (!c) return;
-      blade(c.x - d * 16, c.y + 34, d === 1 ? -.48 : Math.PI + .48, 178, m, p, 9);
-      blade(c.x - d * 8, c.y - 26, d === 1 ? .35 : Math.PI - .35, 150, m, clamp(p - .12, 0, 1), 8);
-    }
-
     function greatSword(c, d, m, p = 1, angle = -0.75, len = 190, width = 18) {
       if (!c) return;
 
       const finalAngle = d === 1 ? angle : Math.PI - angle;
       const q = ease(p);
-
       const baseX = c.x - d * 18;
       const baseY = c.y + 18;
+      const bladeLen = len * q;
 
-      const tipX = baseX + Math.cos(finalAngle) * len * q;
-      const tipY = baseY + Math.sin(finalAngle) * len * q;
-      
       ctx.save();
       ctx.translate(baseX, baseY);
       ctx.rotate(finalAngle);
 
-      // === HANDLE ===
       ctx.fillStyle = "#1a1a1a";
       ctx.strokeStyle = "#000";
       ctx.lineWidth = 2;
@@ -1613,21 +1319,16 @@
       ctx.fill();
       ctx.stroke();
 
-      // === POMMEL ===
       ctx.beginPath();
       ctx.arc(0, 48, 8, 0, Math.PI * 2);
       ctx.fillStyle = "#2b2b2b";
       ctx.fill();
       ctx.stroke();
 
-      // === CROSSGUARD ===
       ctx.fillStyle = "#2a2a2a";
       rr(-34, -6, 68, 12, 5);
       ctx.fill();
       ctx.stroke();
-
-      // === BLADE BASE SHAPE ===
-      const bladeLen = len * q;
 
       ctx.beginPath();
       ctx.moveTo(-10, 0);
@@ -1640,7 +1341,6 @@
       grad.addColorStop(0, "#2f2f2f");
       grad.addColorStop(0.5, "#1a1a1a");
       grad.addColorStop(1, "#0a0a0a");
-
       ctx.fillStyle = grad;
       ctx.fill();
 
@@ -1648,10 +1348,8 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // === EDGE HIGHLIGHTS ===
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 1.2;
-
       ctx.beginPath();
       ctx.moveTo(-6, -bladeLen);
       ctx.lineTo(-2, 0);
@@ -1662,46 +1360,15 @@
       ctx.lineTo(2, 0);
       ctx.stroke();
 
-      // === CENTER FULLER (groove) ===
       ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1;
-
       ctx.beginPath();
       ctx.moveTo(0, -bladeLen + 20);
       ctx.lineTo(0, -10);
       ctx.stroke();
-      
-      function metalSparks(x, y, dir = 1, count = 18) {
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-
-        for (let i = 0; i < count; i++) {
-          const a = Math.PI + (Math.random() - .5) * 1.4;
-          const s = 2 + Math.random() * 8;
-
-          addParticle(x, y, {
-            vx: Math.cos(a) * s * dir,
-            vy: Math.sin(a) * s - Math.random() * 3,
-            color: Math.random() > .35 ? "255,220,120" : "255,255,235",
-            life: 10 + Math.random() * 14,
-            r: 1.2 + Math.random() * 2.2,
-            g: .18
-          });
-        }
-      }
 
       ctx.restore();
-
-      // === TIP SPARK (very subtle, not magical spam) ===
-      if (q > 0.7) {
-        ctx.save();
-        ctx.globalAlpha = 0.4 * (q - 0.7);
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(tipX, tipY, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-}
+    }
 
     function drawBishopIdleSword(f) {
       if (!isBishopSword(f)) return;
@@ -1715,210 +1382,12 @@
       ctx.globalAlpha = .96;
       ctx.shadowColor = "rgba(0,0,0,.55)";
       ctx.shadowBlur = 6;
-
-      const swordPoint = {
-        x: c.x - d * 34,
-        y: c.y + 38
-      };
-
-      greatSword(swordPoint, d, m, .95, -1.36 + sway, 176, 15);
-
-      ctx.restore();
-    }
-
-    function drawUltimateVisual(f) {
-      const u = f.ultimateState;
-      if (!u) return;
-
-      const p = pieceOf(f);
-      const m = mat(f);
-      const c = center(f);
-      const d = f.facing || 1;
-
-      ctx.save();
-
-      if (u.type === "bishopSword") {
-        const active = u.phase === "active";
-        const q = active ? 1 : clamp(u.timer / 34, 0, 1);
-
-        ctx.globalAlpha = active ? .18 + Math.sin(state.t * .12) * .05 : .35 * q;
-        ctx.fillStyle = m.ult;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, active ? 96 + Math.sin(state.t * .07) * 10 : 40 + q * 120, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.globalAlpha = active ? .85 : q;
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = active ? 3 : 6;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, active ? 76 + Math.sin(state.t * .1) * 8 : 54 + q * 105, 0, Math.PI * 2);
-        ctx.stroke();
-
-        if (!active) {
-          ctx.font = "900 86px Georgia";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = m.ult;
-          ctx.strokeStyle = "rgba(60,35,10,.85)";
-          ctx.lineWidth = 3;
-          ctx.strokeText("♗", c.x, c.y);
-          ctx.fillText("♗", c.x, c.y);
-        }
-      }
-
-      if (u.type === "kingVerdict") {
-        const pulse = .55 + Math.sin(state.t * .22) * .18;
-
-        ctx.globalAlpha = pulse;
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = 4;
-        ctx.shadowColor = "rgba(255,215,80,.65)";
-        ctx.shadowBlur = 18;
-
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 74 + Math.sin(state.t * .12) * 8, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.font = "900 58px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillStyle = m.ult;
-        ctx.fillText("♔", c.x, c.y - 88);
-
-        if (u.phase === "hunt") {
-          const enemy = f.side === "white" ? state.gameState?.game?.fighters?.black : state.gameState?.game?.fighters?.white;
-          if (enemy) {
-            const ec = center(enemy);
-            ctx.strokeStyle = "rgba(255,215,80,.9)";
-            ctx.lineWidth = 5;
-            ctx.setLineDash([12, 8]);
-            ctx.beginPath();
-            ctx.arc(ec.x, ec.y, 62 + Math.sin(state.t * .18) * 8, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
-        }
-
-        hammer(c, d, { ...m, weapon: m.ult }, .95);
-      }
-
-      if (u.type === "rookSiege") {
-        const charge = u.phase === "windup" ? clamp(u.timer / 46, 0, 1) : 1;
-        cannon(c, u.dir || d, { ...m, weapon: m.ult }, charge);
-
-        ctx.globalAlpha = .8;
-        ctx.fillStyle = "rgba(255,215,80,.18)";
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = 3;
-
-        const y = f.y + 34 + (u.aimY || 0);
-        const x = (u.dir || d) === 1 ? f.x + f.w : 24;
-        const w = (u.dir || d) === 1 ? 936 - (f.x + f.w) : f.x - 24;
-        rr(Math.min(x, x + w), y, Math.abs(w), 58, 12);
-        ctx.fill();
-        ctx.stroke();
-
-        for (let i = 0; i < 9; i++) {
-          castleBrick(c.x + (u.dir || d) * (70 + i * 36 + state.t % 20), y + 28 + Math.sin(state.t * .1 + i) * 15, m, state.t * .04, charge);
-        }
-      }
-
-      if (u.type === "knightCharge") {
-        const trail = Array.isArray(u.trail) ? u.trail : [];
-
-        if (trail.length > 1) {
-          line(trail, { ...m, weapon: m.ult }, u.phase === "rush" ? 22 : 12, u.phase === "rush" ? .78 : .45);
-        }
-
-        if (u.phase === "windup") {
-          const q = clamp(u.timer / 14, 0, 1);
-
-          ctx.globalAlpha = .55 + Math.sin(state.t * .35) * .12;
-          ctx.strokeStyle = m.ult;
-          ctx.lineWidth = 4 + q * 5;
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 42 + q * 34, 0, Math.PI * 2);
-          ctx.stroke();
-
-          lance(c, u.currentDir?.x || d, { ...m, weapon: m.ult }, q, u.currentDir?.y < 0 ? -1.15 : u.currentDir?.y > 0 ? 1.15 : 0);
-        }
-
-        if (u.phase === "rush") {
-          const moveDir = u.currentDir || { x: d, y: 0 };
-          const angle =
-            moveDir.y < 0 ? -Math.PI / 2 :
-            moveDir.y > 0 ? Math.PI / 2 :
-            (moveDir.x || f.attackFacing || d) === 1 ? 0 : Math.PI;
-
-          blade(c.x, c.y + 12, angle, 210, { ...m, weapon: m.ult }, .95, 18);
-
-          ctx.globalAlpha = .55;
-          ctx.strokeStyle = m.ult;
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 54 + Math.sin(state.t * .22) * 7, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        if (u.phase === "slam") {
-          ctx.globalAlpha = .8;
-          ctx.fillStyle = "rgba(255,215,70,.25)";
-          ctx.beginPath();
-          ctx.ellipse(c.x, f.y + f.h + 8, 94 + Math.sin(state.t * .25) * 8, 34, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          lance(c, f.attackFacing || d, { ...m, weapon: m.ult }, .95, Math.PI / 2);
-        }
-      }
-
-      if (u.type === "pawnUprising") {
-        const ratio = clamp((u.hitsLanded || 0) / (u.hitsNeeded || 4), 0, 1);
-
-        ctx.globalAlpha = .65;
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 42 + ratio * 40, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.font = "900 32px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillStyle = m.ult;
-        for (let i = 0; i < 4; i++) {
-          ctx.fillText(i < (u.hitsLanded || 0) ? "♕" : "♙", c.x - 45 + i * 30, f.y - 46);
-        }
-
-        spear(c, d, { ...m, weapon: m.ult }, .95, 150 + ratio * 70, 12, 0);
-      }
-
-      if (u.type === "queenDominion") {
-        ctx.globalAlpha = .22 + Math.sin(state.t * .12) * .08;
-        ctx.fillStyle = m.ult;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 140 + Math.sin(state.t * .05) * 14, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = 4;
-        for (let i = 0; i < 8; i++) {
-          const a = i * Math.PI / 4 + state.t * .012;
-          ctx.beginPath();
-          ctx.moveTo(c.x, c.y);
-          ctx.lineTo(c.x + Math.cos(a) * 260, c.y + Math.sin(a) * 160);
-          ctx.stroke();
-        }
-
-        ctx.font = "900 44px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillStyle = m.ult;
-        ctx.fillText(`x${u.hits || 0}`, c.x, f.y - 56);
-      }
-
+      greatSword({ x: c.x - d * 34, y: c.y + 38 }, d, m, .95, -1.36 + sway, 176, 15);
       ctx.restore();
     }
 
     function drawWeapon(f) {
       if (!f || !f.attack) return;
-      if (!Number.isFinite(f.x) || !Number.isFinite(f.y)) return;
 
       const p = pieceOf(f);
       const m = mat(f);
@@ -1928,451 +1397,67 @@
       const swing = clamp((e - 3) / 16, 0, 1);
       const sword = isBishopSword(f);
 
-      if (f.attack === "counter") {
-        drawCounter(f, m);
+      if (p === "bishop" && sword) {
+        if (f.attack === "light") greatSword(c, d, m, swing, -0.34, 215, 18);
+        else if (f.attack === "heavy") greatSword(c, d, m, swing, -0.95, 310, 24);
+        else if (f.attack === "crouchLight") greatSword({ x: c.x, y: c.y + 28 }, d, m, swing, 0.05, 180, 15);
+        else if (f.attack === "crouchHeavy") greatSword({ x: c.x, y: c.y + 36 }, d, m, swing, 0.32, 245, 21);
+        else if (f.attack === "airHeavy") greatSword(c, d, m, swing, 0.92, 285, 23);
+        else if (f.attack === "airSpecial") greatSword(c, d, m, .95, -0.75, 250, 19);
+        else if (f.attack === "special" || f.attack === "airSpecial") {
+          if (f.attackAim === "up") greatSword(c, d, m, swing, -1.28, 330, 24);
+          else if (f.attackAim === "down") greatSword(c, d, m, swing, 0.82, 335, 24);
+          else greatSword(c, d, m, swing, -0.6, 365, 24);
+        }
         return;
-      }
-
-      if (p === "king") {
-        if (f.attack === "light") hammer(c, d, m, clamp((e - 2) / 12, 0, 1));
-        if (f.attack === "heavy") {
-          after(f, c.x + d * 28 * swing, c.y, 1.04, .14);
-          hammer(c, d, m, clamp((e - 5) / 20, 0, 1));
-          arc(c.x + d * 30, c.y + 6, 82, d === 1 ? -1.1 : Math.PI + .1, d === 1 ? -1.1 + 1.95 * swing : Math.PI + .1 - 1.95 * swing, m, 12, swing);
-        }
-        if (f.attack === "crouchHeavy") spear(c, d, m, swing, 148, 12, .18);
-        if (f.attack === "airHeavy") arc(c.x, c.y + 10, 62, d === 1 ? -1 : Math.PI + .1, d === 1 ? -1 + 2 * swing : Math.PI + .1 - 2 * swing, m, 12, swing);
-        if (f.attack === "special" || f.attack === "airSpecial") {
-          if (f.attackAim === "down") {
-            ctx.save();
-            ctx.globalAlpha = .8 * swing;
-            ctx.strokeStyle = m.magic;
-            ctx.lineWidth = 7;
-            ctx.beginPath();
-            ctx.arc(c.x + d * 38, c.y + 12, 46 + 14 * swing, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-          } else if (f.attackAim === "up") {
-            blade(c.x, c.y + 36, -Math.PI / 2, 240, m, swing, 16);
-          } else {
-            hammer(c, d, m, swing);
-            blade(c.x - d * 10, c.y + 12, d === 1 ? 0 : Math.PI, 190, m, swing, 18);
-          }
-        }
-      }
-
-      if (p === "rook") {
-        if (f.attack === "light") {
-          cannon(c, d, m, swing);
-          castleBrick(c.x + d * 95 * swing, c.y + 10, m, .1 * d, swing);
-        }
-        if (f.attack === "heavy" || f.attack === "crouchHeavy") {
-          cannon(c, d, m, swing);
-          for (let i = 0; i < 4; i++) {
-            castleBrick(c.x + d * (55 + i * 38) * swing, c.y + (i % 2 ? -8 : 18), m, .2 * d, swing);
-          }
-          dust(c.x + d * 90, f.y + f.h + 4, d, m, Math.ceil(7 * swing));
-        }
-        if (f.attack === "airHeavy") {
-          arc(c.x + d * 8, c.y + 10, 64, d === 1 ? -.4 : Math.PI - .9, d === 1 ? -.4 + 1.45 * swing : Math.PI - .9 + 1.45 * swing, m, 12, swing);
-        }
-
-        if (f.attack === "special") {
-          if (f.attackAim === "forward") {
-            const wind = clamp(e / 42, 0, 1);
-            const fire = clamp((e - 42) / 22, 0, 1);
-            cannon(c, d, m, wind);
-
-            if (fire > 0) {
-              const x1 = c.x + d * 55;
-              const x2 = d === 1 ? 936 : 24;
-              const bx = d === 1 ? x1 : x2;
-              const bw = Math.abs(x2 - x1);
-
-              ctx.save();
-              const g = ctx.createLinearGradient(x1, c.y, x2, c.y);
-              g.addColorStop(0, m.magic);
-              g.addColorStop(.35, m.weapon);
-              g.addColorStop(1, "rgba(255,255,255,.16)");
-              ctx.globalAlpha = .92 * fire;
-              ctx.fillStyle = g;
-              rr(bx, c.y - 48, bw, 96, 16);
-              ctx.fill();
-              ctx.strokeStyle = m.edge;
-              ctx.lineWidth = 4;
-              rr(bx, c.y - 48, bw, 96, 16);
-              ctx.stroke();
-              ctx.restore();
-            }
-          } else if (f.attackAim === "up") {
-            blade(c.x, c.y + 48, -Math.PI / 2, 310, m, swing, 22);
-          } else {
-            blade(c.x + d * 14, c.y + 44, d === 1 ? 0 : Math.PI, 260, m, swing, 22);
-            dust(c.x + d * 110, f.y + f.h + 4, d, m, Math.ceil(10 * swing));
-          }
-        }
       }
 
       if (p === "bishop") {
-        if (sword) {
-          if (f.attack === "light") {
-            const q = clamp((e - 2) / 10, 0, 1);
-            greatSword(c, d, m, q, -0.34, 215, 18);
-            arc(c.x + d * 30, c.y + 5, 88, d === 1 ? -0.65 : Math.PI + .05, d === 1 ? -0.65 + 1.2 * q : Math.PI + .05 - 1.2 * q, { ...m, weapon: m.sword }, 12, q);
-          }
-
-          if (f.attack === "heavy") {
-            const q = clamp((e - 4) / 17, 0, 1);
-            after(f, c.x + d * 45 * q, c.y - 22 * q, 1.06, .16);
-            greatSword(c, d, m, q, -0.95, 310, 24);
-            line([
-              { x: c.x - d * 40, y: c.y + 72 },
-              { x: c.x + d * 120 * q, y: c.y - 95 * q },
-              { x: c.x + d * 245 * q, y: c.y - 155 * q }
-            ], { ...m, weapon: m.sword }, 20, q);
-          }
-
-          if (f.attack === "crouchLight") {
-            const q = clamp((e - 1) / 8, 0, 1);
-            greatSword({ x: c.x, y: c.y + 28 }, d, m, q, 0.05, 180, 15);
-          }
-
-          if (f.attack === "crouchHeavy") {
-            const q = clamp((e - 3) / 13, 0, 1);
-            greatSword({ x: c.x, y: c.y + 36 }, d, m, q, 0.32, 245, 21);
-            dust(c.x + d * 95, f.y + f.h + 5, d, m, Math.ceil(7 * q));
-          }
-
-          if (f.attack === "airHeavy") {
-            const q = clamp((e - 2) / 14, 0, 1);
-            greatSword(c, d, m, q, 0.92, 285, 23);
-            line([
-              { x: c.x - d * 30, y: c.y - 70 },
-              { x: c.x + d * 90 * q, y: c.y + 55 * q },
-              { x: c.x + d * 215 * q, y: c.y + 130 * q }
-            ], { ...m, weapon: m.sword }, 18, q);
-          }
-
-          if (f.attack === "airSpecial") {
-            const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-            for (let i = 0; i < trail.length - 1; i++) {
-              const a = (i + 1) / trail.length;
-              line([trail[i], trail[i + 1]], { ...m, weapon: m.sword }, 12 + a * 18, .25 + a * .65);
-            }
-            for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-            greatSword(c, d, m, .95, -0.75, 250, 19);
-          } else if (f.attack === "special") {
-            const q = clamp((e - 4) / 16, 0, 1);
-            if (f.attackAim === "up") greatSword(c, d, m, q, -1.28, 330, 24);
-            else if (f.attackAim === "down") greatSword(c, d, m, q, 0.82, 335, 24);
-            else greatSword(c, d, m, q, -0.6, 365, 24);
-
-            spark(c.x + d * 140 * q, c.y - 40 * q, { magic: m.sword2 }, 30 * q, 10);
-          }
-        } else {
-          if (f.attack === "light") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
-          if (f.attack === "heavy") {
-            const s = clamp((e - 2) / 16, 0, 1);
-            after(f, c.x + d * 35 * s, c.y - 24 * s, 1, .14);
-            staff(c, d, m, s, -.78, 172, 16);
-          }
-          if (f.attack === "crouchLight") staff(c, d, m, swing, -.18, 110, 7);
-          if (f.attack === "crouchHeavy") staff(c, d, m, swing, -.55, 146, 11);
-          if (f.attack === "airHeavy") staff(c, d, m, swing, .82, 172, 16);
-
-          if (f.attack === "airSpecial") {
-            const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-            for (let i = 0; i < trail.length - 1; i++) {
-              const a = (i + 1) / trail.length;
-              line([trail[i], trail[i + 1]], m, 6 + a * 15, .18 + a * .62);
-            }
-            for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-            spark(c.x, c.y, m, 18, 8);
-          } else if (f.attack === "special") {
-            const s = clamp((e - 4) / 18, 0, 1);
-            if (f.attackAim === "up") staff(c, d, m, s, -.96, 218, 14);
-            else if (f.attackAim === "down") staff(c, d, m, s, .78, 222, 14);
-            else staff(c, d, m, s, -.68, 258, 14);
-          }
-        }
-      }
-
-      if (p === "knight") {
-        if (f.attack === "light") {
-          const q = clamp((e - 2) / 11, 0, 1);
-          const retract = clamp((e - 10) / 8, 0, 1);
-          const reach = 1 - retract * .35;
-
-          after(f, c.x - d * 10 * q, c.y, .96, .12);
-
-          blade(
-            c.x - d * 8,
-            c.y + 14,
-            d === 1 ? -.08 : Math.PI + .08,
-            118 * reach,
-            m,
-            q,
-            8
-          );
-
-          ctx.save();
-          ctx.globalAlpha = .55 * q;
-          ctx.strokeStyle = m.weapon;
-          ctx.lineWidth = 3;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(c.x - d * 18, c.y + 32);
-          ctx.lineTo(c.x + d * 64 * q, c.y + 20);
-          ctx.stroke();
-
-          ctx.strokeStyle = m.edge;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(c.x - d * 18, c.y + 36);
-          ctx.lineTo(c.x + d * 58 * q, c.y + 28);
-          ctx.stroke();
-          ctx.restore();
-        }
-        if (f.attack === "heavy") lance(c, d, m, swing, -1.08);
-        if (f.attack === "crouchHeavy") lance(c, d, m, swing, d === 1 ? -2.78 : -.36);
-        if (f.attack === "airHeavy") {
-          const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-          if (trail.length > 1) line(trail, m, 14, .85);
-          for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-          lance(c, d, m, .9, 0);
-        }
-        if (f.attack === "special" || f.attack === "airSpecial") {
-          const s = clamp((e - 4) / 16, 0, 1);
-          if (f.attackAim === "up") {
-            line([{ x: c.x, y: c.y + 40 }, { x: c.x, y: c.y - 104 * s }, { x: c.x + d * 72 * s, y: c.y - 104 * s }], m, 14, s);
-          } else if (f.attackAim === "down") {
-            line([{ x: c.x, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y + 86 * s }], m, 14, s);
-            dust(c.x + d * 94, f.y + f.h + 5, d, m, Math.ceil(8 * s));
-          } else {
-            line([{ x: c.x, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y - 54 * s }], m, 14, s);
-          }
-        }
-      }
-
-      if (p === "pawn") {
-        if (f.attack === "light" || f.attack === "crouchLight") spear(c, d, m, swing, 106, 7, 0);
-        if (f.attack === "heavy") spear(c, d, m, swing, 130, 9, -.18);
-        if (f.attack === "crouchHeavy") spear(c, d, m, swing, 116, 9, -.7);
-        if (f.attack === "airHeavy") arc(c.x + d * 6, c.y + 12, 44, d === 1 ? -.8 : Math.PI - .35, d === 1 ? -.8 + 1.75 * swing : Math.PI - .35 + 1.75 * swing, m, 9, swing);
-        if (f.attack === "special" || f.attack === "airSpecial") {
-          const s = clamp((e - 4) / 14, 0, 1);
-          if (f.attackAim === "up") spear(c, d, m, s, 140, 11, -1.25);
-          else if (f.attackAim === "down") spear(c, d, m, s, 138, 11, .32);
-          else spear(c, d, m, s, 154, 11, 0);
-          dust(c.x + d * 40, f.y + f.h + 5, d, m, Math.ceil(5 * s));
-        }
-      }
-
-      if (p === "queen") {
-        if (f.attack === "light") twin(c, d, m, clamp((e - 2) / 10, 0, 1));
-        if (f.attack === "heavy" || f.attack === "crouchHeavy") {
-          const s = clamp((e - 4) / 18, 0, 1);
-          arc(c.x + d * 28, c.y + 10, 116, d === 1 ? -1 : Math.PI + .06, d === 1 ? -1 + 1.78 * s : Math.PI + .06 - 1.78 * s, m, 16, s);
-          twin(c, d, m, s);
-        }
-        if (f.attack === "airHeavy") arc(c.x + d * 12, c.y, 86, d === 1 ? -.9 : Math.PI - .22, d === 1 ? -.9 + 1.9 * swing : Math.PI - .22 + 1.9 * swing, m, 14, swing);
-        if (f.attack === "special" || f.attack === "airSpecial") {
-          const s = clamp((e - 6) / 22, 0, 1);
-          after(f, c.x + d * 50 * s, c.y, 1.06, .16 * s);
-          if (f.attackAim === "up") blade(c.x, c.y + 38, -Math.PI / 2, 300, m, s, 18);
-          else if (f.attackAim === "down") blade(c.x - d * 16, c.y + 20, d === 1 ? .24 : Math.PI - .24, 300, m, s, 18);
-          else blade(c.x - d * 24, c.y + 56, d === 1 ? -.47 : Math.PI + .47, 335, m, s, 18);
-        }
-      }
-    }
-
-    function drawCounter(f, m) {
-      const c = center(f);
-      const d = dir(f);
-      const e = elapsed(f);
-      const p = pieceOf(f);
-      const sword = isBishopSword(f);
-
-      if (e < 14) {
-        ctx.save();
-        ctx.globalAlpha = .55 + Math.sin(state.t * .6) * .12;
-        ctx.strokeStyle = sword ? m.sword : m.magic;
-        ctx.lineWidth = sword ? 6 : 4;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 40 + e * 2, 0, Math.PI * 2);
-        ctx.stroke();
-
-        if (sword) greatSword(c, d, m, .55, -1.1, 190, 15);
-
-        ctx.font = "900 36px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillStyle = sword ? m.sword : m.magic;
-        ctx.fillText(GLYPHS[p], c.x, c.y - 62);
-        ctx.restore();
+        blade(c.x, c.y + 30, d === 1 ? -0.7 : Math.PI + 0.7, 150, m, swing, 10);
         return;
       }
 
-      const s = clamp((e - 14) / 14, 0, 1);
-
-      if (p === "king") {
-        hammer(c, d, m, s);
-        blade(c.x - d * 8, c.y + 30, d === 1 ? -.2 : Math.PI + .2, 130, m, s, 18);
-      } else if (p === "rook") {
-        cannon(c, d, m, s);
-        for (let i = 0; i < 6; i++) castleBrick(c.x + d * (35 + i * 28) * s, c.y - 34 + i * 9, m, d * .18, s);
-      } else if (p === "bishop") {
-        if (sword) {
-          greatSword(c, d, m, s, -0.4, 270, 23);
-          arc(c.x + d * 16, c.y, 120 * s, d === 1 ? -1.2 : Math.PI + .1, d === 1 ? .9 : Math.PI - .9, { ...m, weapon: m.sword }, 18, s);
-        } else {
-          staff(c, d, m, s, -.88, 166, 15);
-          staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
-        }
-      } else if (p === "knight") {
-        line([{ x: c.x - d * 46, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y - 60 * s }], m, 16, s);
-        lance(c, d, m, s, -.2);
-      } else if (p === "pawn") {
-        spear(c, d, m, s, 126, 11, 0);
-      } else {
-        twin(c, d, m, s);
-        arc(c.x + d * 12, c.y, 110 * s, d === 1 ? -1.2 : Math.PI + .1, d === 1 ? .95 : Math.PI - .95, m, 16, s);
+      if (p === "knight") {
+        blade(c.x - d * 8, c.y + 14, d === 1 ? -0.08 : Math.PI + 0.08, 118, m, swing, 8);
+        return;
       }
+
+      blade(c.x, c.y + 14, d === 1 ? 0 : Math.PI, 140, m, swing, 10);
     }
 
-    function drawHitboxes(f) {
-      if (!state.showHitboxes || !f) return;
+    function drawUltimateVisual(f) {
+      const u = f.ultimateState;
+      if (!u) return;
 
-      ctx.save();
-      ctx.globalAlpha = .24;
-      ctx.fillStyle = f.side === "white" ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.55)";
-      ctx.fillRect(f.x, f.y, f.w, f.h);
-
-      ctx.globalAlpha = .95;
-      ctx.strokeStyle = f.side === "white" ? "#fff" : "#111";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(f.x, f.y, f.w, f.h);
-
-      ctx.restore();
-    }
-
-    function drawFighter(f) {
-      if (!f || !Number.isFinite(f.x) || !Number.isFinite(f.y)) return;
-
-      const c = center(f);
       const m = mat(f);
-      const bob = Math.sin(state.t * .08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1 : .4);
-
-      shadow(f);
-
-      ctx.save();
-      ctx.globalAlpha = f.side === "white" ? .1 : .18;
-      ctx.fillStyle = f.side === "white" ? "rgba(255,255,255,.22)" : "rgba(0,0,0,.26)";
-      ctx.beginPath();
-      ctx.ellipse(c.x, f.y + f.h + 9, f.w * .85, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      drawUltimateVisual(f);
-      if (isBishopSword(f)) drawBishopIdleSword(f);
-      drawWeapon(f);
-
-      ctx.save();
-      if (f.hurt > 0) ctx.translate((Math.random() - .5) * 2.2, 0);
-      drawPiece(f, c.x, c.y + bob, 1 + (f.attack || f.ultimateState ? .018 : 0), 1);
-
-      if (f.armor > 0) {
-        ctx.globalAlpha = .34;
-        ctx.strokeStyle = m.magic;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, f.w * .74, f.h * .58, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      if (isBishopSword(f)) {
-        ctx.globalAlpha = .48 + Math.sin(state.t * .18) * .12;
-        ctx.strokeStyle = m.sword;
-        ctx.lineWidth = 3;
-        ctx.shadowColor = "rgba(255,215,70,.6)";
-        ctx.shadowBlur = 14;
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, f.w * 1.05, f.h * .78, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if ((f.ultimate || 0) >= (f.ultimateMax || 100)) {
-        ctx.globalAlpha = .4 + Math.sin(state.t * .18) * .14;
-        ctx.strokeStyle = m.ult;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, f.w * .94, f.h * .72, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-
-      ctx.save();
-      ctx.font = "700 11px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.shadowColor = "rgba(0,0,0,.8)";
-      ctx.shadowBlur = 6;
-      ctx.fillText(f.name || "", c.x, f.y - 12);
-      ctx.restore();
-
-      drawCooldownDots(f);
-      drawHitboxes(f);
-    }
-
-    function drawCooldownDots(f) {
       const c = center(f);
-      const y = f.y + f.h + 18;
-      const vals = [f.lightCd || 0, f.heavyCd || 0, f.specialCd || 0, f.counterCd || 0, f.ultimateCd || 0];
-      const max = [20, 60, 250, 150, 360];
 
       ctx.save();
-      for (let i = 0; i < 5; i++) {
-        const x = c.x - 36 + i * 18;
-        const ready = vals[i] <= 0;
 
-        ctx.globalAlpha = ready ? .85 : .35;
-        ctx.fillStyle =
-          i === 4 && ready ? "#ffd84e" :
-          i === 3 && ready ? "#ffe6a0" :
-          ready ? "#fff" :
-          "rgba(255,255,255,.3)";
+      if (u.type === "bishopSword") {
+        const active = u.phase === "active";
+        const q = active ? 1 : clamp(u.timer / 34, 0, 1);
+
+        ctx.globalAlpha = active ? .14 : .28 * q;
+        ctx.fillStyle = "rgba(255,230,150,.8)";
         ctx.beginPath();
-        ctx.arc(x, y, i === 4 ? 5.4 : 4.5, 0, Math.PI * 2);
+        ctx.arc(c.x, c.y, active ? 86 + Math.sin(state.t * .07) * 7 : 45 + q * 130, 0, Math.PI * 2);
         ctx.fill();
 
-        if (!ready) {
-          ctx.strokeStyle = "rgba(0,0,0,.55)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(x, y, 6.2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(vals[i] / max[i], 0, 1));
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-    }
-
-    function drawParticles() {
-      ctx.save();
-      for (const p of state.particles) {
-        const a = clamp(p.life / p.max, 0, 1);
-        ctx.globalAlpha = a;
-        ctx.fillStyle = `rgba(${p.color},${a})`;
+        ctx.globalAlpha = active ? .55 : q;
+        ctx.strokeStyle = "rgba(255,240,190,.9)";
+        ctx.lineWidth = active ? 2.5 : 5;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * a, 0, Math.PI * 2);
-        ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += p.g;
-        p.vx *= .985;
-        p.life--;
+        ctx.arc(c.x, c.y, active ? 70 + Math.sin(state.t * .1) * 6 : 54 + q * 105, 0, Math.PI * 2);
+        ctx.stroke();
       }
-      ctx.restore();
 
-      state.particles = state.particles.filter((p) => p.life > 0);
+      if (u.type === "knightCharge") {
+        const trail = Array.isArray(u.trail) ? u.trail : [];
+        if (trail.length > 1) line(trail, { weapon: "rgba(255,215,70,.9)" }, 22, .78);
+      }
+
+      ctx.restore();
     }
 
     function drawLocalFx() {
@@ -2381,6 +1466,32 @@
       for (const fx of state.localFx) {
         const p = 1 - fx.life / fx.max;
         const a = clamp(fx.life / fx.max, 0, 1);
+
+        if (fx.type === "bishopSwordAwaken") {
+          ctx.globalAlpha = a;
+          ctx.fillStyle = `rgba(255,230,150,${.12 * a})`;
+          ctx.beginPath();
+          ctx.arc(fx.x, fx.y, 45 + p * 155, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(255,240,190,${a})`;
+          ctx.lineWidth = 5;
+          for (let i = 0; i < 10; i++) {
+            const ang = i * Math.PI * 2 / 10 + p * 1.5;
+            ctx.beginPath();
+            ctx.moveTo(fx.x + Math.cos(ang) * 24, fx.y + Math.sin(ang) * 24);
+            ctx.lineTo(fx.x + Math.cos(ang) * (70 + p * 80), fx.y + Math.sin(ang) * (70 + p * 80));
+            ctx.stroke();
+          }
+
+          ctx.font = "900 92px Georgia";
+          ctx.textAlign = "center";
+          ctx.fillStyle = `rgba(255,245,200,${a})`;
+          ctx.strokeStyle = "rgba(50,30,10,.85)";
+          ctx.lineWidth = 3;
+          ctx.strokeText("♗", fx.x, fx.y + 26);
+          ctx.fillText("♗", fx.x, fx.y + 26);
+        }
 
         if (fx.type === "swordImpact") {
           ctx.globalAlpha = a;
@@ -2407,221 +1518,21 @@
           ctx.stroke();
         }
 
-        if (fx.type === "impact") {
+        if (fx.type === "impact" || fx.type === "ultimateImpact") {
           ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,238,205,${a})`;
-          ctx.lineWidth = 5 * a;
+          ctx.strokeStyle = fx.type === "ultimateImpact"
+            ? `rgba(255,215,70,${a})`
+            : `rgba(255,238,205,${a})`;
+          ctx.lineWidth = fx.type === "ultimateImpact" ? 8 * a : 5 * a;
           ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 12 + p * 62, 0, Math.PI * 2);
+          ctx.arc(fx.x, fx.y, 12 + p * 80, 0, Math.PI * 2);
           ctx.stroke();
-        }
-
-        if (fx.type === "ultimateImpact") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.fillStyle = `rgba(255,215,70,${.12 * a})`;
-          ctx.lineWidth = 8 * a;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 22 + p * 94, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-        }
-
-        if (fx.type === "bishopSwordAwaken") {
-          ctx.globalAlpha = a;
-
-          ctx.fillStyle = `rgba(255,230,150,${.12 * a})`;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 45 + p * 155, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = `rgba(255,240,190,${a})`;
-          ctx.lineWidth = 5;
-          for (let i = 0; i < 10; i++) {
-            const ang = i * Math.PI * 2 / 10 + p * 1.5;
-            ctx.beginPath();
-            ctx.moveTo(fx.x + Math.cos(ang) * 24, fx.y + Math.sin(ang) * 24);
-            ctx.lineTo(fx.x + Math.cos(ang) * (70 + p * 80), fx.y + Math.sin(ang) * (70 + p * 80));
-            ctx.stroke();
-          }
-
-          ctx.save();
-          ctx.globalAlpha = a;
-          ctx.font = "900 92px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,245,200,${a})`;
-          ctx.strokeStyle = "rgba(50,30,10,.85)";
-          ctx.lineWidth = 3;
-          ctx.strokeText("♗", fx.x, fx.y + 26);
-          ctx.fillText("♗", fx.x, fx.y + 26);
-          ctx.restore();
-        }
-
-        if (fx.type === "bishopSwordReady") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,245,190,${a})`;
-          ctx.lineWidth = 5;
-          for (let i = 0; i < 8; i++) {
-            const ang = i * Math.PI / 4 + state.t * .02;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (40 + p * 90), fx.y + Math.sin(ang) * (40 + p * 90));
-            ctx.stroke();
-          }
-        }
-
-        if (fx.type === "bishopSwordPulse") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 28 + p * 55, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        if (fx.type === "bishopSwordEnd") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,230,150,${a})`;
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 80 * p, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        if (fx.type === "bishopSwordMove") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,235,150,${a})`;
-          ctx.lineWidth = 6;
-          ctx.lineCap = "round";
-
-          const d = fx.dir || 1;
-          const angle =
-            fx.aim === "up" ? -1.18 :
-            fx.aim === "down" ? .8 :
-            fx.attack === "airHeavy" ? .95 :
-            fx.attack === "heavy" ? -.75 :
-            -.25;
-
-          const a2 = d === 1 ? angle : Math.PI - angle;
-          ctx.beginPath();
-          ctx.moveTo(fx.x - d * 25, fx.y + 30);
-          ctx.lineTo(fx.x + Math.cos(a2) * (120 + p * 150), fx.y + 30 + Math.sin(a2) * (120 + p * 150));
-          ctx.stroke();
-        }
-
-        if (fx.type === "bishopSwordParry") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,245,190,${a})`;
-          ctx.lineWidth = 7;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 35 + p * 90, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.lineWidth = 12;
-          ctx.beginPath();
-          ctx.moveTo(fx.x - 95, fx.y + 70);
-          ctx.lineTo(fx.x + 95, fx.y - 70);
-          ctx.stroke();
-        }
-
-        if (fx.type === "counterStart") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,238,190,${a})`;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 34 + p * 38, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.font = "900 38px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,238,190,${a})`;
-          ctx.fillText(GLYPHS[fx.piece] || "♙", fx.x, fx.y - 52);
-        }
-
-        if (fx.type === "counterSuccess") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,255,255,${a})`;
-          ctx.lineWidth = 5;
-
-          for (let i = 0; i < 10; i++) {
-            const ang = i * Math.PI * .2 + p;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (22 + p * 70), fx.y + Math.sin(ang) * (22 + p * 70));
-            ctx.stroke();
-          }
-
-          ctx.font = "900 72px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,255,255,${.5 * a})`;
-          ctx.fillText(GLYPHS[fx.piece] || "♙", fx.x, fx.y + 24);
-        }
-
-        if (fx.type === "ultimateStart") {
-          ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,215,70,${.18 * a})`;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 6;
-
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 70 + p * 180, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.font = "900 92px Georgia";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = `rgba(255,235,150,${a})`;
-          ctx.strokeStyle = "rgba(50,30,10,.9)";
-          ctx.lineWidth = 3;
-          ctx.strokeText(GLYPHS[fx.piece] || "♕", fx.x, fx.y);
-          ctx.fillText(GLYPHS[fx.piece] || "♕", fx.x, fx.y);
-        }
-
-        if (fx.type === "ultimateLock") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 5;
-          ctx.setLineDash([14, 8]);
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 42 + p * 38, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-
-        if (fx.type === "ultimateBurst") {
-          ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,215,70,${.18 * a})`;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 40 + p * 120, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        if (fx.type === "rookShell") {
-          ctx.globalAlpha = a;
-          castleBrick(fx.x + (fx.dir || 1) * p * 120, fx.y, { weapon: "#ffd347", edge: "#55300f" }, p * 2, a);
-        }
-
-        if (fx.type === "knightWindup") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 4 + p * 8;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 28 + p * 70, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.font = "900 58px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,215,70,${a})`;
-          ctx.fillText("♘", fx.x, fx.y + 18);
         }
 
         if (fx.type === "knightBurst") {
           ctx.globalAlpha = a;
           ctx.strokeStyle = `rgba(255,215,70,${a})`;
           ctx.lineWidth = 6;
-          ctx.lineCap = "round";
-
           for (let i = 0; i < 8; i++) {
             const ang = i * Math.PI / 4;
             ctx.beginPath();
@@ -2629,61 +1540,6 @@
             ctx.lineTo(fx.x + Math.cos(ang) * (24 + p * 85), fx.y + Math.sin(ang) * (24 + p * 85));
             ctx.stroke();
           }
-        }
-
-        if (fx.type === "knightSlam") {
-          ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,215,70,${.25 * a})`;
-          ctx.beginPath();
-          ctx.ellipse(fx.x, fx.y, 70 + p * 120, 22 + p * 35, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        if (fx.type === "pawnPromoteBurst") {
-          ctx.globalAlpha = a;
-          ctx.font = "900 76px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,215,70,${a})`;
-          ctx.strokeStyle = "rgba(50,30,10,.9)";
-          ctx.lineWidth = 3;
-          ctx.strokeText("♕", fx.x, fx.y);
-          ctx.fillText("♕", fx.x, fx.y);
-        }
-
-        if (fx.type === "queenFinisherStart") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 4;
-          for (let i = 0; i < 8; i++) {
-            const ang = i * Math.PI / 4 + state.t * .02;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (80 + p * 160), fx.y + Math.sin(ang) * (50 + p * 90));
-            ctx.stroke();
-          }
-        }
-
-        if (fx.type === "queenFinisher") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,215,70,${a})`;
-          ctx.lineWidth = 18;
-          ctx.lineCap = "round";
-          for (let i = 0; i < 10; i++) {
-            const ang = i * Math.PI / 5 + state.t * .02;
-            ctx.beginPath();
-            ctx.moveTo(fx.x, fx.y);
-            ctx.lineTo(fx.x + Math.cos(ang) * (80 + p * 330), fx.y + Math.sin(ang) * (50 + p * 190));
-            ctx.stroke();
-          }
-        }
-
-        if (fx.type === "grab") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(255,255,255,${a})`;
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 22 + p * 58, 0, Math.PI * 2);
-          ctx.stroke();
         }
 
         if (fx.type === "dash") {
@@ -2696,28 +1552,6 @@
           }
         }
 
-        if (fx.type === "queenEnd") {
-          ctx.globalAlpha = a;
-          ctx.strokeStyle = `rgba(230,220,190,${a})`;
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 70 * p, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        if (fx.type === "roundWin") {
-          ctx.globalAlpha = a;
-          ctx.fillStyle = `rgba(255,240,200,${.28 * a})`;
-          ctx.beginPath();
-          ctx.arc(fx.x, fx.y, 56 + p * 170, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.font = "900 74px Georgia";
-          ctx.textAlign = "center";
-          ctx.fillStyle = `rgba(255,255,255,${a})`;
-          ctx.fillText("♕", fx.x, fx.y + 22);
-        }
-
         fx.life--;
       }
 
@@ -2725,39 +1559,61 @@
       state.localFx = state.localFx.filter((fx) => fx.life > 0);
     }
 
+    function drawFighter(f) {
+      const c = center(f);
+
+      ctx.save();
+      ctx.globalAlpha = .28;
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.ellipse(c.x, 438, f.w, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      drawUltimateVisual(f);
+      if (isBishopSword(f)) drawBishopIdleSword(f);
+      drawWeapon(f);
+      drawPiece(f, c.x, c.y, 1, 1);
+
+      if (state.showHitboxes) {
+        ctx.save();
+        ctx.globalAlpha = .24;
+        ctx.fillStyle = f.side === "white" ? "white" : "black";
+        ctx.fillRect(f.x, f.y, f.w, f.h);
+        ctx.restore();
+      }
+    }
+
+    function drawParticles() {
+      ctx.save();
+      for (const p of state.particles) {
+        const a = clamp(p.life / p.max, 0, 1);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = `rgba(${p.color},${a})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * a, 0, Math.PI * 2);
+        ctx.fill();
+
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.g;
+        p.vx *= .985;
+        p.life--;
+      }
+      ctx.restore();
+
+      state.particles = state.particles.filter((p) => p.life > 0);
+    }
+
     function drawWaiting() {
       ctx.save();
       ctx.fillStyle = "rgba(0,0,0,.18)";
       ctx.fillRect(0, 0, 960, 540);
-
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "1000 54px system-ui";
       ctx.fillStyle = "rgba(70,40,20,.95)";
-      ctx.shadowColor = "rgba(255,255,255,.5)";
-      ctx.shadowBlur = 12;
       ctx.fillText("WAITING FOR BOARD", 480, 238);
-
-      ctx.font = "500 18px system-ui";
-      ctx.fillStyle = "rgba(70,40,20,.78)";
-      ctx.fillText("Weapon-first fantasy chess combat.", 480, 286);
-      ctx.restore();
-    }
-
-    function drawRoundOverlay(game) {
-      if (!game.roundWinner) return;
-
-      ctx.save();
-      ctx.fillStyle = "rgba(90,60,34,.22)";
-      ctx.fillRect(0, 0, 960, 540);
-
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = "1000 66px system-ui";
-      ctx.fillStyle = game.roundWinner === "white" ? "#fff7ec" : "#2b1a10";
-      ctx.shadowColor = "rgba(0,0,0,.35)";
-      ctx.shadowBlur = 20;
-      ctx.fillText(`${game.roundWinner.toUpperCase()} TAKES THE ROUND`, 480, 270);
       ctx.restore();
     }
 
@@ -2807,8 +1663,6 @@
         ctx.fillRect(0, 0, 960, 540);
         ctx.restore();
       }
-
-      if (game.roundOver) drawRoundOverlay(game);
 
       requestAnimationFrame(loop);
     }
