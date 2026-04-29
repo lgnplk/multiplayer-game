@@ -1595,6 +1595,47 @@
       ctx.restore();
     }
 
+    function crownSigil(x, y, m, p, scale = 1) {
+      if (![x, y, p, scale].every(Number.isFinite)) return;
+      const q = ease(p);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = clamp(.18 + q * .72, 0, 1);
+      ctx.strokeStyle = m.magic;
+      ctx.fillStyle = m.ult || m.weapon;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(-28 * q, 12);
+      ctx.lineTo(-20 * q, -14 * q);
+      ctx.lineTo(-7 * q, 2);
+      ctx.lineTo(0, -24 * q);
+      ctx.lineTo(7 * q, 2);
+      ctx.lineTo(20 * q, -14 * q);
+      ctx.lineTo(28 * q, 12);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.globalAlpha *= .35;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function royalScepter(c, d, m, p, angle = 0, len = 160, width = 12) {
+      if (!c) return;
+      const q = ease(p);
+      const finalAngle = d === 1 ? angle : Math.PI - angle;
+      blade(c.x - d * 16, c.y + 14, finalAngle, len, m, q, width);
+
+      const tx = c.x - d * 16 + Math.cos(finalAngle) * len * q;
+      const ty = c.y + 14 + Math.sin(finalAngle) * len * q;
+      crownSigil(tx, ty, m, q, .55 + .2 * q);
+      spark(tx, ty, m, 12 + 14 * q, 6);
+    }
+
     function spear(c, d, m, p, len = 126, width = 7, angle = 0) {
       if (!c) return;
       blade(c.x - d * 6, c.y, d === 1 ? angle : Math.PI - angle, len, m, p, width);
@@ -2098,30 +2139,70 @@
       }
 
       if (p === "king") {
-        if (f.attack === "light" || f.attack === "airLight") hammer(c, d, m, clamp((e - 2) / 12, 0, 1));
-        if (f.attack === "crouchLight") hammer({ x: c.x, y: c.y + 34 }, d, m, clamp((e - 2) / 10, 0, 1));
-        if (f.attack === "heavy") {
-          after(f, c.x + d * 28 * swing, c.y, 1.04, .14);
-          hammer(c, d, m, clamp((e - 5) / 20, 0, 1));
-          arc(c.x + d * 30, c.y + 6, 82, d === 1 ? -1.1 : Math.PI + .1, d === 1 ? -1.1 + 1.95 * swing : Math.PI + .1 - 1.95 * swing, m, 12, swing);
+        if (f.attack === "light") {
+          const q = clamp((e - 2) / 9, 0, 1);
+          royalScepter(c, d, m, q, -0.12, 142, 9);
+          crownSigil(c.x + d * 84 * q, c.y - 18, m, q, .48);
         }
-        if (f.attack === "crouchHeavy") spear(c, d, m, swing, 148, 12, .18);
-        if (f.attack === "airHeavy") arc(c.x, c.y + 10, 62, d === 1 ? -1 : Math.PI + .1, d === 1 ? -1 + 2 * swing : Math.PI + .1 - 2 * swing, m, 12, swing);
+        if (f.attack === "airLight") {
+          const q = clamp((e - 2) / 10, 0, 1);
+          royalScepter(c, d, m, q, .42, 134, 9);
+          arc(c.x + d * 20, c.y + 6, 54, d === 1 ? -.25 : Math.PI - .75, d === 1 ? -.25 + 1.3 * q : Math.PI - .75 + 1.3 * q, m, 8, q);
+        }
+        if (f.attack === "crouchLight") {
+          const q = clamp((e - 2) / 10, 0, 1);
+          royalScepter({ x: c.x, y: c.y + 34 }, d, m, q, .08, 116, 8);
+          dust(c.x + d * 58, f.y + f.h + 4, d, m, Math.ceil(4 * q));
+        }
+        if (f.attack === "heavy") {
+          const q = clamp((e - 5) / 20, 0, 1);
+          after(f, c.x + d * 34 * q, c.y, 1.05, .16);
+          hammer(c, d, m, q);
+          crownSigil(c.x + d * 88 * q, c.y - 74 * q, m, q, .7);
+          arc(c.x + d * 30, c.y + 6, 92, d === 1 ? -1.2 : Math.PI + .2, d === 1 ? -1.2 + 2.1 * q : Math.PI + .2 - 2.1 * q, m, 16, q);
+        }
+        if (f.attack === "crouchHeavy") {
+          royalScepter({ x: c.x, y: c.y + 42 }, d, m, swing, .16, 178, 13);
+          line([{ x: c.x - d * 22, y: c.y + 60 }, { x: c.x + d * 90 * swing, y: c.y + 66 }, { x: c.x + d * 160 * swing, y: c.y + 48 }], m, 11, swing);
+          dust(c.x + d * 96, f.y + f.h + 4, d, m, Math.ceil(8 * swing));
+        }
+        if (f.attack === "airHeavy") {
+          const q = clamp((e - 2) / 18, 0, 1);
+          hammer({ x: c.x + d * 8, y: c.y + 16 }, d, m, q);
+          blade(c.x - d * 20, c.y - 26, d === 1 ? 1.1 : Math.PI - 1.1, 190, m, q, 18);
+          arc(c.x, c.y + 34, 76, d === 1 ? .1 : Math.PI - 1.45, d === 1 ? .1 + 1.8 * q : Math.PI - 1.45 + 1.8 * q, m, 15, q);
+        }
         if (f.attack === "special" || f.attack === "airSpecial") {
           if (f.attackAim === "down") {
             ctx.save();
-            ctx.globalAlpha = .8 * swing;
+            ctx.globalAlpha = .82 * swing;
             ctx.strokeStyle = m.magic;
-            ctx.lineWidth = 7;
+            ctx.lineWidth = 8;
             ctx.beginPath();
-            ctx.arc(c.x + d * 38, c.y + 12, 46 + 14 * swing, 0, Math.PI * 2);
+            ctx.arc(c.x + d * 42, c.y + 12, 34 + 28 * swing, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = .26 * swing;
+            ctx.fillStyle = m.ult;
+            ctx.beginPath();
+            ctx.arc(c.x + d * 42, c.y + 12, 44 + 20 * swing, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = .9 * swing;
+            ctx.strokeStyle = m.edge;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(c.x + d * 42, c.y + 12, 68 * swing, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
+            crownSigil(c.x + d * 42, c.y - 42, m, swing, .78);
           } else if (f.attackAim === "up") {
-            blade(c.x, c.y + 36, -Math.PI / 2, 240, m, swing, 16);
+            royalScepter(c, d, m, swing, -1.35, 260, 16);
+            line([{ x: c.x - d * 28, y: c.y + 60 }, { x: c.x, y: c.y - 118 * swing }, { x: c.x + d * 44, y: c.y - 180 * swing }], { ...m, weapon: "rgba(255,245,190,.78)" }, 14, swing);
           } else {
+            after(f, c.x - d * 16 * swing, c.y, 1.02, .12 * swing);
             hammer(c, d, m, swing);
-            blade(c.x - d * 10, c.y + 12, d === 1 ? 0 : Math.PI, 190, m, swing, 18);
+            blade(c.x - d * 16, c.y + 12, d === 1 ? 0 : Math.PI, 235, m, swing, 20);
+            crownSigil(c.x + d * 148 * swing, c.y - 34, m, swing, .62);
+            dust(c.x + d * 84, f.y + f.h + 5, d, m, Math.ceil(9 * swing));
           }
         }
       }

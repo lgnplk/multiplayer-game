@@ -440,15 +440,17 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "king") {
-    if (attack === "light") Object.assign(m, { duration: 19, activeA: 5, activeB: 11, dmg: 9, kb: 14, cd: 16 });
-    if (attack === "heavy") Object.assign(m, { duration: 36, activeA: 11, activeB: 20, dmg: 19, kb: 30, stamina: 13, cd: 50, armor: 22, breakArmor: true, wall: 38 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 10, activeB: 18, dmg: 19, kb: 27, lift: -14, stamina: 11, cd: 48, armor: 14, wall: 32 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 31, activeA: 8, activeB: 17, dmg: 19, kb: 23, lift: 13, stamina: 10, cd: 44 });
+    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 9, dmg: 7, kb: 12, lift: -3, cd: 12 });
+    if (attack === "airLight") Object.assign(m, { duration: 18, activeA: 4, activeB: 11, dmg: 7, kb: 13, lift: 6, cd: 13 });
+    if (attack === "crouchLight") Object.assign(m, { duration: 18, activeA: 5, activeB: 11, dmg: 6, kb: 10, lift: -16, cd: 13 });
+    if (attack === "heavy") Object.assign(m, { duration: 38, activeA: 12, activeB: 21, dmg: 21, kb: 34, stamina: 14, cd: 54, armor: 28, breakArmor: true, wall: 46 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 9, activeB: 18, dmg: 17, kb: 25, lift: -24, stamina: 11, cd: 46, armor: 16, wall: 34 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 35, activeA: 7, activeB: 20, dmg: 20, kb: 21, lift: 22, stamina: 12, cd: 50, breakArmor: true, wall: 30 });
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "down") Object.assign(m, { duration: 48, activeA: 11, activeB: 23, dmg: 30, stamina: 24, cd: 165, armor: 28, grab: true, throwPower: 60, wall: 52 });
-      else if (aim === "up") Object.assign(m, { duration: 48, activeA: 12, activeB: 24, dmg: 24, kb: 20, lift: -36, stamina: 21, cd: 150, armor: 22, breakArmor: true });
-      else Object.assign(m, { duration: 52, activeA: 14, activeB: 27, dmg: 24, kb: 36, stamina: 24, cd: 160, armor: 30, breakArmor: true, wall: 48 });
+      if (aim === "down") Object.assign(m, { duration: 46, activeA: 9, activeB: 18, dmg: 20, kb: 16, lift: -8, stamina: 22, cd: 150, armor: 32, grab: true, throwPower: 68, wall: 58 });
+      else if (aim === "up") Object.assign(m, { duration: 44, activeA: 9, activeB: 22, dmg: 18, kb: 16, lift: -44, stamina: 20, cd: 135, armor: 20, breakArmor: true, wall: 24 });
+      else Object.assign(m, { duration: 50, activeA: 13, activeB: 25, dmg: 22, kb: 42, lift: -10, stamina: 24, cd: 155, armor: 34, breakArmor: true, wall: 62 });
     }
   }
 
@@ -650,13 +652,13 @@ function box(f) {
     if (a === "light") return forward(104, 56, 28);
     if (a === "airLight") return body(112, 84, 8, 26);
     if (a === "crouchLight") return forward(96, 42, f.h * 0.58);
-    if (a === "heavy") return forward(150, 92, 12);
-    if (a === "crouchHeavy") return forward(138, 60, f.h * 0.52);
-    if (a === "airHeavy") return body(132, 108, 22, 22);
+    if (a === "heavy") return body(178, 126, -10, 48);
+    if (a === "crouchHeavy") return forward(170, 58, f.h * 0.56);
+    if (a === "airHeavy") return body(170, 146, 12, 18);
     if (a === "special" || a === "airSpecial") {
-      if (aim === "up") return up(130, 240);
-      if (aim === "down") return forward(92, 94, 20);
-      return body(236, 136, -4, 54);
+      if (aim === "up") return up(150, 280);
+      if (aim === "down") return forward(106, 118, 10);
+      return body(270, 150, -8, 70);
     }
   }
 
@@ -1994,11 +1996,14 @@ function startAttack(f, base, input, game) {
     if (p === "king") {
       if (aim === "down") {
         f.vx *= 0.1;
+        f.armor = Math.max(f.armor, 42);
       } else if (aim === "up") {
-        f.vy = -9.5;
-        f.vx *= 0.45;
+        f.vy = -12.5;
+        f.vx += d * 2.6;
+        f.armor = Math.max(f.armor, 20);
       } else {
-        f.vx += d * 7;
+        f.vx += d * 12;
+        f.armor = Math.max(f.armor, 36);
       }
     }
 
@@ -2059,8 +2064,13 @@ function startAttack(f, base, input, game) {
     }
   } else {
     if (p === "king" && base === "heavy") {
-      f.vx += d * 4;
+      f.vx += d * 5.8;
       f.armor = Math.max(f.armor, m.armor);
+    }
+
+    if (p === "king" && move === "airHeavy") {
+      f.vy = Math.max(f.vy, 9.5);
+      f.vx += d * 2;
     }
 
     if (p === "rook" && base === "heavy") {
