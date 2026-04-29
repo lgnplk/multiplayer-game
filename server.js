@@ -654,16 +654,16 @@ function box(f) {
   }
 
   if (p === "king") {
-    if (a === "light") return forward(104, 56, 28);
-    if (a === "airLight") return body(112, 84, 8, 26);
-    if (a === "crouchLight") return forward(96, 42, f.h * 0.58);
-    if (a === "heavy") return body(178, 126, -10, 48);
-    if (a === "crouchHeavy") return forward(170, 58, f.h * 0.56);
-    if (a === "airHeavy") return body(170, 146, 12, 18);
+    if (a === "light") return forward(126, 62, 20);
+    if (a === "airLight") return body(138, 108, -2, 34);
+    if (a === "crouchLight") return forward(122, 48, f.h * 0.62);
+    if (a === "heavy") return body(216, 168, -48, 58);
+    if (a === "crouchHeavy") return forward(194, 66, f.h * 0.56);
+    if (a === "airHeavy") return body(192, 184, -18, 28);
     if (a === "special" || a === "airSpecial") {
-      if (aim === "up") return up(150, 280);
-      if (aim === "down") return forward(106, 118, 10);
-      return body(270, 150, -8, 70);
+      if (aim === "up") return up(170, 300, 8);
+      if (aim === "down") return forward(134, 128, 2);
+      return body(302, 166, -24, 88);
     }
   }
 

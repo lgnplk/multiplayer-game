@@ -2289,61 +2289,91 @@
       ctx.restore();
     }
 
-    function royalAxe(c, d, m, p, angle = 0, len = 150, width = 12) {
+    function royalAxe(c, d, m, p, angle = 0, len = 150, width = 12, alpha = 1) {
       if (!c) return;
       const q = ease(p);
       const finalAngle = d === 1 ? angle : Math.PI - angle;
       const baseX = c.x - d * 18;
       const baseY = c.y + 16;
-      const tipX = baseX + Math.cos(finalAngle) * len * q;
-      const tipY = baseY + Math.sin(finalAngle) * len * q;
+      const reach = len * (.84 + q * .16);
+      const tipX = baseX + Math.cos(finalAngle) * reach;
+      const tipY = baseY + Math.sin(finalAngle) * reach;
       const gold = m.ult || "#ffd84e";
 
       line([
         { x: baseX, y: baseY },
         {
-          x: baseX + Math.cos(finalAngle) * len * q * .58,
-          y: baseY + Math.sin(finalAngle) * len * q * .58
+          x: baseX + Math.cos(finalAngle) * reach * .58,
+          y: baseY + Math.sin(finalAngle) * reach * .58
         },
         { x: tipX, y: tipY }
-      ], m, width, clamp(.2 + q, 0, 1));
+      ], m, width, clamp((.28 + q * .72) * alpha, 0, 1));
 
       ctx.save();
       ctx.translate(tipX, tipY);
       ctx.rotate(finalAngle);
-      ctx.globalAlpha = clamp(q, 0, 1);
-      ctx.fillStyle = m.weapon2 || "#ddd";
+      ctx.globalAlpha = clamp((.2 + q * .8) * alpha, 0, 1);
       ctx.strokeStyle = m.edge || "#000";
       ctx.lineWidth = 2.5;
       ctx.lineJoin = "round";
 
+      ctx.fillStyle = m.weapon2 || "#ddd";
       ctx.beginPath();
-      ctx.moveTo(8, 0);
-      ctx.bezierCurveTo(18, -34, 58, -40, 74, -10);
-      ctx.bezierCurveTo(54, -13, 35, -8, 19, 0);
-      ctx.bezierCurveTo(35, 8, 54, 13, 74, 10);
-      ctx.bezierCurveTo(58, 40, 18, 34, 8, 0);
+      ctx.moveTo(-16, -9);
+      ctx.lineTo(8, -44);
+      ctx.lineTo(42, -50);
+      ctx.lineTo(56, -34);
+      ctx.lineTo(40, -14);
+      ctx.lineTo(12, -3);
+      ctx.lineTo(-12, -3);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
+      ctx.beginPath();
+      ctx.moveTo(-16, 9);
+      ctx.lineTo(8, 44);
+      ctx.lineTo(42, 50);
+      ctx.lineTo(56, 34);
+      ctx.lineTo(40, 14);
+      ctx.lineTo(12, 3);
+      ctx.lineTo(-12, 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,.3)";
+      ctx.beginPath();
+      ctx.moveTo(7, -35);
+      ctx.lineTo(34, -39);
+      ctx.lineTo(21, -20);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(7, 35);
+      ctx.lineTo(34, 39);
+      ctx.lineTo(21, 20);
+      ctx.closePath();
+      ctx.fill();
+
       ctx.fillStyle = gold;
-      rr(-14, -16, 28, 32, 5);
+      rr(-18, -17, 36, 34, 5);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = m.weapon || "#eee";
-      rr(-7, -24, 14, 48, 4);
+      rr(-7, -27, 14, 54, 3);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = gold;
       ctx.beginPath();
-      ctx.moveTo(-24, -8);
-      ctx.lineTo(-8, -16);
-      ctx.lineTo(-2, 0);
-      ctx.lineTo(-8, 16);
-      ctx.lineTo(-24, 8);
+      ctx.moveTo(14, -10);
+      ctx.lineTo(62, -6);
+      ctx.lineTo(78, 0);
+      ctx.lineTo(62, 6);
+      ctx.lineTo(14, 10);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
@@ -2357,6 +2387,91 @@
       ctx.closePath();
       ctx.fill();
       ctx.restore();
+    }
+
+    function kingAxePose(f, c, d, lag = 0) {
+      const p = attackProgress(f, lag);
+      const q = swingPhaseAt(p, .04, .78);
+      const lift = Math.sin(q * Math.PI);
+      const hilt = {
+        x: c.x + d * (lerp(-12, 22, q) + lift * 10),
+        y: c.y + 18 - lift * 5
+      };
+      let angle = lerp(-.8, .18, q);
+      let len = 150;
+      let width = 11;
+
+      if (f.attack === "light") {
+        angle = lerp(-.72, .24, q);
+        len = 146;
+        width = 10;
+        hilt.x += d * lerp(-10, 18, q);
+        hilt.y += lerp(12, 6, q);
+      } else if (f.attack === "airLight") {
+        angle = lerp(-.38, .78, q);
+        len = 142;
+        width = 10;
+        hilt.x += d * lerp(-8, 24, q);
+        hilt.y += lerp(-6, 12, q);
+      } else if (f.attack === "crouchLight") {
+        angle = lerp(.16, -.14, q);
+        len = 126;
+        width = 9;
+        hilt.x += d * lerp(-6, 20, q);
+        hilt.y += 42;
+      } else if (f.attack === "heavy") {
+        const hq = swingPhaseAt(p, .08, .82);
+        angle = lerp(-1.62, .48, hq);
+        len = 188;
+        width = 15;
+        hilt.x += d * lerp(-24, 44, hq);
+        hilt.y += lerp(-10, 22, hq);
+      } else if (f.attack === "crouchHeavy") {
+        const hq = swingPhaseAt(p, .05, .8);
+        angle = lerp(.44, -.2, hq);
+        len = 178;
+        width = 13;
+        hilt.x += d * lerp(-18, 42, hq);
+        hilt.y += 48 + lift * 4;
+      } else if (f.attack === "airHeavy") {
+        const hq = swingPhaseAt(p, .03, .82);
+        angle = lerp(-1.48, 1.12, hq);
+        len = 190;
+        width = 16;
+        hilt.x += d * lerp(-20, 36, hq);
+        hilt.y += lerp(-14, 24, hq);
+      } else if (f.attack === "special" || f.attack === "airSpecial") {
+        const sq = swingPhaseAt(p, .06, .78);
+        if (f.attackAim === "up") {
+          angle = lerp(.72, -1.48, sq);
+          len = 252;
+          width = 16;
+          hilt.x += d * lerp(-18, 18, sq);
+          hilt.y += lerp(34, -18, sq);
+        } else if (f.attackAim === "down") {
+          angle = lerp(-.9, .72, sq);
+          len = 152;
+          width = 12;
+          hilt.x += d * lerp(-12, 24, sq);
+          hilt.y += lerp(10, 38, sq);
+        } else {
+          angle = lerp(-.86, .12, sq);
+          len = 232;
+          width = 18;
+          hilt.x += d * lerp(-26, 62, sq);
+          hilt.y += lerp(-4, 14, sq);
+        }
+      }
+
+      return { hilt, angle, len, width, q };
+    }
+
+    function drawKingAxe(f, c, d, m) {
+      const ghost = kingAxePose(f, c, d, .08);
+      const pose = kingAxePose(f, c, d);
+
+      royalAxe(ghost.hilt, d, { ...m, weapon: "rgba(255,245,190,.48)", weapon2: "rgba(255,255,255,.42)" }, 1, ghost.angle, ghost.len, Math.max(7, ghost.width - 4), .22);
+      royalAxe(pose.hilt, d, m, 1, pose.angle, pose.len, pose.width);
     }
 
     function spear(c, d, m, p, len = 126, width = 7, angle = 0) {
@@ -2815,7 +2930,11 @@
           ctx.fill();
         }
 
-        hammer(c, d, { ...m, weapon: m.ult, edge: "#fff0a8" }, 1.08);
+        const axeAngle =
+          u.phase === "grab" ? lerp(-1.25, .18, clamp(u.timer / 38, 0, 1)) :
+          u.phase === "shockwave" ? .36 :
+          -.72 + Math.sin(state.t * .08) * .06;
+        royalAxe({ x: c.x + d * 8, y: c.y + 18 }, d, { ...m, weapon: m.ult, edge: "#fff0a8" }, 1, axeAngle, 210, 18);
       }
 
       if (u.type === "rookSiege") {
@@ -2997,49 +3116,32 @@
       }
 
       if (p === "king") {
+        drawKingAxe(f, c, d, m);
+
         if (f.attack === "light") {
-          const q = clamp((e - 2) / 9, 0, 1);
-          royalAxe(c, d, m, q, -0.12, 142, 9);
-        }
-        if (f.attack === "airLight") {
-          const q = clamp((e - 2) / 10, 0, 1);
-          royalAxe(c, d, m, q, .42, 134, 9);
+          const q = swingPhaseAt(attackProgress(f), .04, .78);
+          dust(c.x + d * 62, f.y + f.h + 4, d, m, Math.ceil(2 * q));
         }
         if (f.attack === "crouchLight") {
-          const q = clamp((e - 2) / 10, 0, 1);
-          royalAxe({ x: c.x, y: c.y + 34 }, d, m, q, .08, 116, 8);
+          const q = swingPhaseAt(attackProgress(f), .04, .78);
           dust(c.x + d * 58, f.y + f.h + 4, d, m, Math.ceil(4 * q));
         }
         if (f.attack === "heavy") {
-          const q = clamp((e - 5) / 20, 0, 1);
+          const q = swingPhaseAt(attackProgress(f), .08, .82);
           after(f, c.x + d * 34 * q, c.y, 1.05, .16);
-          royalAxe(c, d, m, q, -0.72, 190, 16);
         }
         if (f.attack === "crouchHeavy") {
-          royalAxe({ x: c.x, y: c.y + 42 }, d, m, swing, .16, 178, 13);
-          line([{ x: c.x - d * 22, y: c.y + 60 }, { x: c.x + d * 90 * swing, y: c.y + 66 }, { x: c.x + d * 160 * swing, y: c.y + 48 }], m, 11, swing);
-          dust(c.x + d * 96, f.y + f.h + 4, d, m, Math.ceil(8 * swing));
-        }
-        if (f.attack === "airHeavy") {
-          const q = clamp((e - 2) / 18, 0, 1);
-          royalAxe({ x: c.x + d * 8, y: c.y + 16 }, d, m, q, 1.1, 190, 18);
+          const q = swingPhaseAt(attackProgress(f), .05, .8);
+          dust(c.x + d * 96, f.y + f.h + 4, d, m, Math.ceil(8 * q));
         }
         if (f.attack === "special" || f.attack === "airSpecial") {
+          const q = swingPhaseAt(attackProgress(f), .06, .78);
+
           if (f.attackAim === "down") {
-            royalAxe(c, d, m, swing, .15, 138, 12);
-            line([
-              { x: c.x - d * 18, y: c.y - 34 },
-              { x: c.x + d * 42 * swing, y: c.y + 18 },
-              { x: c.x + d * 84 * swing, y: c.y - 20 }
-            ], { ...m, weapon: m.magic }, 10, swing);
-            dust(c.x + d * 44, f.y + f.h + 5, d, m, Math.ceil(5 * swing));
-          } else if (f.attackAim === "up") {
-            royalAxe(c, d, m, swing, -1.35, 260, 16);
-            line([{ x: c.x - d * 28, y: c.y + 60 }, { x: c.x, y: c.y - 118 * swing }, { x: c.x + d * 44, y: c.y - 180 * swing }], { ...m, weapon: "rgba(255,245,190,.78)" }, 14, swing);
-          } else {
-            after(f, c.x - d * 16 * swing, c.y, 1.02, .12 * swing);
-            royalAxe(c, d, m, swing, 0, 235, 20);
-            dust(c.x + d * 84, f.y + f.h + 5, d, m, Math.ceil(9 * swing));
+            dust(c.x + d * 50, f.y + f.h + 5, d, m, Math.ceil(5 * q));
+          } else if (f.attackAim !== "up") {
+            after(f, c.x - d * 16 * q, c.y, 1.02, .12 * q);
+            dust(c.x + d * 84, f.y + f.h + 5, d, m, Math.ceil(9 * q));
           }
         }
       }
