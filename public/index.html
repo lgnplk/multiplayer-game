@@ -812,12 +812,19 @@
     const audio = {
       ctx: null,
       master: null,
+      sfxGain: null,
+      musicGain: null,
       limiter: null,
       noiseBuffer: null,
       muted: localStorage.getItem("chessBrawlMuted") === "1",
       volume: clamp(Number(localStorage.getItem("chessBrawlVolume") || 0.72), 0, 1),
       recent: new Map(),
-      previewAt: 0
+      previewAt: 0,
+      musicMode: null,
+      nextMusicAt: 0,
+      musicStep: 0,
+      musicTimer: null,
+      duckUntil: 0
     };
 
     function initAudio() {
@@ -828,6 +835,8 @@
 
       audio.ctx = new AudioCtor();
       audio.master = audio.ctx.createGain();
+      audio.sfxGain = audio.ctx.createGain();
+      audio.musicGain = audio.ctx.createGain();
       audio.limiter = audio.ctx.createDynamicsCompressor();
 
       audio.limiter.threshold.value = -16;
@@ -836,6 +845,10 @@
       audio.limiter.attack.value = 0.003;
       audio.limiter.release.value = 0.18;
 
+      audio.sfxGain.gain.value = 0.92;
+      audio.musicGain.gain.value = 0.24;
+      audio.sfxGain.connect(audio.master);
+      audio.musicGain.connect(audio.master);
       audio.master.connect(audio.limiter);
       audio.limiter.connect(audio.ctx.destination);
 
@@ -845,12 +858,14 @@
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
 
       updateSoundUi();
+      startMusicClock();
       return true;
     }
 
     function unlockAudio() {
       if (!initAudio()) return false;
       if (audio.ctx.state === "suspended") audio.ctx.resume();
+      setMusicMode(desiredMusicMode());
       return true;
     }
 
@@ -869,12 +884,17 @@
         const target = audio.muted ? 0 : audio.volume;
         audio.master.gain.setTargetAtTime(target, audioTime(), 0.015);
       }
+
+      if (audio.musicGain) {
+        audio.musicGain.gain.setTargetAtTime(audio.muted ? 0 : 0.24, audioTime(), 0.08);
+      }
     }
 
     function setMuted(v) {
       audio.muted = !!v;
       localStorage.setItem("chessBrawlMuted", audio.muted ? "1" : "0");
       updateSoundUi();
+      if (!audio.muted) setMusicMode(desiredMusicMode());
     }
 
     function setVolume(v) {
@@ -883,6 +903,7 @@
       localStorage.setItem("chessBrawlVolume", String(audio.volume));
       localStorage.setItem("chessBrawlMuted", audio.muted ? "1" : "0");
       updateSoundUi();
+      if (!audio.muted && audio.volume > 0) setMusicMode(desiredMusicMode());
     }
 
     function canSound(key, gap = 0.018) {
@@ -901,15 +922,15 @@
     }
 
     function out(node, x) {
-      if (!audio.master) return;
+      if (!audio.sfxGain) return;
 
       if (Number.isFinite(x) && audio.ctx.createStereoPanner) {
         const panner = audio.ctx.createStereoPanner();
         panner.pan.value = clamp((x - 480) / 520, -0.85, 0.85);
         node.connect(panner);
-        panner.connect(audio.master);
+        panner.connect(audio.sfxGain);
       } else {
-        node.connect(audio.master);
+        node.connect(audio.sfxGain);
       }
     }
 
@@ -982,6 +1003,144 @@
       });
     }
 
+    function musicTone(freq, dur, gain = 0.018, opts = {}) {
+      if (!audio.ctx || !audio.musicGain || audio.muted || audio.volume <= 0) return;
+
+      const when = opts.when || 0;
+      const o = audio.ctx.createOscillator();
+      const g = amp(when, dur, gain, opts.attack ?? 0.018, opts.release ?? 0.16, opts.curve);
+      const t = audioTime() + when;
+
+      o.type = opts.type || "triangle";
+      o.frequency.setValueAtTime(Math.max(20, freq), t);
+      if (opts.to) o.frequency.exponentialRampToValueAtTime(Math.max(20, opts.to), t + dur);
+      if (opts.detune) o.detune.value = opts.detune;
+
+      o.connect(g);
+      g.connect(audio.musicGain);
+      o.start(t);
+      o.stop(t + dur + 0.05);
+    }
+
+    function musicNoise(dur, gain = 0.018, opts = {}) {
+      if (!audio.ctx || !audio.musicGain || !audio.noiseBuffer || audio.muted || audio.volume <= 0) return;
+
+      const when = opts.when || 0;
+      const src = audio.ctx.createBufferSource();
+      const filter = audio.ctx.createBiquadFilter();
+      const g = amp(when, dur, gain, opts.attack ?? 0.01, opts.release ?? 0.12);
+      const t = audioTime() + when;
+
+      src.buffer = audio.noiseBuffer;
+      filter.type = opts.filter || "lowpass";
+      filter.frequency.setValueAtTime(opts.freq || 260, t);
+      if (opts.to) filter.frequency.exponentialRampToValueAtTime(Math.max(30, opts.to), t + dur);
+      filter.Q.value = opts.q || 0.7;
+
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(audio.musicGain);
+      src.start(t);
+      src.stop(t + dur + 0.05);
+    }
+
+    function duckMusic(amount = 0.48, dur = 0.2) {
+      if (!audio.musicGain || audio.muted) return;
+
+      const t = audioTime();
+      audio.duckUntil = Math.max(audio.duckUntil, t + dur);
+      audio.musicGain.gain.cancelScheduledValues(t);
+      audio.musicGain.gain.setTargetAtTime(0.24 * amount, t, 0.012);
+    }
+
+    function restoreMusic() {
+      if (!audio.musicGain || audio.muted) return;
+      if (audioTime() > audio.duckUntil) {
+        audio.musicGain.gain.setTargetAtTime(0.24, audioTime(), 0.12);
+      }
+    }
+
+    function setMusicMode(mode) {
+      if (!audio.ctx || audio.muted || audio.volume <= 0) return;
+      if (audio.musicMode === mode) return;
+
+      audio.musicMode = mode;
+      audio.musicStep = 0;
+      audio.nextMusicAt = audioTime() + 0.04;
+    }
+
+    function desiredMusicMode(gs = state.gameState) {
+      const g = gs?.game;
+      const status = gs?.lobby?.status;
+
+      if (state.role === "menu" || !g || status !== "playing") return "menu";
+
+      const fighters = Object.values(g.fighters || {});
+
+      if (fighters.some((f) => f?.ultimateState?.type === "kingVerdict")) return "kingHunt";
+      if (fighters.some((f) => f?.ultimateState?.type === "bishopSword")) return "bishopSword";
+      if (fighters.some((f) => f?.promoted || f?.ultimateState?.type === "pawnUprising")) return "pawnPromotion";
+
+      return "battle";
+    }
+
+    function musicBeat(mode) {
+      if (mode === "menu") return 60 / 88;
+      if (mode === "kingHunt") return 60 / 116;
+      if (mode === "bishopSword") return 60 / 104;
+      if (mode === "pawnPromotion") return 60 / 122;
+      return 60 / 108;
+    }
+
+    function scheduleMusicStep(mode, step, when) {
+      const beat = musicBeat(mode);
+
+      if (mode === "menu") {
+        const seq = [147, 220, 294, 349, 294, 220, 196, 220];
+        musicTone(seq[step % seq.length], beat * 1.1, 0.014, { when, type: "triangle" });
+        if (step % 4 === 0) musicTone(step % 8 === 0 ? 73 : 98, beat * 3.2, 0.012, { when, type: "sine" });
+      } else if (mode === "battle") {
+        const bass = [82, 82, 98, 73, 82, 110, 98, 73];
+        if (step % 2 === 0) musicTone(bass[step % bass.length], beat * 1.5, 0.018, { when, type: "sawtooth", to: bass[step % bass.length] * 0.96 });
+        if (step % 4 === 1) musicTone(330, beat * 0.9, 0.01, { when, type: "triangle" });
+        if (step % 4 === 3) musicNoise(0.045, 0.01, { when, filter: "highpass", freq: 1800, to: 4200 });
+      } else if (mode === "pawnPromotion") {
+        const seq = [220, 330, 440, 660, 880, 660, 440, 330];
+        musicTone(seq[step % seq.length], beat * 0.95, 0.02, { when, type: "triangle" });
+        if (step % 4 === 0) musicTone(110, beat * 2.4, 0.013, { when, type: "sine" });
+      } else if (mode === "bishopSword") {
+        const seq = [247, 370, 494, 740, 988, 740, 494, 370];
+        musicTone(seq[step % seq.length], beat * 1.15, 0.017, { when, type: "sine" });
+        if (step % 2 === 0) musicTone(seq[step % seq.length] * 1.5, beat * 0.7, 0.009, { when: when + beat * 0.25, type: "triangle" });
+      } else if (mode === "kingHunt") {
+        const bass = [55, 55, 65, 55, 49, 55, 73, 65];
+        musicTone(bass[step % bass.length], beat * 1.8, 0.026, { when, type: "sawtooth", to: bass[step % bass.length] * 0.72 });
+        if (step % 4 === 2) musicNoise(0.09, 0.016, { when, filter: "lowpass", freq: 360, to: 90 });
+        if (step % 8 === 7) musicTone(220, beat * 0.8, 0.012, { when, type: "square", to: 146 });
+      }
+    }
+
+    function scheduleMusic() {
+      if (!audio.ctx || !audio.musicMode || audio.muted || audio.volume <= 0) return;
+
+      restoreMusic();
+
+      const now = audioTime();
+      const beat = musicBeat(audio.musicMode);
+
+      while (audio.nextMusicAt < now + 0.28) {
+        const when = Math.max(0, audio.nextMusicAt - now);
+        scheduleMusicStep(audio.musicMode, audio.musicStep, when);
+        audio.musicStep++;
+        audio.nextMusicAt += beat;
+      }
+    }
+
+    function startMusicClock() {
+      if (audio.musicTimer) return;
+      audio.musicTimer = setInterval(scheduleMusic, 90);
+    }
+
     function soundUi(kind = "click") {
       unlockAudio();
       if (!canSound(`ui:${kind}`, 0.03)) return;
@@ -1007,6 +1166,7 @@
       const heavy = /heavy|special|counter/i.test(e.attack || "");
       const piece = e.piece || "king";
       const baseGain = heavy ? 0.09 : 0.05;
+      if (heavy) duckMusic(0.78, 0.12);
 
       if (piece === "rook") {
         noise(heavy ? 0.18 : 0.09, baseGain, { x, filter: "lowpass", freq: heavy ? 420 : 760, to: heavy ? 120 : 380, q: 0.8 });
@@ -1035,6 +1195,7 @@
       const x = e.x;
       const dmg = clamp(Number(e.damage || 8), 2, 45);
       const power = clamp(dmg / 24, 0.25, 1.6);
+      duckMusic(e.ultimate ? 0.28 : 0.48, e.ultimate ? 0.38 : 0.18);
 
       if (e.sword) {
         noise(0.1 + power * 0.04, 0.09 * power, { x, filter: "highpass", freq: 2600, to: 7600, q: 0.8 });
@@ -1054,6 +1215,7 @@
 
       const x = e.x;
       const type = e.ultType || "";
+      duckMusic(0.22, 0.65);
       noise(0.55, 0.08, { x, filter: "lowpass", freq: 180, to: 1400, q: 0.65, curve: "hold" });
 
       if (type.includes("king")) chord([73, 146, 220, 293], 0.55, 0.16, { x, type: "sawtooth", spread: 0.035 });
@@ -1096,6 +1258,7 @@
         case "counterFire":
         case "counterSuccess":
           if (canSound("counterFire", 0.06)) {
+            duckMusic(0.38, 0.22);
             noise(0.16, 0.13, { x: e.x, filter: "bandpass", freq: 1800, to: 240, q: 0.7 });
             chord([196, 392, 784], 0.18, 0.09, { x: e.x, type: "square", spread: 0.012 });
           }
@@ -1108,6 +1271,7 @@
           break;
         case "ultimateBurst":
           if (canSound("ultimateBurst", 0.08)) {
+            duckMusic(0.3, 0.28);
             noise(0.22, 0.13, { x: e.x, filter: "lowpass", freq: 1200, to: 80 });
             chord([110, 220, 440], 0.24, 0.1, { x: e.x, type: "sawtooth", spread: 0.01 });
           }
@@ -1134,6 +1298,7 @@
         case "bishopSwordParry":
         case "bishopFinish":
           if (canSound("bishopParry", 0.06)) {
+            duckMusic(0.36, 0.24);
             noise(0.16, 0.12, { x: e.x, filter: "highpass", freq: 3600, to: 9000 });
             tone(1550, 0.11, 0.07, { x: e.x, type: "square", to: 440 });
           }
@@ -1143,6 +1308,7 @@
             noise(0.24, 0.075, { x: e.x, filter: "lowpass", freq: 180, to: 760, curve: "hold" });
             tone(76, 0.22, 0.07, { x: e.x, type: "sawtooth", to: 135 });
           } else if (e.beamStart && canSound("rookBeam", 0.05)) {
+            duckMusic(0.42, 0.2);
             noise(0.18, 0.13, { x: e.x, filter: "bandpass", freq: 760, to: 130, q: 0.7 });
             tone(92, 0.16, 0.09, { x: e.x, type: "square", to: 55 });
           }
@@ -1150,23 +1316,34 @@
         case "kingCrownBurst":
           if (canSound("kingBurst", 0.14)) chord([73, 146, 293], 0.35, 0.13, { x: e.x, type: "sawtooth", spread: 0.02 });
           break;
+        case "kingAura":
+          if (canSound("kingAura", 0.18)) tone(146, 0.18, 0.025, { x: e.x, type: "sawtooth", to: 220 });
+          break;
+        case "kingAfterimage":
+          if (canSound("kingAfterimage", 0.09)) noise(0.08, 0.03, { x: e.x, filter: "highpass", freq: 650, to: 1800 });
+          break;
         case "kingGrabFlash":
           if (canSound("kingGrabFlash", 0.08)) tone(180, 0.12, 0.075, { x: e.x, type: "square", to: 90 });
           break;
         case "kingSmash":
           if (canSound("kingSmash", 0.08)) {
+            duckMusic(0.36, 0.22);
             noise(0.18, 0.14, { x: e.x, filter: "lowpass", freq: 650, to: 70 });
             tone(88, 0.16, 0.08, { x: e.x, type: "sawtooth", to: 44 });
           }
           break;
         case "kingSlam":
           if (canSound("kingSlam", 0.08)) {
+            duckMusic(0.24, 0.34);
             noise(0.28, 0.18, { x: e.x, filter: "lowpass", freq: 500, to: 45 });
             chord([55, 82, 110], 0.28, 0.15, { x: e.x, type: "sawtooth", spread: 0.01 });
           }
           break;
         case "kingShockwave":
-          if (canSound("kingShockwave", 0.1)) noise(0.36, 0.16, { x: e.x, filter: "lowpass", freq: 900, to: 60 });
+          if (canSound("kingShockwave", 0.1)) {
+            duckMusic(0.28, 0.36);
+            noise(0.36, 0.16, { x: e.x, filter: "lowpass", freq: 900, to: 60 });
+          }
           break;
         case "knightWindup":
           if (canSound("knightWindup", 0.06)) tone(260, 0.12, 0.055, { x: e.x, type: "square", to: 390 });
@@ -1178,7 +1355,10 @@
           }
           break;
         case "knightSlam":
-          if (canSound("knightSlam", 0.08)) noise(0.18, 0.12, { x: e.x, filter: "lowpass", freq: 900, to: 75 });
+          if (canSound("knightSlam", 0.08)) {
+            duckMusic(0.42, 0.2);
+            noise(0.18, 0.12, { x: e.x, filter: "lowpass", freq: 900, to: 75 });
+          }
           break;
         case "pawnPromoteBurst":
           if (canSound("pawnPromote", 0.12)) chord([330, 440, 660, 880], 0.34, 0.12, { x: e.x, type: "triangle", spread: 0.018 });
@@ -1189,6 +1369,7 @@
         case "queenFinisher":
         case "queenEnd":
           if (canSound("queenFinisher", 0.12)) {
+            duckMusic(0.22, 0.42);
             noise(0.28, 0.16, { x: e.x, filter: "highpass", freq: 1300, to: 6200 });
             chord([196, 392, 784, 1175], 0.35, 0.14, { x: e.x, type: "triangle", spread: 0.015 });
           }
@@ -1225,6 +1406,7 @@
       const l = gs?.lobby;
       const m = gs?.match;
       const status = l?.status || "menu";
+      setMusicMode(desiredMusicMode(gs));
 
       if (status !== state.lastAudioStatus) {
         if (status === "finished" && state.lastAudioStatus) soundUi("leave");
@@ -1486,6 +1668,7 @@
     function showGame() {
       menu.style.display = "none";
       gameWrap.style.display = "grid";
+      setMusicMode(desiredMusicMode());
     }
 
     function showMenu() {
@@ -1493,6 +1676,7 @@
       gameWrap.style.display = "none";
       state.role = "menu";
       state.gameState = null;
+      setMusicMode("menu");
     }
 
     function updateHud(gs) {

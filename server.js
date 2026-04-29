@@ -512,17 +512,17 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
       if (aim === "up") {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 21, dmg: 14, kb: 26, lift: -44, stamina: 14, cd: 62, breakArmor: true, wall: 44 }
-          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 20, lift: -34, stamina: 17, cd: 140 }
+          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 18, lift: -30, stamina: 17, cd: 140, multi: true, interval: 13 }
         );
       } else if (aim === "down") {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 21, dmg: 15, kb: 42, lift: 18, stamina: 14, cd: 62, breakArmor: true, wall: 58 }
-          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 29, lift: 13, stamina: 17, cd: 140, breakArmor: true }
+          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 24, lift: 11, stamina: 17, cd: 140, breakArmor: true, multi: true, interval: 13 }
         );
       } else {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 22, dmg: 15, kb: 40, lift: -16, stamina: 14, cd: 62, breakArmor: true, wall: 54 }
-          : { duration: 40, activeA: 9, activeB: 20, dmg: 10, kb: 28, lift: -12, stamina: 17, cd: 140 }
+          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 23, lift: -10, stamina: 17, cd: 140, multi: true, interval: 13 }
         );
       }
     }
@@ -1013,9 +1013,9 @@ function bishopZigzag(f, input) {
     dir,
     yDir,
     phase: 0,
-    t: 8,
-    sx: 10.8,
-    sy: 9.4,
+    t: 14,
+    sx: 8.8,
+    sy: 7.4,
     trail: []
   };
 }
@@ -1938,7 +1938,7 @@ function scriptMove(f, input = {}) {
     if (s.t <= 0) {
       if (s.phase === 0) {
         s.phase = 1;
-        s.t = 8;
+        s.t = 14;
         s.yDir *= -1;
       } else {
         f.script = null;
