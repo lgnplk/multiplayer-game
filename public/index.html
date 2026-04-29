@@ -926,7 +926,7 @@
       });
 
       lobbiesEl.querySelectorAll("[data-watch]").forEach((b) => {
-        b.onclick = () => socket.emit("watchLobby", b.dataset.watch);
+        b.onclick = () => socket.emit("spectateLobby", b.dataset.watch);
       });
     }
 
@@ -2539,9 +2539,10 @@
       state.particles = state.particles.filter((p) => p.life > 0);
     }
 
-        function drawLocalFx(p) {
-      const q = 1 - p.life / p.maxLife;
-      const a = p.life / p.maxLife;
+    function drawOneLocalFx(p) {
+      const max = p.max || p.life || 1;
+      const q = 1 - p.life / max;
+      const a = p.life / max;
 
       ctx.save();
 
@@ -2881,7 +2882,12 @@
       ctx.restore();
     }
 
-      ctx.restore();
+    function drawLocalFx() {
+      for (const fx of state.localFx) {
+        drawOneLocalFx(fx);
+        fx.life--;
+      }
+
       state.localFx = state.localFx.filter((fx) => fx.life > 0);
     }
 
