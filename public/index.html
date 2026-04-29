@@ -1384,7 +1384,10 @@
           }
           break;
         case "dash":
-          if (canSound("dash", 0.035)) noise(0.09, 0.055, { x: e.x, filter: "highpass", freq: 700, to: 1800 });
+        case "dashAttack":
+          if (canSound(e.type, 0.035)) {
+            noise(e.type === "dashAttack" ? 0.12 : 0.09, e.type === "dashAttack" ? 0.075 : 0.055, { x: e.x, filter: "highpass", freq: e.air ? 980 : 700, to: e.type === "dashAttack" ? 2400 : 1800 });
+          }
           break;
         case "land":
           if (canSound("land", 0.045)) {
@@ -1907,7 +1910,8 @@
           state.flash = Math.max(state.flash, .25);
         }
 
-        if (e.type === "dash") addFx("dash", e.x, e.y, { life: 16, dir: e.dir });
+        if (e.type === "dash") addFx("dash", e.x, e.y, { life: e.timer || 16, dir: e.dir, air: !!e.air, turn: !!e.turn });
+        if (e.type === "dashAttack") addFx("dashAttack", e.x, e.y, { life: e.timer || 14, dir: e.dir });
 
         if (e.type === "wallBounce") {
           burst(e.x, e.y, "255,255,255", 18, 5);
@@ -3702,12 +3706,28 @@
         return;
       }
 
-      if (p.type === "dash") {
-        ctx.globalAlpha = a * .38;
-        ctx.fillStyle = "rgba(255,245,190,.55)";
+      if (p.type === "dash" || p.type === "dashAttack") {
+        const d = p.dir || 1;
+
+        ctx.globalAlpha = a * (p.type === "dashAttack" ? .58 : .38);
+        ctx.fillStyle = p.type === "dashAttack"
+          ? "rgba(255,215,90,.68)"
+          : p.turn
+            ? "rgba(170,235,255,.58)"
+            : p.air
+              ? "rgba(210,240,255,.52)"
+              : "rgba(255,245,190,.55)";
         ctx.beginPath();
-        ctx.ellipse(p.x - (p.dir || 1) * q * 70, p.y, 52 + q * 42, 18 + q * 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(p.x - d * q * (p.air ? 92 : 70), p.y, 52 + q * (p.type === "dashAttack" ? 74 : 42), 18 + q * (p.air ? 18 : 8), 0, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.globalAlpha = a * .72;
+        ctx.strokeStyle = "rgba(255,255,255,.75)";
+        ctx.lineWidth = p.type === "dashAttack" ? 5 : 3;
+        ctx.beginPath();
+        ctx.moveTo(p.x - d * (18 + q * 86), p.y - 12);
+        ctx.lineTo(p.x + d * (24 + q * 26), p.y + 8);
+        ctx.stroke();
 
         ctx.restore();
         return;

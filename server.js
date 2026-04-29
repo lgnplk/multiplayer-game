@@ -172,6 +172,8 @@ function makeFighter(id, side, key) {
 
     dashCd: 0,
     airDashUsed: false,
+    dashState: null,
+    dashAttack: false,
 
     coyote: 0,
     jumpBuffer: 0,
@@ -1997,6 +1999,8 @@ function scriptMove(f, input = {}) {
 function startAttack(f, base, input, game) {
   if (f.attack || f.stun > 0 || !canActDuringUltimate(f)) return false;
 
+  const fromDash = base !== "counter" && canDashCancel(f);
+  const dashDir = fromDash ? (f.dashState.dir || f.dashState.dx || f.facing || 1) : null;
   const move = moveName(base, f);
   const aim = aimFromInput(input);
   const m = meta(f, move, aim);
@@ -2017,7 +2021,8 @@ function startAttack(f, base, input, game) {
   f.attackAim = aim;
   f.attackTimer = m.duration;
   f.attackDuration = m.duration;
-  f.attackFacing = f.facing || 1;
+  f.attackFacing = dashDir || f.facing || 1;
+  f.dashAttack = fromDash;
   f.hitDone = false;
   f.hitList = [];
   f.multiHitWait = 0;
@@ -2029,6 +2034,19 @@ function startAttack(f, base, input, game) {
 
   const p = pieceOf(f);
   const d = f.attackFacing;
+
+  if (fromDash) {
+    f.facing = d;
+    f.vx = d * Math.max(Math.abs(f.vx), f.speed * (f.grounded ? 1.85 : 1.45));
+    f.dashState.timer = Math.min(f.dashState.timer, 5);
+    f.invuln = Math.max(f.invuln, 2);
+
+    fx(game, "dashAttack", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: p,
+      dir: d,
+      timer: 14
+    });
+  }
 
   if (base === "counter") {
     f.armor = Math.max(f.armor, m.armor);
@@ -2191,6 +2209,20 @@ function triggerCounter(counterer, attacker, game) {
   game.shake = Math.max(game.shake, 10);
 }
 
+function dashAge(f) {
+  const s = f?.dashState;
+  if (!s || !s.total) return 999;
+  return s.total - Math.max(0, s.timer || 0);
+}
+
+function canDashCancel(f) {
+  const s = f?.dashState;
+  if (!s || s.timer <= 0 || f.hurt > 4 || f.stun > 0) return false;
+
+  const age = dashAge(f);
+  return age >= (s.cancelFrom ?? 3) && age <= (s.cancelUntil ?? 15);
+}
+
 function physics(f, input, game, locked) {
   if (!Number.isFinite(f.x)) f.x = 0;
   if (!Number.isFinite(f.y)) f.y = FLOOR - f.h;
@@ -2199,11 +2231,60 @@ function physics(f, input, game, locked) {
 
   const scriptedCharge = f.script?.type === "knightAirL" && !f.script.done;
   const disabled = locked || scriptedCharge || f.hurt > 5 || f.stun > 0;
+  const dashState = f.dashState?.timer > 0 ? f.dashState : null;
+  const dashing = !!dashState && !disabled;
   const move = (input.right ? 1 : 0) - (input.left ? 1 : 0);
 
-  if (!disabled) {
+  if (dashing) {
+    const age = dashAge(f);
+
+    if (dashState.grounded && f.grounded) {
+      if (move && move !== dashState.dir && age >= 3 && age <= 12) {
+        dashState.dir = move;
+        dashState.dx = move;
+        dashState.timer = Math.max(dashState.timer, 12);
+        f.vx = move * (f.speed * 2.08 + 4);
+        f.facing = move;
+        f.attackFacing = move;
+
+        fx(game, "dash", f.x + f.w / 2, f.y + f.h / 2, {
+          piece: pieceOf(f),
+          dir: move,
+          timer: 12,
+          turn: true
+        });
+      }
+
+      const target = age < 5 ? f.speed * 2.22 + 5 : f.speed * 1.55 + 3;
+      f.vx = dashState.dir * Math.max(Math.abs(f.vx) * 0.92, target);
+      if (move === dashState.dir) f.vx += dashState.dir * 0.45;
+      f.vx = clamp(f.vx, -(f.speed * 2.55 + 6), f.speed * 2.55 + 6);
+      f.vy *= 0.55;
+
+      f.facing = dashState.dir;
+      if (!f.attack) f.attackFacing = dashState.dir;
+    } else {
+      const dx = Number.isFinite(dashState.dx) ? dashState.dx : dashState.dir || f.facing || 1;
+      const dy = Number.isFinite(dashState.dy) ? dashState.dy : 0;
+      const targetX = dx * dashState.speed;
+      const targetY = dy * dashState.speed * 0.72;
+
+      f.vx = f.vx * 0.82 + targetX * 0.18;
+      f.vy = f.vy * 0.78 + targetY * 0.22;
+      f.vx = clamp(f.vx, -(f.speed * 2.25 + 5), f.speed * 2.25 + 5);
+      f.vy = clamp(f.vy, -18, 18);
+
+      if (Math.abs(dx) > 0.1) {
+        f.facing = dx > 0 ? 1 : -1;
+        if (!f.attack) f.attackFacing = f.facing;
+      }
+    }
+
+    dashState.timer--;
+    if (dashState.timer <= 0) f.dashState = null;
+  } else if (!disabled) {
     const accel = f.grounded ? 1.3 : 0.62;
-    const maxSpeed = f.speed * (input.down && !f.grounded ? 0.85 : 1);
+    const maxSpeed = f.speed * (f.dashAttack ? 1.35 : input.down && !f.grounded ? 0.85 : 1);
 
     if (move) f.vx += move * accel;
     else f.vx *= f.grounded ? 0.78 : 0.94;
@@ -2221,7 +2302,10 @@ function physics(f, input, game, locked) {
     f.vy += 0.85;
   }
 
-  if (!scriptedCharge) f.vy += GRAVITY;
+  if (!scriptedCharge) {
+    const gravityScale = dashing && !dashState.grounded ? 0.34 : 1;
+    f.vy += GRAVITY * gravityScale;
+  }
   f.x += f.vx;
   f.y += f.vy;
 
@@ -2260,6 +2344,7 @@ function physics(f, input, game, locked) {
     f.vy = 0;
     f.grounded = true;
     f.airDashUsed = false;
+    if (f.dashState && !f.dashState.grounded) f.dashState = null;
     f.coyote = 7;
   } else {
     f.grounded = false;
@@ -2284,20 +2369,44 @@ function handleJump(f, input) {
 }
 
 function dash(f, input, game) {
-  if (f.dashCd > 0 || f.stamina < 14 || f.hurt > 4 || f.stun > 0 || !canActDuringUltimate(f)) return;
+  const grounded = !!f.grounded;
+  const staminaCost = grounded ? 10 : 16;
 
-  const d = input.left && !input.right ? -1 : input.right && !input.left ? 1 : f.facing || 1;
+  if (f.dashCd > 0 || f.stamina < staminaCost || f.hurt > 4 || f.stun > 0 || !canActDuringUltimate(f)) return;
 
-  if (!f.grounded && f.airDashUsed) return;
+  const horizontal = input.left && !input.right ? -1 : input.right && !input.left ? 1 : 0;
+  const vertical = !grounded && input.up && !input.down ? -1 : !grounded && input.down && !input.up ? 1 : 0;
+  const d = horizontal || f.facing || 1;
 
-  f.vx = d * 15;
-  f.vy *= 0.42;
-  f.stamina -= 14;
-  f.staminaDelay = 20;
-  f.dashCd = 34;
-  f.invuln = 7;
+  if (!grounded && f.airDashUsed) return;
 
-  if (!f.grounded) f.airDashUsed = true;
+  const airX = horizontal || (!vertical ? d : 0);
+  const airY = vertical;
+  const mag = Math.hypot(grounded ? d : airX, airY) || 1;
+  const dx = grounded ? d : airX / mag;
+  const dy = grounded ? 0 : airY / mag;
+  const speed = grounded ? f.speed * 2.22 + 5 : f.speed * 1.72 + 4;
+  const total = grounded ? 18 : 16;
+
+  f.vx = dx * speed;
+  f.vy = grounded ? f.vy * 0.26 : dy * speed * 0.72;
+  f.stamina -= staminaCost;
+  f.staminaDelay = grounded ? 15 : 22;
+  f.dashCd = grounded ? 24 : 38;
+  f.invuln = Math.max(f.invuln, grounded ? 4 : 6);
+  f.dashState = {
+    timer: total,
+    total,
+    dir: d,
+    dx,
+    dy,
+    speed,
+    grounded,
+    cancelFrom: grounded ? 3 : 4,
+    cancelUntil: grounded ? 15 : 13
+  };
+
+  if (!grounded) f.airDashUsed = true;
 
   f.facing = d;
   f.attackFacing = d;
@@ -2305,7 +2414,8 @@ function dash(f, input, game) {
   fx(game, "dash", f.x + f.w / 2, f.y + f.h / 2, {
     piece: pieceOf(f),
     dir: d,
-    timer: 16
+    timer: total,
+    air: !grounded
   });
 }
 
@@ -2313,6 +2423,8 @@ function tickTimers(f) {
   for (const k of ["lightCd", "heavyCd", "specialCd", "counterCd", "ultimateCd", "hurt", "armor", "invuln", "stun", "dashCd", "wallBounceTimer"]) {
     if (f[k] > 0) f[k]--;
   }
+
+  if ((f.hurt > 5 || f.stun > 0) && f.dashState) f.dashState = null;
 
   if (f.staminaDelay > 0) f.staminaDelay--;
   else f.stamina = Math.min(f.maxStamina, f.stamina + 0.82);
@@ -2384,7 +2496,7 @@ function updateFighter(f, enemy, input, game) {
     f.lastSeq.counter = input.seq.counter;
 
     if (canAct) {
-      if (input.left || input.right) {
+      if (input.left || input.right || (!f.grounded && (input.up || input.down))) {
         dash(f, input, game);
       } else {
         startAttack(f, "counter", input, game);
@@ -2405,12 +2517,13 @@ function updateFighter(f, enemy, input, game) {
         f.multiHitWait--;
         if (f.multiHitWait <= 0) {
           const b = box(f);
+          const dashBonus = f.dashAttack ? 1 : 0;
           const hb = makeHitbox(f, b.x, b.y, b.w, b.h, {
-            dmg: m.dmg,
-            kb: m.kb,
+            dmg: dashBonus ? Math.ceil(m.dmg * 1.15 + 1) : m.dmg,
+            kb: m.kb + dashBonus * 5,
             lift: m.lift,
-            wall: m.wall,
-            hitstop: 3,
+            wall: m.wall + dashBonus * 6,
+            hitstop: 3 + dashBonus,
             breakArmor: m.breakArmor,
             grab: m.grab,
             throwPower: m.throwPower,
@@ -2423,12 +2536,13 @@ function updateFighter(f, enemy, input, game) {
         }
       } else if (!f.hitDone) {
         const b = box(f);
+        const dashBonus = f.dashAttack ? 1 : 0;
         const hb = makeHitbox(f, b.x, b.y, b.w, b.h, {
-          dmg: m.dmg,
-          kb: m.kb,
+          dmg: dashBonus ? Math.ceil(m.dmg * 1.18 + 1) : m.dmg,
+          kb: m.kb + dashBonus * 7,
           lift: m.lift,
-          wall: m.wall,
-          hitstop: 5,
+          wall: m.wall + dashBonus * 8,
+          hitstop: 5 + dashBonus * 2,
           breakArmor: m.breakArmor,
           grab: m.grab,
           throwPower: m.throwPower,
@@ -2447,6 +2561,7 @@ function updateFighter(f, enemy, input, game) {
       f.attackDuration = 0;
       f.hitDone = false;
       f.hitList = [];
+      f.dashAttack = false;
       if (f.script?.type === "knightAirL") f.script = null;
     }
   }
