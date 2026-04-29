@@ -809,6 +809,468 @@
       }[c]));
     }
 
+    const audio = {
+      ctx: null,
+      master: null,
+      limiter: null,
+      noiseBuffer: null,
+      muted: localStorage.getItem("chessBrawlMuted") === "1",
+      volume: clamp(Number(localStorage.getItem("chessBrawlVolume") || 0.72), 0, 1),
+      recent: new Map(),
+      previewAt: 0
+    };
+
+    function initAudio() {
+      if (audio.ctx) return true;
+
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return false;
+
+      audio.ctx = new AudioCtor();
+      audio.master = audio.ctx.createGain();
+      audio.limiter = audio.ctx.createDynamicsCompressor();
+
+      audio.limiter.threshold.value = -16;
+      audio.limiter.knee.value = 18;
+      audio.limiter.ratio.value = 8;
+      audio.limiter.attack.value = 0.003;
+      audio.limiter.release.value = 0.18;
+
+      audio.master.connect(audio.limiter);
+      audio.limiter.connect(audio.ctx.destination);
+
+      const len = Math.max(1, Math.floor(audio.ctx.sampleRate * 1.4));
+      audio.noiseBuffer = audio.ctx.createBuffer(1, len, audio.ctx.sampleRate);
+      const data = audio.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+
+      updateSoundUi();
+      return true;
+    }
+
+    function unlockAudio() {
+      if (!initAudio()) return false;
+      if (audio.ctx.state === "suspended") audio.ctx.resume();
+      return true;
+    }
+
+    function audioTime() {
+      return audio.ctx ? audio.ctx.currentTime : 0;
+    }
+
+    function updateSoundUi() {
+      if (soundVolume) soundVolume.value = String(Math.round(audio.volume * 100));
+      if (soundBtn) {
+        soundBtn.classList.toggle("muted", audio.muted || audio.volume <= 0);
+        soundBtn.innerHTML = audio.muted || audio.volume <= 0 ? "&#9834;" : "&#9835;";
+      }
+
+      if (audio.master) {
+        const target = audio.muted ? 0 : audio.volume;
+        audio.master.gain.setTargetAtTime(target, audioTime(), 0.015);
+      }
+    }
+
+    function setMuted(v) {
+      audio.muted = !!v;
+      localStorage.setItem("chessBrawlMuted", audio.muted ? "1" : "0");
+      updateSoundUi();
+    }
+
+    function setVolume(v) {
+      audio.volume = clamp(v, 0, 1);
+      if (audio.volume > 0 && audio.muted) audio.muted = false;
+      localStorage.setItem("chessBrawlVolume", String(audio.volume));
+      localStorage.setItem("chessBrawlMuted", audio.muted ? "1" : "0");
+      updateSoundUi();
+    }
+
+    function canSound(key, gap = 0.018) {
+      if (!audio.ctx || audio.muted || audio.volume <= 0) return false;
+
+      const t = audioTime();
+      const last = audio.recent.get(key) || -99;
+      if (t - last < gap) return false;
+
+      audio.recent.set(key, t);
+      if (audio.recent.size > 120) {
+        audio.recent = new Map(Array.from(audio.recent.entries()).slice(-70));
+      }
+
+      return true;
+    }
+
+    function out(node, x) {
+      if (!audio.master) return;
+
+      if (Number.isFinite(x) && audio.ctx.createStereoPanner) {
+        const panner = audio.ctx.createStereoPanner();
+        panner.pan.value = clamp((x - 480) / 520, -0.85, 0.85);
+        node.connect(panner);
+        panner.connect(audio.master);
+      } else {
+        node.connect(audio.master);
+      }
+    }
+
+    function amp(when, dur, peak, attack = 0.006, release = 0.05, curve = "linear") {
+      const g = audio.ctx.createGain();
+      const t0 = audioTime() + when;
+      const t1 = t0 + Math.max(0.002, attack);
+      const t2 = t0 + Math.max(attack + 0.004, dur - release);
+      const t3 = t0 + dur;
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(Math.max(0.0001, peak), t1);
+      if (curve === "hold") g.gain.setValueAtTime(Math.max(0.0001, peak), t2);
+      else g.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak * 0.35), t2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t3);
+      return g;
+    }
+
+    function tone(freq, dur, gain = 0.08, opts = {}) {
+      if (!audio.ctx) return;
+
+      const when = opts.when || 0;
+      const o = audio.ctx.createOscillator();
+      const g = amp(when, dur, gain, opts.attack ?? 0.004, opts.release ?? 0.045, opts.curve);
+      const t = audioTime() + when;
+
+      o.type = opts.type || "sine";
+      o.frequency.setValueAtTime(Math.max(20, freq), t);
+      if (opts.to) {
+        o.frequency.exponentialRampToValueAtTime(Math.max(20, opts.to), t + dur);
+      }
+      if (opts.detune) o.detune.value = opts.detune;
+
+      o.connect(g);
+      out(g, opts.x);
+      o.start(t);
+      o.stop(t + dur + 0.03);
+    }
+
+    function noise(dur, gain = 0.06, opts = {}) {
+      if (!audio.ctx || !audio.noiseBuffer) return;
+
+      const when = opts.when || 0;
+      const src = audio.ctx.createBufferSource();
+      const filter = audio.ctx.createBiquadFilter();
+      const g = amp(when, dur, gain, opts.attack ?? 0.002, opts.release ?? 0.055, opts.curve);
+      const t = audioTime() + when;
+
+      src.buffer = audio.noiseBuffer;
+      src.playbackRate.value = opts.rate || 1;
+      filter.type = opts.filter || "bandpass";
+      filter.frequency.setValueAtTime(opts.freq || 1200, t);
+      if (opts.to) filter.frequency.exponentialRampToValueAtTime(Math.max(30, opts.to), t + dur);
+      filter.Q.value = opts.q || 1.2;
+
+      src.connect(filter);
+      filter.connect(g);
+      out(g, opts.x);
+      src.start(t);
+      src.stop(t + dur + 0.03);
+    }
+
+    function chord(notes, dur, gain, opts = {}) {
+      notes.forEach((n, i) => {
+        tone(n, dur, gain / Math.sqrt(notes.length), {
+          ...opts,
+          when: (opts.when || 0) + i * (opts.spread || 0.018),
+          detune: (opts.detune || 0) + (i - 1) * 5
+        });
+      });
+    }
+
+    function soundUi(kind = "click") {
+      unlockAudio();
+      if (!canSound(`ui:${kind}`, 0.03)) return;
+
+      if (kind === "select") {
+        tone(520, 0.06, 0.035, { type: "triangle", to: 780 });
+        tone(1040, 0.05, 0.018, { type: "sine", when: 0.035 });
+      } else if (kind === "join") {
+        chord([392, 587, 784], 0.12, 0.055, { type: "triangle", spread: 0.025 });
+      } else if (kind === "leave") {
+        tone(420, 0.1, 0.045, { type: "triangle", to: 190 });
+      } else if (kind === "toggle") {
+        tone(audio.muted ? 230 : 660, 0.08, 0.04, { type: "square", to: audio.muted ? 150 : 920 });
+      } else {
+        tone(620, 0.04, 0.03, { type: "triangle", to: 820 });
+      }
+    }
+
+    function soundAttack(e) {
+      if (!canSound(`attack:${e.piece}:${e.attack}`, 0.028)) return;
+
+      const x = e.x;
+      const heavy = /heavy|special|counter/i.test(e.attack || "");
+      const piece = e.piece || "king";
+      const baseGain = heavy ? 0.09 : 0.05;
+
+      if (piece === "rook") {
+        noise(heavy ? 0.18 : 0.09, baseGain, { x, filter: "lowpass", freq: heavy ? 420 : 760, to: heavy ? 120 : 380, q: 0.8 });
+        tone(heavy ? 92 : 130, heavy ? 0.16 : 0.08, heavy ? 0.08 : 0.04, { x, type: "sawtooth", to: heavy ? 55 : 90 });
+      } else if (piece === "bishop") {
+        noise(heavy ? 0.13 : 0.07, baseGain, { x, filter: "highpass", freq: 1800, to: 4200, q: 0.9 });
+        tone(heavy ? 740 : 980, 0.08, 0.035, { x, type: "triangle", to: heavy ? 1180 : 1320 });
+      } else if (piece === "knight") {
+        noise(heavy ? 0.12 : 0.07, baseGain, { x, filter: "bandpass", freq: 1600, to: 620, q: 1.5 });
+        tone(heavy ? 220 : 310, 0.07, 0.035, { x, type: "square", to: heavy ? 150 : 230 });
+      } else if (piece === "pawn") {
+        noise(0.06, 0.04, { x, filter: "bandpass", freq: 1100, q: 1.8 });
+        tone(360, 0.045, 0.025, { x, type: "triangle", to: 510 });
+      } else if (piece === "queen") {
+        noise(heavy ? 0.18 : 0.1, baseGain, { x, filter: "highpass", freq: 1200, to: 5600, q: 0.75 });
+        chord(heavy ? [330, 660, 990] : [494, 740, 988], heavy ? 0.16 : 0.09, heavy ? 0.07 : 0.04, { x, type: "triangle", spread: 0.012 });
+      } else {
+        noise(heavy ? 0.16 : 0.08, baseGain, { x, filter: "bandpass", freq: heavy ? 540 : 900, to: heavy ? 170 : 520, q: heavy ? 0.8 : 1.4 });
+        tone(heavy ? 145 : 240, heavy ? 0.13 : 0.06, heavy ? 0.07 : 0.035, { x, type: heavy ? "sawtooth" : "triangle", to: heavy ? 80 : 320 });
+      }
+    }
+
+    function soundHit(e) {
+      if (!canSound(`hit:${e.ultimate ? "u" : "n"}`, 0.018)) return;
+
+      const x = e.x;
+      const dmg = clamp(Number(e.damage || 8), 2, 45);
+      const power = clamp(dmg / 24, 0.25, 1.6);
+
+      if (e.sword) {
+        noise(0.1 + power * 0.04, 0.09 * power, { x, filter: "highpass", freq: 2600, to: 7600, q: 0.8 });
+        tone(980, 0.075, 0.045 * power, { x, type: "square", to: 3200 });
+        tone(1620, 0.055, 0.025 * power, { x, type: "sine", when: 0.018, to: 900 });
+      } else if (e.ultimate) {
+        noise(0.22, 0.16 * power, { x, filter: "lowpass", freq: 820, to: 90, q: 0.7 });
+        chord([82, 164, 246], 0.24, 0.12 * power, { x, type: "sawtooth", spread: 0.01 });
+      } else {
+        noise(0.12, 0.11 * power, { x, filter: "lowpass", freq: 1100, to: 170, q: 0.9 });
+        tone(105 + dmg * 2.4, 0.08, 0.055 * power, { x, type: "triangle", to: 72 });
+      }
+    }
+
+    function soundUltimateStart(e) {
+      if (!canSound(`ultimate:${e.ultType || e.piece}`, 0.2)) return;
+
+      const x = e.x;
+      const type = e.ultType || "";
+      noise(0.55, 0.08, { x, filter: "lowpass", freq: 180, to: 1400, q: 0.65, curve: "hold" });
+
+      if (type.includes("king")) chord([73, 146, 220, 293], 0.55, 0.16, { x, type: "sawtooth", spread: 0.035 });
+      else if (type.includes("rook")) chord([55, 110, 165], 0.48, 0.14, { x, type: "square", spread: 0.025 });
+      else if (type.includes("bishop")) chord([247, 370, 740], 0.5, 0.12, { x, type: "triangle", spread: 0.025 });
+      else if (type.includes("knight")) chord([196, 294, 392], 0.35, 0.11, { x, type: "square", spread: 0.018 });
+      else if (type.includes("pawn")) chord([220, 330, 440, 660], 0.4, 0.12, { x, type: "triangle", spread: 0.018 });
+      else chord([262, 392, 523, 784], 0.5, 0.13, { x, type: "triangle", spread: 0.02 });
+    }
+
+    function playFxSound(e) {
+      if (!e || !e.type || !audio.ctx || audio.muted || audio.volume <= 0) return;
+
+      switch (e.type) {
+        case "attack":
+          soundAttack(e);
+          break;
+        case "hit":
+          soundHit(e);
+          break;
+        case "grab":
+          if (canSound("grab", 0.05)) {
+            noise(0.16, 0.11, { x: e.x, filter: "bandpass", freq: 760, to: 180, q: 0.8 });
+            tone(130, 0.12, 0.07, { x: e.x, type: "sawtooth", to: 70 });
+          }
+          break;
+        case "armor":
+          if (canSound("armor", 0.05)) {
+            noise(0.08, 0.055, { x: e.x, filter: "highpass", freq: 3400, q: 0.9 });
+            tone(520, 0.055, 0.035, { x: e.x, type: "square", to: 380 });
+          }
+          break;
+        case "counterReady":
+        case "counterStart":
+          if (canSound("counterReady", 0.08)) {
+            tone(420, 0.12, 0.055, { x: e.x, type: "triangle", to: 840 });
+            noise(0.11, 0.035, { x: e.x, filter: "highpass", freq: 2000, to: 4300 });
+          }
+          break;
+        case "counterFire":
+        case "counterSuccess":
+          if (canSound("counterFire", 0.06)) {
+            noise(0.16, 0.13, { x: e.x, filter: "bandpass", freq: 1800, to: 240, q: 0.7 });
+            chord([196, 392, 784], 0.18, 0.09, { x: e.x, type: "square", spread: 0.012 });
+          }
+          break;
+        case "ultimateStart":
+          soundUltimateStart(e);
+          break;
+        case "ultimateLock":
+          if (canSound("ultimateLock", 0.08)) chord([330, 311, 294], 0.16, 0.07, { x: e.x, type: "sine", spread: 0.035 });
+          break;
+        case "ultimateBurst":
+          if (canSound("ultimateBurst", 0.08)) {
+            noise(0.22, 0.13, { x: e.x, filter: "lowpass", freq: 1200, to: 80 });
+            chord([110, 220, 440], 0.24, 0.1, { x: e.x, type: "sawtooth", spread: 0.01 });
+          }
+          break;
+        case "bishopSwordAwaken":
+          if (canSound("bishopAwaken", 0.2)) chord([247, 494, 988, 1480], 0.55, 0.12, { x: e.x, type: "triangle", spread: 0.025 });
+          break;
+        case "bishopSwordReady":
+          if (canSound("bishopReady", 0.08)) {
+            noise(0.13, 0.07, { x: e.x, filter: "highpass", freq: 4200 });
+            tone(1320, 0.11, 0.045, { x: e.x, type: "sine", to: 1760 });
+          }
+          break;
+        case "bishopSwordPulse":
+          if (canSound("bishopPulse", 0.12)) tone(880, 0.08, 0.025, { x: e.x, type: "sine", to: 1180 });
+          break;
+        case "bishopSwordEnd":
+          if (canSound("bishopEnd", 0.12)) tone(880, 0.18, 0.055, { x: e.x, type: "triangle", to: 260 });
+          break;
+        case "bishopSwordMove":
+        case "bishopTrail":
+          if (canSound("bishopMove", 0.035)) noise(0.08, 0.04, { x: e.x, filter: "highpass", freq: 2200, to: 5200 });
+          break;
+        case "bishopSwordParry":
+        case "bishopFinish":
+          if (canSound("bishopParry", 0.06)) {
+            noise(0.16, 0.12, { x: e.x, filter: "highpass", freq: 3600, to: 9000 });
+            tone(1550, 0.11, 0.07, { x: e.x, type: "square", to: 440 });
+          }
+          break;
+        case "rookShell":
+          if (e.charge && canSound("rookCharge", 0.08)) {
+            noise(0.24, 0.075, { x: e.x, filter: "lowpass", freq: 180, to: 760, curve: "hold" });
+            tone(76, 0.22, 0.07, { x: e.x, type: "sawtooth", to: 135 });
+          } else if (e.beamStart && canSound("rookBeam", 0.05)) {
+            noise(0.18, 0.13, { x: e.x, filter: "bandpass", freq: 760, to: 130, q: 0.7 });
+            tone(92, 0.16, 0.09, { x: e.x, type: "square", to: 55 });
+          }
+          break;
+        case "kingCrownBurst":
+          if (canSound("kingBurst", 0.14)) chord([73, 146, 293], 0.35, 0.13, { x: e.x, type: "sawtooth", spread: 0.02 });
+          break;
+        case "kingGrabFlash":
+          if (canSound("kingGrabFlash", 0.08)) tone(180, 0.12, 0.075, { x: e.x, type: "square", to: 90 });
+          break;
+        case "kingSmash":
+          if (canSound("kingSmash", 0.08)) {
+            noise(0.18, 0.14, { x: e.x, filter: "lowpass", freq: 650, to: 70 });
+            tone(88, 0.16, 0.08, { x: e.x, type: "sawtooth", to: 44 });
+          }
+          break;
+        case "kingSlam":
+          if (canSound("kingSlam", 0.08)) {
+            noise(0.28, 0.18, { x: e.x, filter: "lowpass", freq: 500, to: 45 });
+            chord([55, 82, 110], 0.28, 0.15, { x: e.x, type: "sawtooth", spread: 0.01 });
+          }
+          break;
+        case "kingShockwave":
+          if (canSound("kingShockwave", 0.1)) noise(0.36, 0.16, { x: e.x, filter: "lowpass", freq: 900, to: 60 });
+          break;
+        case "knightWindup":
+          if (canSound("knightWindup", 0.06)) tone(260, 0.12, 0.055, { x: e.x, type: "square", to: 390 });
+          break;
+        case "knightBurst":
+          if (canSound("knightBurst", 0.045)) {
+            noise(0.1, 0.07, { x: e.x, filter: "bandpass", freq: 1500, to: 450 });
+            tone(220, 0.07, 0.045, { x: e.x, type: "square", to: 140 });
+          }
+          break;
+        case "knightSlam":
+          if (canSound("knightSlam", 0.08)) noise(0.18, 0.12, { x: e.x, filter: "lowpass", freq: 900, to: 75 });
+          break;
+        case "pawnPromoteBurst":
+          if (canSound("pawnPromote", 0.12)) chord([330, 440, 660, 880], 0.34, 0.12, { x: e.x, type: "triangle", spread: 0.018 });
+          break;
+        case "queenFinisherStart":
+          if (canSound("queenWindup", 0.12)) chord([262, 392, 523], 0.32, 0.1, { x: e.x, type: "triangle", spread: 0.03 });
+          break;
+        case "queenFinisher":
+        case "queenEnd":
+          if (canSound("queenFinisher", 0.12)) {
+            noise(0.28, 0.16, { x: e.x, filter: "highpass", freq: 1300, to: 6200 });
+            chord([196, 392, 784, 1175], 0.35, 0.14, { x: e.x, type: "triangle", spread: 0.015 });
+          }
+          break;
+        case "dash":
+          if (canSound("dash", 0.035)) noise(0.09, 0.055, { x: e.x, filter: "highpass", freq: 700, to: 1800 });
+          break;
+        case "land":
+          if (canSound("land", 0.045)) {
+            noise(0.1, 0.07, { x: e.x, filter: "lowpass", freq: 520, to: 95 });
+            tone(78, 0.07, 0.04, { x: e.x, type: "sine", to: 44 });
+          }
+          break;
+        case "wall":
+        case "wallBounce":
+          if (canSound("wall", 0.06)) {
+            noise(0.11, 0.08, { x: e.x, filter: "bandpass", freq: 950, to: 240 });
+            tone(190, 0.09, 0.055, { x: e.x, type: "square", to: 110 });
+          }
+          break;
+        case "roundEnd":
+        case "roundWin":
+          if (canSound("roundEnd", 0.4)) chord([196, 247, 330, 392], 0.42, 0.14, { type: "triangle", spread: 0.05 });
+          break;
+        default:
+          break;
+      }
+    }
+
+    function trackGameAudio(gs) {
+      if (!audio.ctx || audio.muted || audio.volume <= 0) return;
+
+      const g = gs?.game;
+      const l = gs?.lobby;
+      const m = gs?.match;
+      const status = l?.status || "menu";
+
+      if (status !== state.lastAudioStatus) {
+        if (status === "finished" && state.lastAudioStatus) soundUi("leave");
+        state.lastAudioStatus = status;
+      }
+
+      if (!g || !m || status !== "playing") return;
+
+      const roundKey = `${l?.id || "lobby"}:${m.round}:${m.whiteRounds}:${m.blackRounds}`;
+      if (roundKey !== state.lastAudioRoundKey && g.tick < 20) {
+        state.lastAudioRoundKey = roundKey;
+        state.lastAudioSecond = null;
+        if (canSound("roundStart", 0.4)) chord([220, 330, 440], 0.22, 0.09, { type: "triangle", spread: 0.035 });
+      }
+
+      const sec = Math.ceil((g.roundTime || 0) / 60);
+      if (sec !== state.lastAudioSecond) {
+        state.lastAudioSecond = sec;
+        if (sec > 0 && sec <= 5 && !g.roundOver && canSound(`count:${sec}`, 0.2)) {
+          tone(sec === 1 ? 880 : 660, 0.08, 0.05, { type: "square", to: sec === 1 ? 440 : 620 });
+        }
+      }
+    }
+
+    updateSoundUi();
+
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+
+    soundBtn.onclick = () => {
+      unlockAudio();
+      setMuted(!audio.muted);
+      soundUi("toggle");
+    };
+
+    soundVolume.oninput = () => {
+      unlockAudio();
+      setVolume(Number(soundVolume.value) / 100);
+
+      const t = performance.now();
+      if (t - audio.previewAt > 120) {
+        audio.previewAt = t;
+        soundUi("click");
+      }
+    };
+
     function sendInput() {
       socket.emit("input", state.input);
     }
@@ -837,9 +1299,12 @@
     };
 
     window.addEventListener("keydown", (e) => {
+      unlockAudio();
+
       if (e.code === "KeyH" && !e.repeat) {
         state.showHitboxes = !state.showHitboxes;
         debugNoticeEl.classList.toggle("show", state.showHitboxes);
+        soundUi("click");
         return;
       }
 
@@ -879,6 +1344,9 @@
     }, 1000 / 20);
 
     createBtn.onclick = () => {
+      unlockAudio();
+      soundUi("join");
+
       const n = nameInput.value.trim();
       const l = lobbyInput.value.trim();
 
@@ -888,6 +1356,8 @@
     };
 
     leaveBtn.onclick = () => {
+      unlockAudio();
+      soundUi("leave");
       socket.emit("leaveLobby");
       showMenu();
     };
@@ -910,15 +1380,20 @@
 
     socket.on("enteredLobby", (data) => {
       state.role = data.role || "spectator";
+      soundUi("join");
       showGame();
     });
 
-    socket.on("leftLobby", showMenu);
+    socket.on("leftLobby", () => {
+      soundUi("leave");
+      showMenu();
+    });
 
     socket.on("gameState", (gs) => {
       state.gameState = gs;
       consumeFx(gs);
       updateHud(gs);
+      trackGameAudio(gs);
 
       if (gs?.lobby?.status !== "waiting") showGame();
     });
@@ -935,6 +1410,8 @@
           <p>${ch.title}</p>
         `;
         card.onclick = () => {
+          unlockAudio();
+          soundUi("select");
           state.selected = key;
           socket.emit("setCharacter", key);
           renderCharacters();
@@ -974,11 +1451,19 @@
       }
 
       lobbiesEl.querySelectorAll("[data-join]").forEach((b) => {
-        b.onclick = () => socket.emit("joinLobby", b.dataset.join);
+        b.onclick = () => {
+          unlockAudio();
+          soundUi("join");
+          socket.emit("joinLobby", b.dataset.join);
+        };
       });
 
       lobbiesEl.querySelectorAll("[data-watch]").forEach((b) => {
-        b.onclick = () => socket.emit("spectateLobby", b.dataset.watch);
+        b.onclick = () => {
+          unlockAudio();
+          soundUi("select");
+          socket.emit("spectateLobby", b.dataset.watch);
+        };
       });
     }
 
@@ -1059,6 +1544,8 @@
         if (state.seenFx.size > 900) {
           state.seenFx = new Set(Array.from(state.seenFx).slice(-450));
         }
+
+        playFxSound(e);
 
         if (e.type === "hit") {
           if (e.sword) {
