@@ -739,6 +739,15 @@
       );
     }
 
+    function bishopSwordVisualAlpha(f) {
+      if (!f || f.characterKey !== "bishop") return 0;
+      const u = f.ultimateState;
+      if (!u || u.type !== "bishopSword") return 0;
+      if (u.phase === "active") return 1;
+      if (u.phase === "awakening") return ease(clamp((u.timer || 0) / 34, 0, 1));
+      return 0;
+    }
+
     function glyph(f) {
       return GLYPHS[pieceOf(f)] || "♙";
     }
@@ -1733,10 +1742,7 @@
 
         if (e.type === "hit") {
           if (e.sword) {
-            metalSparks(e.x, e.y, e.dir || 1, 34);
-            addFx("swordImpact", e.x, e.y, { life: 22, dir: e.dir || 1 });
-            state.shake = Math.max(state.shake, 13);
-            state.flash = Math.max(state.flash, .08);
+            state.shake = Math.max(state.shake, 8);
           } else {
             burst(e.x, e.y, e.ultimate ? "255,211,71" : "255,235,200", e.ultimate ? 54 : 24, e.ultimate ? 13 : 8);
             addFx(e.ultimate ? "ultimateImpact" : "impact", e.x, e.y, { life: e.ultimate ? 30 : 18 });
@@ -1763,46 +1769,38 @@
         }
 
         if (e.type === "ultimateStart") {
-          addFx("ultimateStart", e.x, e.y, { life: 80, piece: e.piece, dir: e.dir, ultType: e.ultType });
-          burst(e.x, e.y, "255,211,71", 90, 12);
-          state.shake = Math.max(state.shake, 16);
-          state.flash = Math.max(state.flash, .18);
+          if (e.ultType === "bishopSword") {
+            state.shake = Math.max(state.shake, 8);
+          } else {
+            addFx("ultimateStart", e.x, e.y, { life: 80, piece: e.piece, dir: e.dir, ultType: e.ultType });
+            burst(e.x, e.y, "255,211,71", 90, 12);
+            state.shake = Math.max(state.shake, 16);
+            state.flash = Math.max(state.flash, .18);
+          }
         }
 
         if (e.type === "bishopSwordAwaken") {
-          addFx("bishopSwordAwaken", e.x, e.y, { life: 80, dir: e.dir });
-          burst(e.x, e.y, "255,230,120", 80, 10);
-          state.shake = Math.max(state.shake, 13);
-          state.flash = Math.max(state.flash, .18);
+          state.shake = Math.max(state.shake, 10);
         }
 
         if (e.type === "bishopSwordReady") {
-          addFx("bishopSwordReady", e.x, e.y, { life: 46, dir: e.dir });
-          metalSparks(e.x, e.y, e.dir || 1, 36);
+          state.shake = Math.max(state.shake, 6);
         }
 
         if (e.type === "bishopSwordPulse") {
-          addFx("bishopSwordPulse", e.x, e.y, { life: 18, dir: e.dir });
+          state.shake = Math.max(state.shake, 3);
         }
 
         if (e.type === "bishopSwordEnd") {
-          addFx("bishopSwordEnd", e.x, e.y, { life: 34, dir: e.dir });
+          state.shake = Math.max(state.shake, 5);
         }
 
         if (e.type === "bishopSwordMove") {
-          addFx("bishopSwordMove", e.x, e.y, {
-            life: 16,
-            attack: e.attack,
-            aim: e.aim,
-            dir: e.dir
-          });
+          state.shake = Math.max(state.shake, 3);
         }
 
         if (e.type === "bishopSwordParry") {
-          addFx("bishopSwordParry", e.x, e.y, { life: 34, dir: e.dir });
-          metalSparks(e.x, e.y, e.dir || 1, 58);
-          state.shake = Math.max(state.shake, 15);
-          state.flash = Math.max(state.flash, .14);
+          state.shake = Math.max(state.shake, 12);
         }
 
         if (e.type === "ultimateLock") {
@@ -1871,11 +1869,11 @@
         }
 
         if (e.type === "bishopTrail") {
-          addFx("bishopTrail", e.x, e.y, { life: 18 });
+          state.shake = Math.max(state.shake, 2);
         }
 
         if (e.type === "bishopFinish") {
-          addFx("bishopFinish", e.x, e.y, { life: 30, dir: e.dir });
+          state.shake = Math.max(state.shake, 9);
         }
 
         if (e.type === "knightWindup") {
@@ -2505,18 +2503,200 @@
       ctx.restore();
     }
 
+    const BISHOP_SWORD_LEN = 244;
+    const BISHOP_SWORD_WIDTH = 18;
+
+    function lerp(a, b, t) {
+      return a + (b - a) * clamp(t, 0, 1);
+    }
+
+    function swingPhase(f, delay = 0.06, span = 0.76) {
+      const total = Math.max(1, f.attackDuration || 1);
+      const p = clamp(elapsed(f) / total, 0, 1);
+      return ease(clamp((p - delay) / span, 0, 1));
+    }
+
+    function bishopSwordBlade(hilt, d, m, angle, alpha = 1) {
+      if (!hilt || ![hilt.x, hilt.y, d, angle, alpha].every(Number.isFinite)) return;
+
+      m = m || {};
+
+      const a = d === 1 ? angle : Math.PI - angle;
+      const ux = Math.cos(a);
+      const uy = Math.sin(a);
+      const nx = -uy;
+      const ny = ux;
+      const len = BISHOP_SWORD_LEN;
+      const width = BISHOP_SWORD_WIDTH;
+
+      const base = {
+        x: hilt.x + ux * 12,
+        y: hilt.y + uy * 12
+      };
+      const tip = {
+        x: hilt.x + ux * len,
+        y: hilt.y + uy * len
+      };
+      const shoulder = {
+        x: tip.x - ux * 28,
+        y: tip.y - uy * 28
+      };
+
+      ctx.save();
+      ctx.globalAlpha = clamp(alpha, 0, 1);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.shadowColor = "rgba(255,220,125,.24)";
+      ctx.shadowBlur = 8;
+
+      ctx.strokeStyle = "rgba(0,0,0,.58)";
+      ctx.lineWidth = 13;
+      ctx.beginPath();
+      ctx.moveTo(hilt.x - ux * 52, hilt.y - uy * 52);
+      ctx.lineTo(hilt.x + ux * 12, hilt.y + uy * 12);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#2a241c";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(hilt.x - ux * 48, hilt.y - uy * 48);
+      ctx.lineTo(hilt.x + ux * 10, hilt.y + uy * 10);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(242,196,80,.95)";
+      ctx.lineWidth = 11;
+      ctx.beginPath();
+      ctx.moveTo(hilt.x + nx * 38, hilt.y + ny * 38);
+      ctx.lineTo(hilt.x - nx * 38, hilt.y - ny * 38);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(25,20,16,.95)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(hilt.x + nx * 38, hilt.y + ny * 38);
+      ctx.lineTo(hilt.x - nx * 38, hilt.y - ny * 38);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(242,196,80,.95)";
+      ctx.strokeStyle = "rgba(25,20,16,.95)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(hilt.x - ux * 62, hilt.y - uy * 62);
+      ctx.lineTo(hilt.x - ux * 48 + nx * 10, hilt.y - uy * 48 + ny * 10);
+      ctx.lineTo(hilt.x - ux * 34, hilt.y - uy * 34);
+      ctx.lineTo(hilt.x - ux * 48 - nx * 10, hilt.y - uy * 48 - ny * 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      const grad = ctx.createLinearGradient(base.x, base.y, tip.x, tip.y);
+      grad.addColorStop(0, "#4a4a4a");
+      grad.addColorStop(.46, "#191919");
+      grad.addColorStop(1, "#050505");
+
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(base.x + nx * width * .72, base.y + ny * width * .72);
+      ctx.lineTo(shoulder.x + nx * width * .28, shoulder.y + ny * width * .28);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.lineTo(shoulder.x - nx * width * .28, shoulder.y - ny * width * .28);
+      ctx.lineTo(base.x - nx * width * .72, base.y - ny * width * .72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(255,255,255,.24)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(base.x + nx * width * .22, base.y + ny * width * .22);
+      ctx.lineTo(shoulder.x + nx * width * .08, shoulder.y + ny * width * .08);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255,255,255,.08)";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(base.x, base.y);
+      ctx.lineTo(tip.x - ux * 26, tip.y - uy * 26);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function bishopSwordAttackPose(f, c, d) {
+      const q = swingPhase(f);
+      const e = elapsed(f);
+      const hilt = { x: c.x + d * 2, y: c.y + 28 };
+      let angle = lerp(-1.8, .18, q);
+
+      if (f.attack === "light") {
+        angle = lerp(-2.18, .12, q);
+        hilt.x += d * lerp(-12, 24, q);
+        hilt.y += lerp(30, 18, q);
+      } else if (f.attack === "airLight") {
+        angle = lerp(-1.98, .42, q);
+        hilt.x += d * lerp(-8, 28, q);
+        hilt.y += lerp(14, 20, q);
+      } else if (f.attack === "heavy") {
+        angle = lerp(-2.02, .72, swingPhase(f, .03, .84));
+        hilt.x += d * lerp(-18, 42, q);
+        hilt.y += lerp(10, 34, q);
+      } else if (f.attack === "crouchLight") {
+        angle = lerp(-.58, .18, q);
+        hilt.x += d * lerp(-8, 22, q);
+        hilt.y += 54;
+      } else if (f.attack === "crouchHeavy") {
+        angle = lerp(-1.05, .74, swingPhase(f, .04, .82));
+        hilt.x += d * lerp(-12, 38, q);
+        hilt.y += 54;
+      } else if (f.attack === "airHeavy") {
+        angle = lerp(-2.1, .92, swingPhase(f, .02, .82));
+        hilt.x += d * lerp(-14, 36, q);
+        hilt.y += lerp(4, 26, q);
+      } else if (f.attack === "special") {
+        const sq = swingPhase(f, .05, .78);
+        hilt.x += d * lerp(-6, 42, sq);
+
+        if (f.attackAim === "up") {
+          angle = lerp(.92, -1.42, sq);
+          hilt.y += lerp(34, -12, sq);
+        } else if (f.attackAim === "down") {
+          angle = lerp(-1.25, .95, sq);
+          hilt.y += lerp(8, 54, sq);
+        } else {
+          angle = lerp(-1.18, .24, sq);
+          hilt.y += lerp(14, 28, sq);
+        }
+      } else if (f.attack === "airSpecial") {
+        const vx = Number.isFinite(f.vx) && Math.abs(f.vx) > .2 ? f.vx : d;
+        const vy = Number.isFinite(f.vy) ? f.vy : 0;
+        const worldAngle = Math.atan2(vy, vx);
+        angle = d === 1 ? worldAngle : Math.PI - worldAngle;
+        hilt.x += d * (22 + Math.min(e, 16) * .35);
+        hilt.y += 16;
+      }
+
+      return { hilt, angle };
+    }
+
     function drawBishopIdleSword(f) {
-      if (!isBishopSword(f)) return;
+      const alpha = bishopSwordVisualAlpha(f);
+      if (alpha <= 0) return;
 
       const c = center(f);
       const d = f.facing || 1;
       const m = mat(f);
       const sway = Math.sin(state.t * .055) * .045;
 
-      ctx.save();
-      ctx.globalAlpha = .96;
-      greatSword({ x: c.x - d * 34, y: c.y + 38 }, d, m, .95, -1.36 + sway, 176, 15);
-      ctx.restore();
+      bishopSwordBlade(
+        { x: c.x - d * 12, y: c.y + 58 },
+        d,
+        m,
+        -1.42 + sway,
+        .96 * alpha
+      );
     }
 
     function drawUltimateVisual(f) {
@@ -2531,32 +2711,14 @@
       ctx.save();
 
       if (u.type === "bishopSword") {
-        const active = u.phase === "active";
-        const q = active ? 1 : clamp(u.timer / 34, 0, 1);
+        ctx.restore();
+        return;
+        /*
 
-        ctx.globalAlpha = active ? .14 + Math.sin(state.t * .12) * .04 : .25 * q;
-        ctx.fillStyle = "rgba(255,230,150,.85)";
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, active ? 92 + Math.sin(state.t * .07) * 9 : 45 + q * 145, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.globalAlpha = active ? .55 : q;
-        ctx.strokeStyle = "rgba(255,240,190,.95)";
-        ctx.lineWidth = active ? 2.5 : 5;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, active ? 72 + Math.sin(state.t * .1) * 7 : 54 + q * 115, 0, Math.PI * 2);
-        ctx.stroke();
-
-        if (!active) {
-          ctx.font = "900 86px Georgia";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = "rgba(255,245,200,.95)";
-          ctx.strokeStyle = "rgba(60,35,10,.85)";
-          ctx.lineWidth = 3;
           ctx.strokeText("♗", c.x, c.y);
           ctx.fillText("♗", c.x, c.y);
         }
+        */
       }
 
       if (u.type === "kingVerdict") {
@@ -2969,60 +3131,8 @@
 
       if (p === "bishop") {
         if (sword) {
-          if (f.attack === "light" || f.attack === "airLight") {
-            const q = clamp((e - 2) / 10, 0, 1);
-            greatSword(c, d, m, q, -0.34, 215, 18);
-            line([{ x: c.x - d * 24, y: c.y + 42 }, { x: c.x + d * 115 * q, y: c.y - 32 }], { ...m, weapon: "rgba(255,245,190,.72)" }, 12, q);
-          }
-
-          if (f.attack === "heavy") {
-            const q = clamp((e - 4) / 17, 0, 1);
-            after(f, c.x + d * 45 * q, c.y - 22 * q, 1.06, .16);
-            greatSword(c, d, m, q, -0.95, 310, 24);
-            line([
-              { x: c.x - d * 40, y: c.y + 72 },
-              { x: c.x + d * 120 * q, y: c.y - 95 * q },
-              { x: c.x + d * 245 * q, y: c.y - 155 * q }
-            ], { ...m, weapon: "rgba(255,245,190,.75)" }, 20, q);
-          }
-
-          if (f.attack === "crouchLight") {
-            const q = clamp((e - 1) / 8, 0, 1);
-            greatSword({ x: c.x, y: c.y + 28 }, d, m, q, 0.05, 180, 15);
-          }
-
-          if (f.attack === "crouchHeavy") {
-            const q = clamp((e - 3) / 13, 0, 1);
-            greatSword({ x: c.x, y: c.y + 36 }, d, m, q, 0.32, 245, 21);
-            dust(c.x + d * 95, f.y + f.h + 5, d, m, Math.ceil(7 * q));
-          }
-
-          if (f.attack === "airHeavy") {
-            const q = clamp((e - 2) / 14, 0, 1);
-            greatSword(c, d, m, q, 0.92, 285, 23);
-            line([
-              { x: c.x - d * 30, y: c.y - 70 },
-              { x: c.x + d * 90 * q, y: c.y + 55 * q },
-              { x: c.x + d * 215 * q, y: c.y + 130 * q }
-            ], { ...m, weapon: "rgba(255,245,190,.75)" }, 18, q);
-          }
-
-          if (f.attack === "airSpecial") {
-            const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-            for (let i = 0; i < trail.length - 1; i++) {
-              const a = (i + 1) / trail.length;
-              line([trail[i], trail[i + 1]], { ...m, weapon: "rgba(255,245,190,.75)" }, 12 + a * 18, .25 + a * .65);
-            }
-            for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-            greatSword(c, d, m, .95, -0.75, 250, 19);
-          } else if (f.attack === "special") {
-            const q = clamp((e - 4) / 16, 0, 1);
-            if (f.attackAim === "up") greatSword(c, d, m, q, -1.28, 330, 24);
-            else if (f.attackAim === "down") greatSword(c, d, m, q, 0.82, 335, 24);
-            else greatSword(c, d, m, q, -0.6, 365, 24);
-
-            spark(c.x + d * 140 * q, c.y - 40 * q, { magic: "rgba(255,245,190,.9)" }, 30 * q, 10);
-          }
+          const pose = bishopSwordAttackPose(f, c, d);
+          bishopSwordBlade(pose.hilt, d, m, pose.angle, bishopSwordVisualAlpha(f));
         } else {
           if (f.attack === "light" || f.attack === "airLight") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
           if (f.attack === "heavy") {
@@ -3175,6 +3285,16 @@
       const p = pieceOf(f);
       const sword = isBishopSword(f);
 
+      if (sword) {
+        const s = e < 14 ? 0 : swingPhase(f, .36, .44);
+        const hilt = {
+          x: c.x + d * lerp(-4, 30, s),
+          y: c.y + lerp(34, 24, s)
+        };
+        bishopSwordBlade(hilt, d, m, lerp(-1.18, .34, s), bishopSwordVisualAlpha(f));
+        return;
+      }
+
       if (e < 14) {
         ctx.save();
         ctx.globalAlpha = .55 + Math.sin(state.t * .6) * .12;
@@ -3246,6 +3366,7 @@
       const c = center(f);
       const m = mat(f);
       const bob = Math.sin(state.t * .08 + (f.side === "white" ? 0 : 2)) * (f.grounded ? 1 : .4);
+      const bishopSwordVisible = bishopSwordVisualAlpha(f) > 0;
 
       shadow(f);
 
@@ -3258,12 +3379,16 @@
       ctx.restore();
 
       drawUltimateVisual(f);
-      if (isBishopSword(f) && !f.attack) drawBishopIdleSword(f);
-      drawWeapon(f);
+      if (!bishopSwordVisible) drawWeapon(f);
 
       ctx.save();
       if (f.hurt > 0) ctx.translate((Math.random() - .5) * 2.2, 0);
       drawPiece(f, c.x, c.y + bob, 1 + (f.attack || f.ultimateState ? .018 : 0), 1);
+
+      if (bishopSwordVisible) {
+        if (f.attack) drawWeapon(f);
+        else drawBishopIdleSword(f);
+      }
 
       if (f.armor > 0) {
         ctx.globalAlpha = .34;
@@ -3274,16 +3399,7 @@
         ctx.stroke();
       }
 
-      if (isBishopSword(f)) {
-        ctx.globalAlpha = .34 + Math.sin(state.t * .18) * .08;
-        ctx.strokeStyle = "rgba(255,230,150,.85)";
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = "rgba(255,215,70,.35)";
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, f.w * 1.05, f.h * .78, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if ((f.ultimate || 0) >= (f.ultimateMax || 100)) {
+      if (!bishopSwordVisible && (f.ultimate || 0) >= (f.ultimateMax || 100)) {
         ctx.globalAlpha = .4 + Math.sin(state.t * .18) * .14;
         ctx.strokeStyle = m.ult;
         ctx.lineWidth = 3;

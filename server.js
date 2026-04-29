@@ -884,6 +884,7 @@ function applyHitbox(attacker, defender, hb, game) {
       piece: pieceOf(attacker),
       attack: attacker.attack,
       dir: d,
+      sword: isBishopSword(attacker),
       ultimate: hb.ultimate,
       timer: 18
     });
@@ -934,6 +935,7 @@ function applyHitbox(attacker, defender, hb, game) {
     attack: attacker.attack,
     dir: hb.dir,
     damage,
+    sword: isBishopSword(attacker),
     ultimate: hb.ultimate,
     timer: hb.ultimate ? 20 : 14
   });
