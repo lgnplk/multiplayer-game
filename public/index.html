@@ -2423,86 +2423,6 @@
       blade(c.x - d * 8, c.y - 26, d === 1 ? .35 : Math.PI - .35, 150, m, clamp(p - .12, 0, 1), 8);
     }
 
-    function greatSword(c, d, m, p = 1, angle = -0.75, len = 190, width = 18) {
-      if (!c) return;
-
-      const finalAngle = d === 1 ? angle : Math.PI - angle;
-      const q = ease(p);
-
-      const baseX = c.x - d * 18;
-      const baseY = c.y + 18;
-      const bladeLen = len * q;
-
-      ctx.save();
-      ctx.translate(baseX, baseY);
-      ctx.rotate(finalAngle);
-
-      ctx.shadowColor = "rgba(0,0,0,.45)";
-      ctx.shadowBlur = 5;
-
-      ctx.fillStyle = "#1a1a1a";
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2;
-
-      rr(-6, -10, 12, 55, 4);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(0, 48, 8, 0, Math.PI * 2);
-      ctx.fillStyle = "#2b2b2b";
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#2a2a2a";
-      rr(-34, -6, 68, 12, 5);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-10, 0);
-      ctx.lineTo(-6, -bladeLen);
-      ctx.lineTo(0, -bladeLen - 18);
-      ctx.lineTo(6, -bladeLen);
-      ctx.lineTo(10, 0);
-      ctx.closePath();
-
-      const grad = ctx.createLinearGradient(0, 0, 0, -bladeLen);
-      grad.addColorStop(0, "#333");
-      grad.addColorStop(0.45, "#191919");
-      grad.addColorStop(1, "#060606");
-
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(255,255,255,.26)";
-      ctx.lineWidth = 1.2;
-
-      ctx.beginPath();
-      ctx.moveTo(-6, -bladeLen);
-      ctx.lineTo(-2, 0);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(6, -bladeLen);
-      ctx.lineTo(2, 0);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(255,255,255,.08)";
-      ctx.lineWidth = 1;
-
-      ctx.beginPath();
-      ctx.moveTo(0, -bladeLen + 18);
-      ctx.lineTo(0, -12);
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
     const BISHOP_SWORD_LEN = 244;
     const BISHOP_SWORD_WIDTH = 18;
 
@@ -2713,12 +2633,6 @@
       if (u.type === "bishopSword") {
         ctx.restore();
         return;
-        /*
-
-          ctx.strokeText("♗", c.x, c.y);
-          ctx.fillText("♗", c.x, c.y);
-        }
-        */
       }
 
       if (u.type === "kingVerdict") {
@@ -3308,8 +3222,6 @@
         ctx.lineTo(c.x - 34 - e * 2, c.y + 34);
         ctx.stroke();
 
-        if (sword) greatSword(c, d, m, .55, -1.1, 190, 15);
-
         ctx.font = "900 36px Georgia";
         ctx.textAlign = "center";
         ctx.fillStyle = sword ? "rgba(255,245,190,.95)" : m.magic;
@@ -3326,13 +3238,8 @@
         cannon(c, d, m, s);
         for (let i = 0; i < 6; i++) castleBrick(c.x + d * (35 + i * 28) * s, c.y - 34 + i * 9, m, d * .18, s);
       } else if (p === "bishop") {
-        if (sword) {
-          greatSword(c, d, m, s, -0.4, 270, 23);
-          line([{ x: c.x - d * 50, y: c.y + 70 }, { x: c.x + d * 135 * s, y: c.y - 92 * s }], { ...m, weapon: "rgba(255,245,190,.8)" }, 18, s);
-        } else {
-          staff(c, d, m, s, -.88, 166, 15);
-          staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
-        }
+        staff(c, d, m, s, -.88, 166, 15);
+        staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
       } else if (p === "knight") {
         line([{ x: c.x - d * 46, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y - 60 * s }], m, 16, s);
         lance(c, d, m, s, -.2);
