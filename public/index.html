@@ -2305,7 +2305,27 @@
           for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
           lance(c, d, m, .9, 0);
         }
-        if (f.attack === "special" || f.attack === "airSpecial") {
+        if (f.attack === "airSpecial") {
+          const s = f.script || {};
+          const trail = Array.isArray(s.trail) ? s.trail : [];
+          const start = s.start || trail[0] || c;
+          const pivot = s.pivot || trail[Math.max(0, trail.length - 1)] || c;
+          const end = s.end || trail[Math.max(0, trail.length - 1)] || c;
+          const path = s.phase === 1 ? [start, pivot] : [start, pivot, end];
+
+          if (path.length > 1) {
+            line(path, { ...m, weapon: "rgba(255,245,190,.84)" }, 24, .32);
+            line(path, m, 12, .95);
+          }
+
+          for (let i = 0; i < trail.length - 1; i++) {
+            const a = (i + 1) / trail.length;
+            line([trail[i], trail[i + 1]], { ...m, weapon: "rgba(255,245,190,.7)" }, 8 + a * 12, .2 + a * .55);
+          }
+
+          for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
+          lance(c, d, m, .95, 0);
+        } else if (f.attack === "special") {
           const s = clamp((e - 4) / 16, 0, 1);
           if (f.attackAim === "up") {
             line([{ x: c.x, y: c.y + 40 }, { x: c.x, y: c.y - 104 * s }, { x: c.x + d * 72 * s, y: c.y - 104 * s }], m, 14, s);

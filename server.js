@@ -531,7 +531,21 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 5, kb: 22, lift: -23, stamina: 8, cd: 34 });
     if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 5, kb: 20, lift: -17, stamina: 8, cd: 34 });
     if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 4, activeB: 22, dmg: 10, kb: 25, stamina: 10, cd: 40 });
-    if (attack === "special" || attack === "airSpecial") {
+    if (attack === "airSpecial") {
+      Object.assign(m, {
+        duration: 34,
+        activeA: 1,
+        activeB: 31,
+        dmg: 4,
+        kb: 18,
+        lift: -10,
+        stamina: 20,
+        cd: 155,
+        multi: true,
+        interval: 5,
+        wall: 44
+      });
+    } else if (attack === "special") {
       if (aim === "up") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 9, kb: 20, lift: -38, stamina: 17, cd: 140 });
       else if (aim === "down") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 11, kb: 34, lift: 18, stamina: 18, cd: 145, breakArmor: true });
       else Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 10, kb: 31, lift: -18, stamina: 17, cd: 140 });
@@ -679,7 +693,8 @@ function box(f) {
     if (a === "heavy") return body(112, 104, -12, 30);
     if (a === "crouchHeavy") return forward(102, 74, f.h * 0.43);
     if (a === "airHeavy") return { x: f.x - 32, y: f.y - 28, w: f.w + 64, h: f.h + 56 };
-    if (a === "special" || a === "airSpecial") {
+    if (a === "airSpecial") return { x: f.x - 34, y: f.y - 34, w: f.w + 68, h: f.h + 68 };
+    if (a === "special") {
       if (aim === "up") return up(120, 154, 10);
       if (aim === "down") return body(142, 112, f.h * 0.3, 42);
       return body(140, 110, 0, 50);
@@ -939,6 +954,39 @@ function knightPattern(f, input) {
     secondary,
     s1: 17,
     s2: 12,
+    trail: []
+  };
+}
+
+function knightAirPattern(f, input) {
+  const d = f.facing || 1;
+  let primary;
+
+  if (input.up && !input.down) primary = { x: 0, y: -1 };
+  else if (input.down && !input.up) primary = { x: 0, y: 1 };
+  else primary = { x: d, y: 0 };
+
+  const longDistance = Math.round(f.h * 2.18);
+  const shortDistance = Math.round(f.h * 1.16);
+  const longSpeed = 18.5;
+  const shortSpeed = 15.5;
+
+  return {
+    type: "knightAirL",
+    phase: 1,
+    primary,
+    secondary: null,
+    longDistance,
+    shortDistance,
+    longSpeed,
+    shortSpeed,
+    traveled: 0,
+    start: {
+      x: f.x + f.w / 2,
+      y: f.y + f.h / 2
+    },
+    pivot: null,
+    end: null,
     trail: []
   };
 }
@@ -1759,7 +1807,7 @@ function canActDuringUltimate(f) {
   );
 }
 
-function scriptMove(f) {
+function scriptMove(f, input = {}) {
   const s = f.script;
   if (!s || typeof s !== "object") return;
 
@@ -1813,6 +1861,56 @@ function scriptMove(f) {
       if (s.t2 <= 0) {
         f.script = null;
       }
+    }
+  }
+
+  if (s.type === "knightAirL") {
+    if (s.done) {
+      f.vx *= 0.75;
+      f.vy *= 0.75;
+      return;
+    }
+
+    function chooseSecondary() {
+      if (s.primary.x !== 0) {
+        if (input.down && !input.up) return { x: 0, y: 1 };
+        return { x: 0, y: -1 };
+      }
+
+      if (input.left && !input.right) return { x: -1, y: 0 };
+      if (input.right && !input.left) return { x: 1, y: 0 };
+      return { x: f.facing || 1, y: 0 };
+    }
+
+    const dir = s.phase === 1 ? s.primary : s.secondary;
+    const speed = s.phase === 1 ? s.longSpeed : s.shortSpeed;
+    const limit = s.phase === 1 ? s.longDistance : s.shortDistance;
+    const step = Math.min(speed, Math.max(0, limit - s.traveled));
+
+    f.vx = dir.x * step;
+    f.vy = dir.y * step;
+
+    if (dir.x) {
+      f.facing = dir.x;
+      f.attackFacing = dir.x;
+    }
+
+    s.traveled += step;
+
+    if (s.phase === 1 && s.traveled >= s.longDistance) {
+      s.phase = 2;
+      s.secondary = chooseSecondary();
+      s.traveled = 0;
+      s.pivot = {
+        x: f.x + f.w / 2 + f.vx,
+        y: f.y + f.h / 2 + f.vy
+      };
+    } else if (s.phase === 2 && s.traveled >= s.shortDistance) {
+      s.end = {
+        x: f.x + f.w / 2 + f.vx,
+        y: f.y + f.h / 2 + f.vy
+      };
+      s.done = true;
     }
   }
 
@@ -1923,7 +2021,7 @@ function startAttack(f, base, input, game) {
     }
 
     if (p === "knight") {
-      f.script = knightPattern(f, input);
+      f.script = move === "airSpecial" ? knightAirPattern(f, input) : knightPattern(f, input);
     }
 
     if (p === "pawn") {
@@ -2031,7 +2129,8 @@ function physics(f, input, game, locked) {
   if (!Number.isFinite(f.vx)) f.vx = 0;
   if (!Number.isFinite(f.vy)) f.vy = 0;
 
-  const disabled = locked || f.hurt > 5 || f.stun > 0;
+  const scriptedCharge = f.script?.type === "knightAirL" && !f.script.done;
+  const disabled = locked || scriptedCharge || f.hurt > 5 || f.stun > 0;
   const move = (input.right ? 1 : 0) - (input.left ? 1 : 0);
 
   if (!disabled) {
@@ -2050,11 +2149,11 @@ function physics(f, input, game, locked) {
     f.vx *= f.grounded ? 0.86 : 0.98;
   }
 
-  if (input.down && !f.grounded && !locked) {
+  if (input.down && !f.grounded && !locked && !scriptedCharge) {
     f.vy += 0.85;
   }
 
-  f.vy += GRAVITY;
+  if (!scriptedCharge) f.vy += GRAVITY;
   f.x += f.vx;
   f.y += f.vy;
 
@@ -2218,7 +2317,7 @@ function updateFighter(f, enemy, input, game) {
     }
   }
 
-  scriptMove(f);
+  scriptMove(f, input);
   physics(f, input, game, ultLocksMovement);
 
   if (f.attack) {
@@ -2273,6 +2372,7 @@ function updateFighter(f, enemy, input, game) {
       f.attackDuration = 0;
       f.hitDone = false;
       f.hitList = [];
+      if (f.script?.type === "knightAirL") f.script = null;
     }
   }
 
