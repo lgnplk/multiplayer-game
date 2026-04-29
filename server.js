@@ -445,17 +445,17 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "king") {
-    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 9, dmg: 7, kb: 12, lift: -3, cd: 12 });
-    if (attack === "airLight") Object.assign(m, { duration: 18, activeA: 4, activeB: 11, dmg: 7, kb: 13, lift: 6, cd: 13 });
-    if (attack === "crouchLight") Object.assign(m, { duration: 18, activeA: 5, activeB: 11, dmg: 6, kb: 10, lift: -16, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 39, activeA: 12, activeB: 21, dmg: 18, kb: 30, stamina: 15, cd: 64, armor: 22, breakArmor: true, wall: 40 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 35, activeA: 9, activeB: 18, dmg: 15, kb: 22, lift: -22, stamina: 12, cd: 56, armor: 12, wall: 28 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 36, activeA: 7, activeB: 20, dmg: 17, kb: 18, lift: 20, stamina: 13, cd: 58, breakArmor: true, wall: 24 });
+    if (attack === "light") Object.assign(m, { duration: 25, activeA: 9, activeB: 14, dmg: 8, kb: 24, lift: -4, cd: 22, wall: 30 });
+    if (attack === "airLight") Object.assign(m, { duration: 26, activeA: 8, activeB: 15, dmg: 8, kb: 24, lift: 12, cd: 23, wall: 28 });
+    if (attack === "crouchLight") Object.assign(m, { duration: 24, activeA: 9, activeB: 14, dmg: 7, kb: 20, lift: -20, cd: 22, wall: 24 });
+    if (attack === "heavy") Object.assign(m, { duration: 54, activeA: 23, activeB: 31, dmg: 20, kb: 56, stamina: 18, cd: 86, armor: 32, breakArmor: true, wall: 78 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 48, activeA: 18, activeB: 27, dmg: 17, kb: 42, lift: -26, stamina: 15, cd: 76, armor: 22, wall: 62 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 50, activeA: 17, activeB: 29, dmg: 18, kb: 38, lift: 34, stamina: 16, cd: 78, breakArmor: true, wall: 56 });
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "down") Object.assign(m, { duration: 47, activeA: 10, activeB: 18, dmg: 17, kb: 14, lift: -7, stamina: 24, cd: 175, armor: 24, grab: true, throwPower: 58, wall: 44 });
-      else if (aim === "up") Object.assign(m, { duration: 45, activeA: 10, activeB: 22, dmg: 15, kb: 14, lift: -38, stamina: 22, cd: 158, armor: 14, breakArmor: true, wall: 18 });
-      else Object.assign(m, { duration: 51, activeA: 14, activeB: 25, dmg: 18, kb: 34, lift: -8, stamina: 26, cd: 182, armor: 26, breakArmor: true, wall: 48 });
+      if (aim === "down") Object.assign(m, { duration: 60, activeA: 22, activeB: 31, dmg: 18, kb: 18, lift: -9, stamina: 26, cd: 210, armor: 34, grab: true, throwPower: 80, wall: 74 });
+      else if (aim === "up") Object.assign(m, { duration: 58, activeA: 20, activeB: 34, dmg: 17, kb: 26, lift: -56, stamina: 24, cd: 190, armor: 24, breakArmor: true, wall: 42 });
+      else Object.assign(m, { duration: 68, activeA: 27, activeB: 39, dmg: 21, kb: 64, lift: -10, stamina: 30, cd: 230, armor: 38, breakArmor: true, wall: 92 });
     }
   }
 

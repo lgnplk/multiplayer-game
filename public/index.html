@@ -2391,7 +2391,7 @@
 
     function kingAxePose(f, c, d, lag = 0) {
       const p = attackProgress(f, lag);
-      const q = swingPhaseAt(p, .04, .78);
+      const q = swingPhaseAt(p, .26, .48);
       const lift = Math.sin(q * Math.PI);
       const hilt = {
         x: c.x + d * (lerp(-12, 22, q) + lift * 10),
@@ -2402,64 +2402,67 @@
       let width = 11;
 
       if (f.attack === "light") {
-        angle = lerp(-.72, .24, q);
+        const kq = swingPhaseAt(p, .28, .42);
+        angle = lerp(-1.02, .28, kq);
         len = 146;
         width = 10;
-        hilt.x += d * lerp(-10, 18, q);
-        hilt.y += lerp(12, 6, q);
+        hilt.x += d * lerp(-18, 24, kq);
+        hilt.y += lerp(12, 6, kq);
       } else if (f.attack === "airLight") {
-        angle = lerp(-.38, .78, q);
+        const kq = swingPhaseAt(p, .24, .46);
+        angle = lerp(-.7, .9, kq);
         len = 142;
         width = 10;
-        hilt.x += d * lerp(-8, 24, q);
-        hilt.y += lerp(-6, 12, q);
+        hilt.x += d * lerp(-16, 28, kq);
+        hilt.y += lerp(-10, 14, kq);
       } else if (f.attack === "crouchLight") {
-        angle = lerp(.16, -.14, q);
+        const kq = swingPhaseAt(p, .3, .4);
+        angle = lerp(.42, -.2, kq);
         len = 126;
         width = 9;
-        hilt.x += d * lerp(-6, 20, q);
+        hilt.x += d * lerp(-14, 24, kq);
         hilt.y += 42;
       } else if (f.attack === "heavy") {
-        const hq = swingPhaseAt(p, .08, .82);
-        angle = lerp(-1.62, .48, hq);
+        const hq = swingPhaseAt(p, .42, .38);
+        angle = lerp(-2.08, .56, hq);
         len = 188;
         width = 15;
-        hilt.x += d * lerp(-24, 44, hq);
-        hilt.y += lerp(-10, 22, hq);
+        hilt.x += d * lerp(-36, 52, hq);
+        hilt.y += lerp(-18, 26, hq);
       } else if (f.attack === "crouchHeavy") {
-        const hq = swingPhaseAt(p, .05, .8);
-        angle = lerp(.44, -.2, hq);
+        const hq = swingPhaseAt(p, .36, .42);
+        angle = lerp(.76, -.28, hq);
         len = 178;
         width = 13;
-        hilt.x += d * lerp(-18, 42, hq);
-        hilt.y += 48 + lift * 4;
+        hilt.x += d * lerp(-28, 50, hq);
+        hilt.y += 50 + Math.sin(hq * Math.PI) * 4;
       } else if (f.attack === "airHeavy") {
-        const hq = swingPhaseAt(p, .03, .82);
-        angle = lerp(-1.48, 1.12, hq);
+        const hq = swingPhaseAt(p, .32, .44);
+        angle = lerp(-1.9, 1.18, hq);
         len = 190;
         width = 16;
-        hilt.x += d * lerp(-20, 36, hq);
-        hilt.y += lerp(-14, 24, hq);
+        hilt.x += d * lerp(-30, 42, hq);
+        hilt.y += lerp(-20, 28, hq);
       } else if (f.attack === "special" || f.attack === "airSpecial") {
-        const sq = swingPhaseAt(p, .06, .78);
+        const sq = swingPhaseAt(p, .4, .42);
         if (f.attackAim === "up") {
-          angle = lerp(.72, -1.48, sq);
+          angle = lerp(1.08, -1.58, sq);
           len = 252;
           width = 16;
-          hilt.x += d * lerp(-18, 18, sq);
-          hilt.y += lerp(34, -18, sq);
+          hilt.x += d * lerp(-26, 22, sq);
+          hilt.y += lerp(40, -24, sq);
         } else if (f.attackAim === "down") {
-          angle = lerp(-.9, .72, sq);
+          angle = lerp(-1.2, .8, sq);
           len = 152;
           width = 12;
-          hilt.x += d * lerp(-12, 24, sq);
-          hilt.y += lerp(10, 38, sq);
+          hilt.x += d * lerp(-20, 30, sq);
+          hilt.y += lerp(8, 42, sq);
         } else {
-          angle = lerp(-.86, .12, sq);
+          angle = lerp(-1.38, .16, sq);
           len = 232;
           width = 18;
-          hilt.x += d * lerp(-26, 62, sq);
-          hilt.y += lerp(-4, 14, sq);
+          hilt.x += d * lerp(-40, 72, sq);
+          hilt.y += lerp(-10, 18, sq);
         }
       }
 
@@ -3119,23 +3122,23 @@
         drawKingAxe(f, c, d, m);
 
         if (f.attack === "light") {
-          const q = swingPhaseAt(attackProgress(f), .04, .78);
+          const q = swingPhaseAt(attackProgress(f), .28, .42);
           dust(c.x + d * 62, f.y + f.h + 4, d, m, Math.ceil(2 * q));
         }
         if (f.attack === "crouchLight") {
-          const q = swingPhaseAt(attackProgress(f), .04, .78);
+          const q = swingPhaseAt(attackProgress(f), .3, .4);
           dust(c.x + d * 58, f.y + f.h + 4, d, m, Math.ceil(4 * q));
         }
         if (f.attack === "heavy") {
-          const q = swingPhaseAt(attackProgress(f), .08, .82);
+          const q = swingPhaseAt(attackProgress(f), .42, .38);
           after(f, c.x + d * 34 * q, c.y, 1.05, .16);
         }
         if (f.attack === "crouchHeavy") {
-          const q = swingPhaseAt(attackProgress(f), .05, .8);
+          const q = swingPhaseAt(attackProgress(f), .36, .42);
           dust(c.x + d * 96, f.y + f.h + 4, d, m, Math.ceil(8 * q));
         }
         if (f.attack === "special" || f.attack === "airSpecial") {
-          const q = swingPhaseAt(attackProgress(f), .06, .78);
+          const q = swingPhaseAt(attackProgress(f), .4, .42);
 
           if (f.attackAim === "down") {
             dust(c.x + d * 50, f.y + f.h + 5, d, m, Math.ceil(5 * q));
