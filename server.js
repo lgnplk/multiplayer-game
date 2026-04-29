@@ -400,7 +400,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
       activeB: 25,
       stamina: 18,
       cd: 115,
-      dmg: 8,
+      dmg: 5,
       kb: 24,
       lift: -10,
       armor: 14,
@@ -412,7 +412,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (p === "rook") Object.assign(m, { dmg: 12, kb: 40, armor: 24, wall: 48, cd: 150 });
     if (p === "bishop") Object.assign(m, { dmg: sword ? 14 : 10, kb: sword ? 38 : 28, lift: sword ? -30 : -25, cd: sword ? 72 : 118, breakArmor: sword });
     if (p === "knight") Object.assign(m, { dmg: 10, kb: 31, lift: -18, cd: 110 });
-    if (p === "pawn") Object.assign(m, { dmg: 8, kb: 24, cd: 92 });
+    if (p === "pawn") Object.assign(m, { dmg: 5, kb: 24, cd: 92 });
     if (p === "queen") Object.assign(m, { dmg: 16, kb: 24, lift: -20, cd: 92, breakArmor: true });
 
     return m;
@@ -490,7 +490,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "crouchHeavy") {
       Object.assign(m, sword
         ? { duration: 25, activeA: 6, activeB: 16, dmg: 13, kb: 32, lift: -18, stamina: 7, cd: 23, breakArmor: true, wall: 42 }
-        : { duration: 28, activeA: 8, activeB: 16, dmg: 8, kb: 21, lift: -12, stamina: 8, cd: 38 }
+        : { duration: 28, activeA: 8, activeB: 16, dmg: 5, kb: 21, lift: -12, stamina: 8, cd: 38 }
       );
     }
 
@@ -527,9 +527,9 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "knight") {
-    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 11, dmg: 5, kb: 14, lift: -5, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 8, kb: 22, lift: -23, stamina: 8, cd: 34 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 8, kb: 20, lift: -17, stamina: 8, cd: 34 });
+    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 11, dmg: 5, kb: 14, lift: -3, cd: 13 });
+    if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 5, kb: 22, lift: -23, stamina: 8, cd: 34 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 5, kb: 20, lift: -17, stamina: 8, cd: 34 });
     if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 4, activeB: 22, dmg: 10, kb: 25, stamina: 10, cd: 40 });
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 9, kb: 20, lift: -38, stamina: 17, cd: 140 });
@@ -546,15 +546,15 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "airHeavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 7, kb: 17, lift: 10, stamina: 8, cd: 34 });
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 7, kb: 15, lift: -25, stamina: 17, cd: 135 });
-      else if (aim === "down") Object.assign(m, { duration: 36, activeA: 8, activeB: 16, dmg: 8, kb: 22, stamina: 17, cd: 135, breakArmor: true });
-      else Object.assign(m, { duration: 36, activeA: 8, activeB: 16, dmg: 8, kb: 22, stamina: 17, cd: 135 });
+      else if (aim === "down") Object.assign(m, { duration: 36, activeA: 8, activeB: 16, dmg: 5, kb: 22, stamina: 17, cd: 135, breakArmor: true });
+      else Object.assign(m, { duration: 36, activeA: 8, activeB: 16, dmg: 5, kb: 22, stamina: 17, cd: 135 });
     }
   }
 
   if (p === "queen") {
     if (attack === "light") Object.assign(m, { duration: 16, activeA: 4, activeB: 11, dmg: 12, kb: 18, cd: 13 });
     if (attack === "heavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 16, kb: 32, stamina: 10, cd: 42, breakArmor: true });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 16, kb: 28, lift: -18, stamina: 10, cd: 42 });
+        if (attack === "crouchHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 17, dmg: 16, kb: 28, lift: -18, stamina: 10, cd: 42 });
     if (attack === "airHeavy") Object.assign(m, { duration: 30, activeA: 8, activeB: 16, dmg: 16, kb: 26, lift: 16, stamina: 10, cd: 42 });
     if (attack === "special" || attack === "airSpecial") {
       if (aim === "up") Object.assign(m, { duration: 54, activeA: 13, activeB: 26, dmg: 18, kb: 23, lift: -40, stamina: 22, cd: 185, breakArmor: true });
@@ -898,7 +898,7 @@ function applyHitbox(attacker, defender, hb, game) {
     defender.vx += dcx < cx ? 3.2 : -3.2;
   }
 
-  game.hitstop = Math.max(game.hitstop, hb.hitstop);
+    game.hitstop = Math.max(game.hitstop, hb.hitstop);
   game.shake = Math.max(game.shake, hb.ultimate ? 16 : damage >= 12 ? 10 : 6);
 
   fx(game, "hit", clamp(hb.x + hb.w / 2, defender.x, defender.x + defender.w), clamp(hb.y + hb.h / 2, defender.y, defender.y + defender.h), {
@@ -972,11 +972,13 @@ function makeUltimateState(f, input) {
       type: "kingVerdict",
       phase: "hunt",
       timer: 0,
-      duration: 150,
-      grabRange: 96,
+      duration: 185,
+      grabRange: 126,
       dir: d,
       grabbed: false,
-      shockwaveDone: false
+      shockwaveDone: false,
+      slamDone: false,
+      auraPulse: 0
     };
   }
 
@@ -987,9 +989,10 @@ function makeUltimateState(f, input) {
       timer: 0,
       dir: d,
       aimY: 0,
-      fireEvery: 7,
+      fireEvery: 13,
       shots: 0,
-      maxShots: 9
+      maxShots: 4,
+      beams: []
     };
   }
 
@@ -1079,11 +1082,23 @@ function startUltimate(f, input, game) {
     f.armor = Math.max(f.armor, 28);
   }
 
+  if (f.ultimateState.type === "kingVerdict") {
+    f.ultimateCd = 330;
+    f.invuln = Math.max(f.invuln, 34);
+    f.armor = Math.max(f.armor, 64);
+  }
+
+  if (f.ultimateState.type === "rookSiege") {
+    f.ultimateCd = 390;
+    f.invuln = Math.max(f.invuln, 20);
+    f.armor = Math.max(f.armor, 34);
+  }
+
   fx(game, "ultimateStart", f.x + f.w / 2, f.y + f.h / 2, {
     piece: pieceOf(f),
     dir: f.facing,
     ultType: f.ultimateState.type,
-    timer: 80
+    timer: f.ultimateState.type === "kingVerdict" ? 105 : 80
   });
 
   if (f.ultimateState.type === "bishopSword") {
@@ -1094,7 +1109,15 @@ function startUltimate(f, input, game) {
     });
   }
 
-  game.shake = Math.max(game.shake, 14);
+  if (f.ultimateState.type === "kingVerdict") {
+    fx(game, "kingCrownBurst", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: "king",
+      dir: f.facing,
+      timer: 90
+    });
+  }
+
+  game.shake = Math.max(game.shake, f.ultimateState.type === "kingVerdict" ? 24 : 14);
   return true;
 }
 
@@ -1108,151 +1131,241 @@ function endUltimate(f) {
 
 function updateKingUltimate(f, enemy, game, input, u) {
   u.timer++;
+  u.auraPulse = (u.auraPulse || 0) + 1;
 
-  f.armor = Math.max(f.armor, 22);
-  f.invuln = Math.max(f.invuln, 2);
+  f.armor = Math.max(f.armor, 58);
+  f.invuln = Math.max(f.invuln, 3);
 
   const d = enemy.x + enemy.w / 2 > f.x + f.w / 2 ? 1 : -1;
   f.facing = d;
   f.attackFacing = d;
+  u.dir = d;
 
   const dist = Math.abs((enemy.x + enemy.w / 2) - (f.x + f.w / 2));
-  const closeY = Math.abs((enemy.y + enemy.h / 2) - (f.y + f.h / 2)) < 115;
+  const closeY = Math.abs((enemy.y + enemy.h / 2) - (f.y + f.h / 2)) < 145;
+
+  if (u.timer % 9 === 0) {
+    fx(game, "kingAura", f.x + f.w / 2, f.y + f.h / 2, {
+      piece: "king",
+      dir: d,
+      timer: 18
+    });
+  }
 
   if (u.phase === "hunt") {
-    f.vx = d * Math.max(3.2, f.speed * 0.78);
+    f.vx = d * Math.max(4.9, f.speed * 1.08);
+
+    if (u.timer % 13 === 0) {
+      fx(game, "kingAfterimage", f.x + f.w / 2, f.y + f.h / 2, {
+        piece: "king",
+        dir: d,
+        timer: 18
+      });
+    }
 
     if (dist <= u.grabRange && closeY) {
       u.phase = "grab";
       u.timer = 0;
       u.grabbed = true;
-      enemy.stun = Math.max(enemy.stun, 34);
-      enemy.hurt = Math.max(enemy.hurt, 34);
+      enemy.stun = Math.max(enemy.stun, 48);
+      enemy.hurt = Math.max(enemy.hurt, 48);
+      enemy.invuln = 0;
 
       fx(game, "ultimateLock", enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, {
         piece: "king",
         dir: d,
+        timer: 44
+      });
+
+      fx(game, "kingGrabFlash", enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, {
+        piece: "king",
+        dir: d,
         timer: 34
       });
+
+      game.shake = Math.max(game.shake, 18);
+      game.hitstop = Math.max(game.hitstop, 6);
     } else if (u.timer >= u.duration) {
       u.phase = "shockwave";
       u.timer = 0;
     }
   } else if (u.phase === "grab") {
-    f.vx *= 0.2;
+    f.vx *= 0.16;
     enemy.x = f.x + f.w / 2 + d * 50 - enemy.w / 2;
-    enemy.y = f.y + f.h * 0.05;
+    enemy.y = f.y + f.h * 0.04;
     enemy.vx = 0;
     enemy.vy = 0;
+    enemy.stun = Math.max(enemy.stun, 3);
 
-    if (u.timer === 22) {
-      const hb = makeHitbox(f, f.x + f.w / 2 - 155, f.y - 25, 310, 190, {
-        dmg: 20,
-        kb: 62,
-        lift: -22,
-        wall: 92,
-        hitstop: 16,
-        ultimate: true,
-        breakArmor: true,
-        grab: true,
-        throwPower: 52,
-        dir: d,
-        hitKey: `kingUlt:${f.attackId}`
-      });
-
-      applyHitbox(f, enemy, hb, game);
-    }
-
-    if (u.timer > 44) endUltimate(f);
-  } else if (u.phase === "shockwave") {
-    f.vx *= 0.25;
-
-    if (!u.shockwaveDone) {
-      u.shockwaveDone = true;
-
-      const hb = makeHitbox(f, f.x + f.w / 2 - 170, f.y + 4, 340, 116, {
-        dmg: 50,
-        kb: 42,
-        lift: -16,
-        wall: 58,
+    if (u.timer === 16) {
+      const hb = makeHitbox(f, f.x + f.w / 2 - 165, f.y - 32, 330, 205, {
+        dmg: 16,
+        kb: 38,
+        lift: -18,
+        wall: 62,
         hitstop: 10,
         ultimate: true,
         breakArmor: true,
         dir: d,
-        hitKey: `kingShock:${f.attackId}`
+        hitKey: `kingUltHit1:${f.attackId}`
       });
 
       applyHitbox(f, enemy, hb, game);
-
-      fx(game, "ultimateBurst", f.x + f.w / 2, f.y + f.h / 2, {
+      fx(game, "kingSmash", enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, {
         piece: "king",
         dir: d,
-        timer: 34
+        timer: 32
       });
+      game.shake = Math.max(game.shake, 20);
     }
 
-    if (u.timer > 28) endUltimate(f);
+    if (u.timer === 38) {
+      const hb = makeHitbox(f, f.x + f.w / 2 - 210, f.y - 52, 420, 245, {
+        dmg: 28,
+        kb: 78,
+        lift: -32,
+        wall: 108,
+        hitstop: 18,
+        ultimate: true,
+        breakArmor: true,
+        dir: d,
+        hitKey: `kingUltSlam:${f.attackId}`
+      });
+
+      applyHitbox(f, enemy, hb, game);
+      fx(game, "kingSlam", enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, {
+        piece: "king",
+        dir: d,
+        timer: 52
+      });
+      game.shake = Math.max(game.shake, 30);
+    }
+
+    if (u.timer >= 58) {
+      u.phase = "shockwave";
+      u.timer = 0;
+    }
+  } else if (u.phase === "shockwave") {
+    f.vx *= 0.15;
+
+    if (!u.shockwaveDone) {
+      u.shockwaveDone = true;
+
+      const hb = makeHitbox(f, f.x + f.w / 2 - 255, f.y - 42, 510, 228, {
+        dmg: u.grabbed ? 12 : 24,
+        kb: u.grabbed ? 42 : 74,
+        lift: -24,
+        wall: 92,
+        hitstop: 14,
+        ultimate: true,
+        breakArmor: true,
+        dir: d,
+        hitKey: `kingUltShock:${f.attackId}`
+      });
+
+      applyHitbox(f, enemy, hb, game);
+      fx(game, "kingShockwave", f.x + f.w / 2, f.y + f.h * 0.58, {
+        piece: "king",
+        dir: d,
+        timer: 60
+      });
+      game.shake = Math.max(game.shake, 28);
+    }
+
+    if (u.timer >= 32) {
+      endUltimate(f);
+    }
   }
 }
 
 function updateRookUltimate(f, enemy, game, input, u) {
   u.timer++;
-  f.vx *= 0.04;
+
+  f.vx *= 0.05;
   f.vy = Math.min(f.vy, 1);
-  f.armor = Math.max(f.armor, 80);
+  f.armor = Math.max(f.armor, 34);
 
-  if (input.left && !input.right) u.dir = -1;
-  if (input.right && !input.left) u.dir = 1;
-
+  u.dir = f.x < enemy.x ? 1 : -1;
   f.facing = u.dir;
   f.attackFacing = u.dir;
 
-  if (input.up) u.aimY = clamp(u.aimY - 2.5, -45, 18);
-  if (input.down) u.aimY = clamp(u.aimY + 2.5, -45, 28);
+  if (input.up) u.aimY = clamp(u.aimY - 1.45, -34, 16);
+  if (input.down) u.aimY = clamp(u.aimY + 1.45, -34, 24);
 
-  if (u.phase === "windup" && u.timer >= 46) {
+  if (u.phase === "windup" && u.timer >= 44) {
     u.phase = "fire";
     u.timer = 0;
-    game.shake = Math.max(game.shake, 12);
+    game.shake = Math.max(game.shake, 8);
+
+    fx(game, "rookShell", f.x + f.w / 2, f.y + 62, {
+      piece: "rook",
+      dir: u.dir,
+      timer: 26,
+      charge: true
+    });
   }
 
   if (u.phase === "fire") {
     if (u.timer % u.fireEvery === 1 && u.shots < u.maxShots) {
       u.shots++;
 
-      const x = u.dir === 1 ? f.x + f.w : LEFT;
-      const w = u.dir === 1 ? RIGHT - (f.x + f.w) : f.x - LEFT;
+      const originX = u.dir === 1 ? f.x + f.w : f.x;
       const y = f.y + 34 + u.aimY;
 
-      const hb = makeHitbox(f, Math.min(x, x + w), y, Math.abs(w), 58, {
-        dmg: 8,
-        kb: 19 + u.shots * 1.2,
-        lift: -5,
-        wall: 72,
-        hitstop: 5,
-        ultimate: true,
-        breakArmor: true,
-        once: false,
+      u.beams.push({
+        id: u.shots,
+        x: originX,
+        y,
         dir: u.dir,
-        hitKey: `rookUlt:${f.attackId}:${u.shots}`
+        length: 0,
+        maxLength: u.dir === 1 ? RIGHT - originX : originX - LEFT,
+        grow: 96,
+        linger: 14,
+        hitDone: false
       });
 
-      applyHitbox(f, enemy, hb, game);
-
-      fx(game, "rookShell", u.dir === 1 ? f.x + f.w + 30 : f.x - 30, y + 29, {
+      fx(game, "rookShell", originX + u.dir * 24, y + 22, {
         piece: "rook",
         dir: u.dir,
-        timer: 20
+        timer: 18,
+        beamStart: true
       });
     }
 
-    if (u.shots >= u.maxShots && u.timer > u.maxShots * u.fireEvery + 16) {
+    for (const beam of u.beams) {
+      if (beam.length < beam.maxLength) {
+        beam.length = Math.min(beam.maxLength, beam.length + beam.grow);
+      } else {
+        beam.linger--;
+      }
+
+      const beamX = beam.dir === 1 ? beam.x : beam.x - beam.length;
+      const beamW = beam.length;
+      const hb = makeHitbox(f, beamX, beam.y, beamW, 42, {
+        dmg: 3,
+        kb: 9 + u.shots * 0.4,
+        lift: -2,
+        wall: 25,
+        hitstop: 2,
+        ultimate: true,
+        breakArmor: false,
+        once: true,
+        dir: beam.dir,
+        hitKey: `rookUlt:${f.attackId}:${beam.id}`
+      });
+
+      applyHitbox(f, enemy, hb, game);
+    }
+
+    u.beams = u.beams.filter((beam) => beam.linger > 0);
+
+    if (u.shots >= u.maxShots && u.beams.length === 0 && u.timer > u.maxShots * u.fireEvery + 18) {
       u.phase = "recover";
       u.timer = 0;
     }
   }
 
-  if (u.phase === "recover" && u.timer > 30) {
+  if (u.phase === "recover" && u.timer > 24) {
     endUltimate(f);
   }
 }
@@ -1657,782 +1770,612 @@ function scriptMove(f) {
     f.vx = Number.isFinite(s.vx) ? s.vx : 0;
     f.vy = Number.isFinite(s.vy) ? s.vy : 0;
     s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
-
-    if (s.t <= 0) f.script = null;
-    return;
+        if (s.t <= 0) {
+      f.script = null;
+    }
   }
 
   if (s.type === "knightL") {
-    if (!s.primary || !s.secondary) {
-      f.script = null;
-      return;
-    }
-
     if (s.phase === 1) {
-      f.vx = (s.primary.x || 0) * (s.s1 || 0);
-      f.vy = (s.primary.y || 0) * (s.s1 || 0);
-      s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+      f.vx = s.primary.x * s.s1;
+      f.vy = s.primary.y * s.s1;
+      s.t--;
+
+      if (s.primary.x) {
+        f.facing = s.primary.x;
+        f.attackFacing = s.primary.x;
+      }
 
       if (s.t <= 0) {
         s.phase = 2;
-        s.t = s.t2 || 6;
       }
     } else {
-      f.vx = (s.secondary.x || 0) * (s.s2 || 0);
-      f.vy = (s.secondary.y || 0) * (s.s2 || 0);
-      s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+      f.vx = s.secondary.x * s.s2;
+      f.vy = s.secondary.y * s.s2;
+      s.t2--;
 
-      if (s.t <= 0) f.script = null;
+      if (s.secondary.x) {
+        f.facing = s.secondary.x;
+        f.attackFacing = s.secondary.x;
+      }
+
+      if (s.t2 <= 0) {
+        f.script = null;
+      }
     }
-
-    return;
   }
 
   if (s.type === "bishopZigzag") {
-    f.vx = (s.dir || f.facing || 1) * (s.sx || 0);
-    f.vy = (s.yDir || -1) * (s.sy || 0);
+    f.vx = s.dir * s.sx;
+    f.vy = s.yDir * s.sy;
+    s.t--;
 
-    s.t = (Number.isFinite(s.t) ? s.t : 0) - 1;
+    f.facing = s.dir;
+    f.attackFacing = s.dir;
 
     if (s.t <= 0) {
-      s.phase = (s.phase || 0) + 1;
-      s.t = 8;
-      s.yDir = -(s.yDir || -1);
+      if (s.phase === 0) {
+        s.phase = 1;
+        s.t = 8;
+        s.yDir *= -1;
+      } else {
+        f.script = null;
+      }
     }
-
-    if (s.phase >= 4) f.script = null;
-    return;
   }
-
-  f.script = null;
 }
 
 function startAttack(f, base, input, game) {
-  if (base === "ultimate") {
-    return startUltimate(f, input, game);
-  }
+  if (f.attack || f.stun > 0 || f.ultimateState) return false;
 
-  const swordModeOk = f.ultimateState?.type === "bishopSword" && f.ultimateState.phase === "active";
-  const blockedByUlt = f.ultimateState && !swordModeOk && f.ultimateState.type !== "pawnUprising" && f.ultimateState.type !== "queenDominion";
+  const move = moveName(base, f);
+  const aim = aimFromInput(input);
+  const m = meta(f, move, aim);
 
-  if (f.attack || blockedByUlt || f.hurt > 8 || f.stun > 0) return false;
-
-  const attack = moveName(base, f);
-  const aim = base === "special" ? aimFromInput(input) : "forward";
-  const m = meta(f, attack, aim);
-
-  if (base === "light" && f.lightCd > 0) return false;
-  if (base === "heavy" && f.heavyCd > 0) return false;
-  if (base === "special" && f.specialCd > 0) return false;
-  if (base === "counter" && f.counterCd > 0) return false;
   if (f.stamina < m.stamina) return false;
 
-  f.stamina -= m.stamina;
-  f.staminaDelay =
-    base === "special" ? 45 :
-    base === "counter" ? 35 :
-    base === "heavy" ? 24 :
-    12;
+  const cdKey = base === "light"
+    ? "lightCd"
+    : base === "heavy"
+      ? "heavyCd"
+      : base === "special"
+        ? "specialCd"
+        : "counterCd";
 
-  f.attack = attack;
+  if (f[cdKey] > 0) return false;
+
+  f.attack = move;
   f.attackAim = aim;
-  f.attackFacing = f.facing || 1;
   f.attackTimer = m.duration;
   f.attackDuration = m.duration;
+  f.attackFacing = f.facing || 1;
   f.hitDone = false;
   f.hitList = [];
   f.multiHitWait = 0;
+  f[cdKey] = m.cd;
   f.attackId++;
-  f.script = null;
 
-  if (base === "light") f.lightCd = m.cd;
-  if (base === "heavy") f.heavyCd = m.cd;
-  if (base === "special") f.specialCd = m.cd;
-  if (base === "counter") f.counterCd = m.cd;
-
-  if (m.armor) f.armor = Math.max(f.armor, m.armor);
-  if (base === "counter") f.invuln = Math.max(f.invuln, m.counterWindow);
+  f.stamina = Math.max(0, f.stamina - m.stamina);
+  f.staminaDelay = 24;
 
   const p = pieceOf(f);
-  const sword = isBishopSword(f);
+  const d = f.attackFacing;
 
   if (base === "counter") {
-    if (p === "king") f.vx -= f.facing * 2;
-    if (p === "rook") f.vx *= 0.1;
-    if (p === "bishop") {
-      f.vx -= f.facing * (sword ? 1.8 : 4);
-      f.vy = Math.min(f.vy, sword ? -8 : -4);
-    }
-    if (p === "knight") {
-      f.vx -= f.facing * 7;
-      f.vy = Math.min(f.vy, -6);
-    }
-    if (p === "pawn") f.vx -= f.facing * 3;
-    if (p === "queen") f.vx += f.facing * 2;
-
-    fx(game, sword ? "bishopSwordParry" : "counterStart", f.x + f.w / 2, f.y + f.h / 2, {
+    f.armor = Math.max(f.armor, m.armor);
+    f.vx *= 0.15;
+    f.vy *= 0.7;
+    fx(game, "counterReady", f.x + f.w / 2, f.y + f.h / 2, {
       piece: p,
-      dir: f.attackFacing,
-      timer: 22
+      dir: d,
+      timer: 18
     });
-    return true;
-  }
-
-  if (p === "king") {
-    if (attack === "light") f.vx += f.facing * 1.5;
-    if (attack === "heavy") f.vx += f.facing * 3.6;
-    if (attack === "crouchHeavy") f.vx += f.facing * 3.1;
-    if (attack === "airHeavy") {
-      f.vx += f.facing * 2;
-      f.vy += 4.1;
-    }
-    if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") {
-        f.vy = -8.5;
-        f.grounded = false;
-      } else if (aim === "down") f.vx += f.facing * 2.2;
-      else f.vx += f.facing * 4.5;
-    }
-  }
-
-  if (p === "rook") {
-    if (attack === "light") f.vx += f.facing * 1.4;
-    if (attack === "heavy") f.vx += f.facing * 4.2;
-    if (attack === "crouchHeavy") f.vx += f.facing * 3;
-    if (attack === "airHeavy") {
-      f.vx += f.facing * 1.3;
-      f.vy += 5;
-    }
-    if (attack === "special") {
-      if (aim === "forward") {
-        f.vx *= 0.05;
-        f.armor = Math.max(f.armor, 54);
+  } else if (base === "special") {
+    if (p === "king") {
+      if (aim === "down") {
+        f.vx *= 0.1;
       } else if (aim === "up") {
-        f.vx *= 0.05;
-        f.vy = -2.2;
+        f.vy = -9.5;
+        f.vx *= 0.45;
       } else {
-        f.vx += f.facing * 7.4;
+        f.vx += d * 7;
       }
     }
-  }
 
-  if (p === "bishop") {
-    if (attack === "light") f.vx += f.facing * (sword ? 3.2 : 1.8);
-    if (attack === "heavy") {
-      f.script = fixed(f.facing * (sword ? 13.6 : 10), sword ? -7.8 : -8.4, sword ? 13 : 11);
-      f.grounded = false;
-    }
-    if (attack === "airHeavy") {
-      f.script = fixed(f.facing * (sword ? 12.8 : 9.8), sword ? 10.4 : 8.8, sword ? 13 : 11);
-    }
-    if (attack === "airSpecial") {
-      f.script = bishopZigzag(f, input);
-      if (sword) {
-        f.script.sx = 14.5;
-        f.script.sy = 11.8;
-      }
-      f.grounded = false;
-    } else if (attack === "special") {
-      if (aim === "up") {
-        f.vx += f.facing * (sword ? 7.2 : 5.2);
-        f.vy = sword ? -16 : -14;
-        f.grounded = false;
-      } else if (aim === "down") {
-        f.vx += f.facing * (sword ? 9.4 : 7.2);
-        f.vy += sword ? 10.5 : 8.5;
+    if (p === "rook") {
+      if (aim === "forward") {
+        f.vx *= 0.04;
+        f.armor = Math.max(f.armor, 50);
+      } else if (aim === "up") {
+        f.vx *= 0.35;
+        f.vy = -7.5;
       } else {
-        f.vx += f.facing * (sword ? 12.5 : 9.5);
-        f.vy = sword ? -5.5 : -4.8;
-        f.grounded = false;
+        f.vx += d * 4;
+        f.armor = Math.max(f.armor, 32);
       }
     }
 
-    if (sword) {
-      fx(game, "bishopSwordMove", f.x + f.w / 2, f.y + f.h / 2, {
-        piece: "bishop",
-        attack,
-        aim,
-        dir: f.attackFacing,
-        timer: 16
-      });
+    if (p === "bishop") {
+      if (isBishopSword(f)) {
+        if (aim === "up") {
+          f.vx += d * 3.5;
+          f.vy = -11.2;
+        } else if (aim === "down") {
+          f.vx += d * 6.5;
+          f.vy = Math.max(f.vy, 7.5);
+        } else {
+          f.vx += d * 10;
+        }
+      } else {
+        f.script = bishopZigzag(f, input);
+      }
     }
-  }
 
-  if (p === "knight") {
-    if (attack === "light") f.vx += f.facing * 2.2;
-    if (attack === "heavy") {
-      f.vy = -11.2;
-      f.vx += f.facing * 1.5;
-      f.grounded = false;
-    }
-    if (attack === "crouchHeavy") {
-      f.vx -= f.facing * 2;
-      f.vy = -6.2;
-      f.grounded = false;
-    }
-    if (attack === "airHeavy") {
+    if (p === "knight") {
       f.script = knightPattern(f, input);
-      f.grounded = false;
     }
-    if (attack === "special" || attack === "airSpecial") {
+
+    if (p === "pawn") {
       if (aim === "up") {
-        f.vx -= f.facing * 3.8;
-        f.vy = -18.8;
-        f.grounded = false;
+        f.vy = -11;
+        f.vx += d * 2.4;
       } else if (aim === "down") {
-        f.vx += f.facing * 12;
-        f.vy += 11.4;
+        f.vx += d * 5.8;
       } else {
-        f.vx += f.facing * 12;
-        f.vy = -12.8;
-        f.grounded = false;
+        f.vx += d * 7.3;
       }
     }
-  }
 
-  if (p === "pawn") {
-    if (attack === "light") f.vx += f.facing * 1.4;
-    if (attack === "heavy") f.vx += f.facing * 2.7;
-    if (attack === "crouchHeavy") {
-      f.vx += f.facing * 3.4;
-      f.vy = -4.8;
-      f.grounded = false;
-    }
-    if (attack === "airHeavy") f.vx += f.facing * 2;
-    if (attack === "special" || attack === "airSpecial") {
+    if (p === "queen") {
       if (aim === "up") {
-        f.vx += f.facing * 1.8;
-        f.vy = -11.4;
-        f.grounded = false;
+        f.vy = -14;
+        f.vx += d * 6;
       } else if (aim === "down") {
-        f.vx += f.facing * 5.2;
-        f.vy = -2.3;
-      } else f.vx += f.facing * 7.5;
+        f.vx += d * 12;
+        f.vy = 8;
+      } else {
+        f.script = fixed(d * 15.5, -2.8, 12);
+      }
+    }
+  } else {
+    if (p === "king" && base === "heavy") {
+      f.vx += d * 4;
+      f.armor = Math.max(f.armor, m.armor);
+    }
 
-      charge(f, 3.5);
+    if (p === "rook" && base === "heavy") {
+      f.vx += d * 2.5;
+      f.armor = Math.max(f.armor, m.armor);
+    }
+
+    if (p === "bishop" && isBishopSword(f) && base === "heavy") {
+      f.vx += d * 7.5;
+    }
+
+    if (p === "knight" && base === "heavy") {
+      f.vx += d * 4;
+    }
+
+    if (p === "queen" && base === "heavy") {
+      f.vx += d * 5.5;
     }
   }
 
-  if (p === "queen") {
-    if (attack === "light") f.vx += f.facing * 2.2;
-    if (attack === "heavy") f.vx += f.facing * 4.4;
-    if (attack === "crouchHeavy") f.vx += f.facing * 3.2;
-    if (attack === "airHeavy") f.vx += f.facing * 2.8;
-    if (attack === "special" || attack === "airSpecial") {
-      if (aim === "up") {
-        f.vy = -13.6;
-        f.grounded = false;
-      } else if (aim === "down") {
-        f.vx += f.facing * 9.2;
-        f.vy += 6.8;
-      } else f.vx += f.facing * 7.4;
-    }
-  }
-
-  fx(game, "moveStart", f.x + f.w / 2, f.y + f.h / 2, {
+  fx(game, "attack", f.x + f.w / 2, f.y + f.h / 2, {
     piece: p,
-    attack,
+    attack: move,
     aim,
-    dir: f.attackFacing,
-    sword,
-    timer: 12
+    dir: d,
+    sword: isBishopSword(f),
+    timer: m.duration
   });
 
   return true;
 }
 
-function triggerCounter(defender, attacker, game) {
-  const p = pieceOf(defender);
-  const d = defender.facing || -attacker.facing || 1;
-  const m = meta(defender, "counter");
+function triggerCounter(counterer, attacker, game) {
+  counterer.attack = null;
+  counterer.attackTimer = 0;
+  counterer.attackDuration = 0;
+  counterer.hitList = [];
+  counterer.stun = 0;
+  counterer.hurt = 0;
+  counterer.invuln = 10;
 
-  defender.attackFacing = d;
-  defender.invuln = 12;
-  defender.hurt = 0;
-  defender.hitDone = false;
-  defender.attackTimer = Math.min(defender.attackTimer, defender.attackDuration - m.activeA);
+  const d = counterer.x < attacker.x ? 1 : -1;
+  counterer.facing = d;
+  counterer.attackFacing = d;
 
-  attacker.attack = null;
-  attacker.attackTimer = 0;
-  attacker.script = null;
-  attacker.hurt = Math.max(attacker.hurt, 22);
+  const p = pieceOf(counterer);
+  const m = meta(counterer, "counter");
 
-  if (p === "king") {
-    attacker.vx = d * 34;
-    attacker.vy = -12;
-  } else if (p === "rook") {
-    attacker.vx = d * 40;
-    attacker.vy = -8;
-  } else if (p === "bishop") {
-    const sword = isBishopSword(defender);
-    defender.vx = d * (sword ? 13 : 10);
-    defender.vy = sword ? -16 : -12;
-    attacker.vx = d * (sword ? 38 : 25);
-    attacker.vy = sword ? -30 : -25;
-  } else if (p === "knight") {
-    defender.vx = d * 12;
-    defender.vy = -9;
-    attacker.vx = d * 27;
-    attacker.vy = -18;
-  } else if (p === "pawn") {
-    attacker.vx = d * 23;
-    attacker.vy = -10;
-  } else {
-    attacker.vx = d * 40;
-    attacker.vy = -22;
-  }
+  const hb = makeHitbox(counterer, d === 1 ? counterer.x + counterer.w : counterer.x - 175, counterer.y - 12, 175, counterer.h + 30, {
+    dmg: m.dmg,
+    kb: m.kb,
+    lift: m.lift,
+    wall: m.wall,
+    hitstop: 10,
+    breakArmor: true,
+    grab: m.grab,
+    throwPower: m.throwPower,
+    once: true,
+    dir: d,
+    hitKey: `counter:${counterer.attackId}:${attacker.side}`
+  });
 
-  game.hitstop = Math.max(game.hitstop, isBishopSword(defender) ? 14 : 10);
-  game.shake = Math.max(game.shake, isBishopSword(defender) ? 16 : 12);
+  applyHitbox(counterer, attacker, hb, game);
 
-  fx(game, isBishopSword(defender) ? "bishopSwordParry" : "counterSuccess", defender.x + defender.w / 2, defender.y + defender.h / 2, {
+  fx(game, "counterFire", counterer.x + counterer.w / 2, counterer.y + counterer.h / 2, {
     piece: p,
     dir: d,
-    timer: 34
-  });
-}
-
-function applyGrab(attacker, defender, m, game, b) {
-  const d = attacker.attackFacing || attacker.facing || 1;
-
-  defender.invuln = 0;
-  defender.hurt = 36;
-  defender.stun = Math.max(defender.stun, 18);
-  defender.x = attacker.x + attacker.w / 2 + d * 55 - defender.w / 2;
-  defender.y = Math.min(defender.y, attacker.y + attacker.h * 0.12);
-  defender.vx = d * m.throwPower * 1.52;
-  defender.vy = -14;
-  defender.hp = Math.max(0, defender.hp - m.dmg);
-  defender.wallBounceTimer = 50;
-  defender.wallBouncePower = m.wall;
-
-  attacker.hitDone = true;
-  attacker.hitList.push(`${attacker.attackId}:${defender.side}`);
-
-  game.hitstop = Math.max(game.hitstop, 12);
-  game.shake = Math.max(game.shake, 13);
-
-  fx(game, "grab", defender.x + defender.w / 2, defender.y + defender.h / 2, {
-    dir: d,
-    piece: pieceOf(attacker),
     timer: 24
   });
 
-  fx(game, "hit", b.x + b.w / 2, b.y + b.h / 2, {
-    piece: pieceOf(attacker),
-    attack: attacker.attack,
-    dir: d,
-    timer: 18
-  });
+  game.shake = Math.max(game.shake, 10);
 }
 
-function handleHit(attacker, defender, game) {
-  if (!attacker.attack || !active(attacker)) return;
-
-  const m = meta(attacker);
-
-  if (m.multi) {
-    if (attacker.multiHitWait > 0) return;
-  } else if (attacker.hitDone) {
-    return;
-  }
-
-  const b = box(attacker);
-  const defRect = { x: defender.x, y: defender.y, w: defender.w, h: defender.h };
-
-  if (!rect(b, defRect)) return;
-
-  if (counterWindow(defender)) {
-    triggerCounter(defender, attacker, game);
-    return;
-  }
-
-  if (defender.invuln > 0) return;
-
-  if (m.grab) {
-    applyGrab(attacker, defender, m, game, b);
-    return;
-  }
-
-  let damage = m.dmg;
-  let knock = m.kb * 1.52;
-  let lift = m.lift * 1.2;
-
-  if (m.multi) {
-    damage = Math.max(2, Math.ceil(damage * 0.55));
-    knock *= 0.64;
-  }
-
-  if (defender.armor > 0 && !m.breakArmor) {
-    damage = Math.ceil(damage * 0.5);
-    knock *= 0.4;
-    fx(game, "armor", defender.x + defender.w / 2, defender.y + defender.h / 2, { timer: 12 });
-  } else {
-    defender.hurt = m.multi ? 8 : 20;
-  }
-
-  defender.hp = Math.max(0, defender.hp - damage);
-  defender.vx += attacker.attackFacing * knock;
-  defender.vy += lift;
-  defender.wallBounceTimer = 42;
-  defender.wallBouncePower = m.wall;
-
-  chargeUltimate(attacker, damage * 1.15 + 2);
-  chargeUltimate(defender, damage * 0.38 + 1);
-
-  if (attacker.characterKey === "pawn" && !attacker.promoted) charge(attacker, 4.5 + damage * 0.28);
-  if (defender.characterKey === "pawn" && !defender.promoted) charge(defender, 1.8 + damage * 0.08);
-
-  if (attacker.ultimateState?.type === "pawnUprising") {
-    attacker.ultimateState.hitsLanded++;
-  }
-
-  if (attacker.ultimateState?.type === "queenDominion") {
-    attacker.ultimateState.hits++;
-    const cx = attacker.x + attacker.w / 2;
-    const dcx = defender.x + defender.w / 2;
-    defender.vx += dcx < cx ? 3.2 : -3.2;
-  }
-
-  game.hitstop = Math.max(game.hitstop, m.multi ? 3 : damage >= 12 ? 9 : damage >= 8 ? 6 : 4);
-  game.shake = Math.max(game.shake, isBishopSword(attacker) ? 14 : damage >= 12 ? 10 : damage >= 8 ? 7 : 4);
-
-  fx(game, "hit", clamp(b.x + b.w / 2, defender.x, defender.x + defender.w), clamp(b.y + b.h / 2, defender.y, defender.y + defender.h), {
-    piece: pieceOf(attacker),
-    attack: attacker.attack,
-    dir: attacker.attackFacing,
-    damage,
-    sword: isBishopSword(attacker),
-    timer: m.multi ? 8 : 18
-  });
-
-  if (m.multi) attacker.multiHitWait = m.interval;
-  else attacker.hitDone = true;
-}
-
-function updateFighter(f, enemy, input, game) {
-  if (f.lightCd > 0) f.lightCd--;
-  if (f.heavyCd > 0) f.heavyCd--;
-  if (f.specialCd > 0) f.specialCd--;
-  if (f.counterCd > 0) f.counterCd--;
-  if (f.ultimateCd > 0) f.ultimateCd--;
-  if (f.hurt > 0) f.hurt--;
-  if (f.armor > 0) f.armor--;
-  if (f.invuln > 0) f.invuln--;
-  if (f.stun > 0) f.stun--;
-  if (f.dashCd > 0) f.dashCd--;
-  if (f.staminaDelay > 0) f.staminaDelay--;
-  if (f.multiHitWait > 0) f.multiHitWait--;
-
-  if (!Number.isFinite(f.x)) f.x = f.side === "white" ? 220 : 690;
-  if (!Number.isFinite(f.y)) f.y = FLOOR - f.standH;
+function physics(f, input, game, locked) {
+  if (!Number.isFinite(f.x)) f.x = 0;
+  if (!Number.isFinite(f.y)) f.y = FLOOR - f.h;
   if (!Number.isFinite(f.vx)) f.vx = 0;
   if (!Number.isFinite(f.vy)) f.vy = 0;
-  if (!Number.isFinite(f.hp)) f.hp = Math.max(1, f.maxHp || 500);
-  if (!Number.isFinite(f.stamina)) f.stamina = 50;
-  if (!Number.isFinite(f.ultimate)) f.ultimate = 0;
 
-  if (!isBishopSword(f) && f.characterKey === "bishop" && f.speed !== (f.baseSpeed || charData("bishop").speed)) {
-    f.speed = f.baseSpeed || charData("bishop").speed;
+  const disabled = locked || f.hurt > 5 || f.stun > 0;
+  const move = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+
+  if (!disabled) {
+    const accel = f.grounded ? 1.3 : 0.62;
+    const maxSpeed = f.speed * (input.down && !f.grounded ? 0.85 : 1);
+
+    if (move) f.vx += move * accel;
+    else f.vx *= f.grounded ? 0.78 : 0.94;
+
+    f.vx = clamp(f.vx, -maxSpeed, maxSpeed);
+
+    if (move && (!f.attack || f.attackTimer <= 4)) {
+      f.facing = move;
+    }
+  } else {
+    f.vx *= f.grounded ? 0.86 : 0.98;
   }
+
+  if (input.down && !f.grounded && !locked) {
+    f.vy += 0.85;
+  }
+
+  f.vy += GRAVITY;
+  f.x += f.vx;
+  f.y += f.vy;
+
+  if (f.x < LEFT) {
+    f.x = LEFT;
+    if (f.wallBounceTimer > 0) {
+      f.vx = Math.abs(f.wallBouncePower || 20);
+      f.vy = Math.min(f.vy, -6);
+      fx(game, "wall", f.x, f.y + f.h / 2, { timer: 15 });
+    } else {
+      f.vx = 0;
+    }
+  }
+
+  if (f.x + f.w > RIGHT) {
+    f.x = RIGHT - f.w;
+    if (f.wallBounceTimer > 0) {
+      f.vx = -Math.abs(f.wallBouncePower || 20);
+      f.vy = Math.min(f.vy, -6);
+      fx(game, "wall", f.x + f.w, f.y + f.h / 2, { timer: 15 });
+    } else {
+      f.vx = 0;
+    }
+  }
+
+  const floor = game.floorY ?? FLOOR;
+  if (f.y + f.h >= floor) {
+    if (!f.grounded && f.vy > 10) {
+      fx(game, "land", f.x + f.w / 2, floor, {
+        piece: pieceOf(f),
+        timer: 14
+      });
+    }
+
+    f.y = floor - f.h;
+    f.vy = 0;
+    f.grounded = true;
+    f.airDashUsed = false;
+    f.coyote = 7;
+  } else {
+    f.grounded = false;
+    f.coyote = Math.max(0, f.coyote - 1);
+  }
+}
+
+function handleJump(f, input) {
+  if (f.jumpBuffer > 0) f.jumpBuffer--;
+
+  if (input.seq.jump !== f.lastSeq.jump) {
+    f.lastSeq.jump = input.seq.jump;
+    f.jumpBuffer = 8;
+  }
+
+  if (f.jumpBuffer > 0 && f.coyote > 0 && f.stun <= 0 && f.hurt <= 4 && !f.ultimateState) {
+    f.vy = -f.jump;
+    f.grounded = false;
+    f.coyote = 0;
+    f.jumpBuffer = 0;
+  }
+}
+
+function dash(f, input, game) {
+  if (f.dashCd > 0 || f.stamina < 14 || f.hurt > 4 || f.stun > 0 || f.ultimateState) return;
+
+  const d = input.left && !input.right ? -1 : input.right && !input.left ? 1 : f.facing || 1;
+
+  if (!f.grounded && f.airDashUsed) return;
+
+  f.vx = d * 15;
+  f.vy *= 0.42;
+  f.stamina -= 14;
+  f.staminaDelay = 20;
+  f.dashCd = 34;
+  f.invuln = 7;
+
+  if (!f.grounded) f.airDashUsed = true;
+
+  f.facing = d;
+  f.attackFacing = d;
+
+  fx(game, "dash", f.x + f.w / 2, f.y + f.h / 2, {
+    piece: pieceOf(f),
+    dir: d,
+    timer: 16
+  });
+}
+
+function tickTimers(f) {
+  for (const k of ["lightCd", "heavyCd", "specialCd", "counterCd", "ultimateCd", "hurt", "armor", "invuln", "stun", "dashCd", "wallBounceTimer"]) {
+    if (f[k] > 0) f[k]--;
+  }
+
+  if (f.staminaDelay > 0) f.staminaDelay--;
+  else f.stamina = Math.min(f.maxStamina, f.stamina + 0.82);
 
   if (f.promoted) {
     f.queenTimer--;
-    if (f.queenTimer <= 0 && f.ultimateState?.type !== "pawnUprising") {
-      unpromote(f);
-      fx(game, "queenEnd", f.x + f.w / 2, f.y + f.h / 2, { timer: 34 });
-    }
-  } else if (f.characterKey === "pawn") {
-    charge(f, f.hp < f.maxHp * 0.3 ? 0.018 : 0.008);
+    if (f.queenTimer <= 0) unpromote(f);
+  }
+}
+
+function updateFighter(f, enemy, input, game) {
+  input = input || {};
+  input.seq = input.seq || {};
+
+  const faceEnemy = f.x + f.w / 2 < enemy.x + enemy.w / 2 ? 1 : -1;
+  f.facing = faceEnemy;
+  if (!f.attack || f.ultimateState) {
+    f.attackFacing = faceEnemy;
   }
 
-  chargeUltimate(f, 0.006);
+  tickTimers(f);
 
-  if (input.jumpPressed) f.jumpBuffer = 8;
-  else if (f.jumpBuffer > 0) f.jumpBuffer--;
-
-  if (f.grounded) {
-    f.coyote = 8;
-    f.airDashUsed = false;
-  } else if (f.coyote > 0) {
-    f.coyote--;
-  }
-
-  const oldH = f.h;
-  f.crouching = !!input.down && f.grounded && !f.attack && !f.ultimateState && f.hurt <= 8;
-  if (isBishopSword(f)) {
-    f.crouching = !!input.down && f.grounded && !f.attack && f.hurt <= 8;
-  }
-
+  f.crouching = !!input.down && f.grounded && !f.attack && !f.ultimateState && f.stun <= 0 && f.hurt <= 4;
+  const oldBottom = f.y + f.h;
   f.h = f.crouching ? f.crouchH : f.standH;
-  f.y += oldH - f.h;
+  f.y = oldBottom - f.h;
 
-  if (f.staminaDelay <= 0) {
-    f.stamina = Math.min(f.maxStamina, f.stamina + (f.grounded ? 0.85 : 0.48));
+  handleJump(f, input);
+
+  if (input.seq.ultimate !== f.lastSeq.ultimate) {
+    f.lastSeq.ultimate = input.seq.ultimate;
+    startUltimate(f, input, game);
   }
 
-  const stunned = f.hurt > 8 || f.stun > 0;
+  const ultLocksMovement = updateUltimate(f, enemy, game, input);
 
-  if (!stunned && input.ultimatePressed) {
-    startAttack(f, "ultimate", input, game);
-  }
-
-  const ultTakingOver = updateUltimate(f, enemy, game, input);
-  const bishopSwordActive = isBishopSword(f);
-
-  const wantsDash =
-    !ultTakingOver &&
-    input.counterPressed &&
-    input.left !== input.right &&
-    f.dashCd <= 0 &&
-    !f.attack &&
-    !stunned &&
-    f.stamina >= 15;
-
-  if (wantsDash) {
-    const d = input.left ? -1 : 1;
-    f.vx = d * f.speed * 2.25;
-    f.facing = d;
-    f.attackFacing = d;
-    f.dashCd = 28;
-    f.invuln = 5;
-    f.stamina -= 15;
-    f.staminaDelay = 28;
-    fx(game, "dash", f.x + f.w / 2, f.y + f.h / 2, { dir: d, timer: 14 });
-  } else if (!ultTakingOver && input.counterPressed) {
-    startAttack(f, "counter", input, game);
-  }
-
-  const airCtrl =
-    pieceOf(f) === "bishop" ? (bishopSwordActive ? 1.33 : 1.18) :
-    pieceOf(f) === "knight" ? 1.22 :
-    pieceOf(f) === "queen" ? 1.12 :
-    1;
-
-  const queenHyper = f.ultimateState?.type === "queenDominion" && f.ultimateState.phase === "hyper";
-  const movementAllowed = !ultTakingOver || queenHyper || f.ultimateState?.type === "pawnUprising" || bishopSwordActive;
-
-  if (movementAllowed && !f.attack && !stunned) {
-    if (input.left && !input.right) {
-      f.vx = f.grounded ? -f.speed : Math.max(f.vx - f.speed * 0.16 * airCtrl, -f.speed * airCtrl);
-    } else if (input.right && !input.left) {
-      f.vx = f.grounded ? f.speed : Math.min(f.vx + f.speed * 0.16 * airCtrl, f.speed * airCtrl);
-    } else {
-      f.vx *= f.grounded ? 0.72 : 0.96;
+  if (!f.ultimateState) {
+    if (input.seq.light !== f.lastSeq.light) {
+      f.lastSeq.light = input.seq.light;
+      startAttack(f, "light", input, game);
     }
-  } else {
-    f.vx *= f.grounded ? 0.84 : 0.96;
-  }
 
-  if (movementAllowed && f.jumpBuffer > 0 && f.coyote > 0 && !f.attack && !f.crouching && !stunned) {
-    f.vy = -f.jump;
-    f.grounded = false;
-    f.jumpBuffer = 0;
-    f.coyote = 0;
-  }
+    if (input.seq.heavy !== f.lastSeq.heavy) {
+      f.lastSeq.heavy = input.seq.heavy;
+      startAttack(f, "heavy", input, game);
+    }
 
-  if (movementAllowed && !f.grounded && input.down && f.vy > -2 && !f.attack) {
-    f.vy += 0.55;
-  }
+    if (input.seq.special !== f.lastSeq.special) {
+      f.lastSeq.special = input.seq.special;
+      startAttack(f, "special", input, game);
+    }
 
-  if (movementAllowed && !stunned) {
-    if (input.lightPressed) startAttack(f, "light", input, game);
-    if (input.heavyPressed) startAttack(f, "heavy", input, game);
-    if (input.specialPressed) startAttack(f, "special", input, game);
+    if (input.seq.counter !== f.lastSeq.counter) {
+      f.lastSeq.counter = input.seq.counter;
+
+      if (input.left || input.right) {
+        dash(f, input, game);
+      } else {
+        startAttack(f, "counter", input, game);
+      }
+    }
   }
 
   scriptMove(f);
-
-  f.x += f.vx;
-  f.y += f.vy;
-  f.vy += GRAVITY;
-
-  if (!Number.isFinite(f.x)) f.x = f.side === "white" ? 220 : 690;
-  if (!Number.isFinite(f.y)) f.y = FLOOR - f.standH;
-  if (!Number.isFinite(f.vx)) f.vx = 0;
-  if (!Number.isFinite(f.vy)) f.vy = 0;
-
-  if (f.y + f.h >= FLOOR) {
-    f.y = FLOOR - f.h;
-    f.vy = 0;
-    f.grounded = true;
-
-    if (f.script && f.script.type === "fixed" && f.script.vy > 0) f.script = null;
-  } else {
-    f.grounded = false;
-  }
-
-  if (f.x < LEFT) f.x = LEFT;
-  if (f.x + f.w > RIGHT) f.x = RIGHT - f.w;
-
-  if (!f.attack && !f.ultimateState) {
-    f.facing = f.x < enemy.x ? 1 : -1;
-    f.attackFacing = f.facing;
-  }
-
-  if (!f.attack && bishopSwordActive) {
-    f.facing = f.x < enemy.x ? 1 : -1;
-    f.attackFacing = f.facing;
-  }
+  physics(f, input, game, ultLocksMovement);
 
   if (f.attack) {
     f.attackTimer--;
-    if (f.attackTimer <= 0) {
-      f.attack = null;
-      f.attackAim = "forward";
-      f.hitDone = false;
-      f.hitList = [];
-      f.multiHitWait = 0;
-      f.script = null;
-    }
-  }
 
-  if (f.wallBounceTimer > 0) {
-    f.wallBounceTimer--;
+    if (active(f)) {
+      const m = meta(f);
 
-    const hitL = f.x <= LEFT + 1;
-    const hitR = f.x + f.w >= RIGHT - 1;
+      if (m.multi) {
+        f.multiHitWait--;
+        if (f.multiHitWait <= 0) {
+          const b = box(f);
+          const hb = makeHitbox(f, b.x, b.y, b.w, b.h, {
+            dmg: m.dmg,
+            kb: m.kb,
+            lift: m.lift,
+            wall: m.wall,
+            hitstop: 3,
+            breakArmor: m.breakArmor,
+            grab: m.grab,
+            throwPower: m.throwPower,
+            dir: f.attackFacing,
+            hitKey: `${f.attackId}:${Math.floor((f.attackDuration - f.attackTimer) / m.interval)}`
+          });
 
-    if ((hitL || hitR) && Math.abs(f.vx) > 4.2) {
-      const side = hitL ? -1 : 1;
-      f.x = hitL ? LEFT : RIGHT - f.w;
-      f.vx = -side * Math.max(7, Math.abs(f.vx) * 0.52);
-      f.vy = Math.min(f.vy, -7);
+          applyHitbox(f, enemy, hb, game);
+          f.multiHitWait = m.interval;
+        }
+      } else if (!f.hitDone) {
+        const b = box(f);
+        const hb = makeHitbox(f, b.x, b.y, b.w, b.h, {
+          dmg: m.dmg,
+          kb: m.kb,
+          lift: m.lift,
+          wall: m.wall,
+          hitstop: 5,
+          breakArmor: m.breakArmor,
+          grab: m.grab,
+          throwPower: m.throwPower,
+          dir: f.attackFacing,
+          hitKey: `${f.attackId}:single`
+        });
 
-      const damage = Math.ceil(f.wallBouncePower * 0.76);
-      f.hp = Math.max(0, f.hp - damage);
-      f.hurt = Math.max(f.hurt, 18);
-      f.wallBounceTimer = 0;
-
-      fx(game, "wallBounce", f.x + f.w / 2, f.y + f.h / 2, { timer: 18 });
-    }
-  }
-}
-
-function prepInput(player) {
-  const input = player.input || {};
-  const seq = input.seq || {};
-
-  const out = {
-    left: !!input.left,
-    right: !!input.right,
-    up: !!input.up,
-    down: !!input.down,
-    lightPressed: seq.light > (player.lastSeq?.light || 0),
-    heavyPressed: seq.heavy > (player.lastSeq?.heavy || 0),
-    specialPressed: seq.special > (player.lastSeq?.special || 0),
-    counterPressed: seq.counter > (player.lastSeq?.counter || 0),
-    ultimatePressed: seq.ultimate > (player.lastSeq?.ultimate || 0),
-    jumpPressed: seq.jump > (player.lastSeq?.jump || 0)
-  };
-
-  player.lastSeq = {
-    light: seq.light || 0,
-    heavy: seq.heavy || 0,
-    special: seq.special || 0,
-    counter: seq.counter || 0,
-    ultimate: seq.ultimate || 0,
-    jump: seq.jump || 0
-  };
-
-  return out;
-}
-
-function winnerOfRound(w, b, game) {
-  if (w.hp <= 0 && b.hp <= 0) return w.hp >= b.hp ? "white" : "black";
-  if (w.hp <= 0) return "black";
-  if (b.hp <= 0) return "white";
-  if (game.roundTime <= 0) return w.hp >= b.hp ? "white" : "black";
-  return null;
-}
-
-function updateGame(lobby) {
-  const game = lobby.game;
-  if (!game || lobby.status !== "playing") return;
-
-  game.tick++;
-  if (game.shake > 0) game.shake--;
-  tickEffects(game);
-
-  if (game.roundOver) {
-    game.roundOverTimer--;
-
-    if (game.roundOverTimer <= 0) {
-      if (lobby.match.winner) {
-        lobby.status = "finished";
-        lobby.game = null;
-        sendGame(lobby);
-        sendLobbyData();
-      } else {
-        lobby.match.round++;
-        startRound(lobby);
+        if (applyHitbox(f, enemy, hb, game)) {
+          f.hitDone = true;
+        }
       }
     }
 
-    return;
+    if (f.attackTimer <= 0) {
+      f.attack = null;
+      f.attackDuration = 0;
+      f.hitDone = false;
+      f.hitList = [];
+    }
   }
 
-  if (game.hitstop > 0) {
-    game.hitstop--;
-    return;
-  }
+  
+  f.x = clamp(f.x, LEFT, RIGHT - f.w);
+  f.y = clamp(f.y, -220, FLOOR - f.h);
+}
 
-  game.roundTime--;
+function updateRound(lobby) {
+  const game = lobby.game;
+  if (!game || game.roundOver) return;
 
   const white = game.fighters.white;
   const black = game.fighters.black;
 
-  const wi = prepInput(players[white.id] || {});
-  const bi = prepInput(players[black.id] || {});
+  game.tick++;
+  game.roundTime = Math.max(0, game.roundTime - 1);
 
-  updateFighter(white, black, wi, game);
-  updateFighter(black, white, bi, game);
+  if (game.hitstop > 0) {
+    game.hitstop--;
+    tickEffects(game);
+    return;
+  }
 
-  handleHit(white, black, game);
-  handleHit(black, white, game);
+  const wp = players[white.id];
+  const bp = players[black.id];
 
-  const win = winnerOfRound(white, black, game);
+  updateFighter(white, black, wp?.input || {}, game);
+  updateFighter(black, white, bp?.input || {}, game);
 
-  if (win) {
+  if (white.hp <= 0 || black.hp <= 0 || game.roundTime <= 0) {
     game.roundOver = true;
-    game.roundWinner = win;
-    game.roundOverTimer = 150;
 
-    if (win === "white") lobby.match.whiteRounds++;
-    else lobby.match.blackRounds++;
+    if (white.hp > black.hp) game.roundWinner = "white";
+    else if (black.hp > white.hp) game.roundWinner = "black";
+    else game.roundWinner = "draw";
 
-    const wf = game.fighters[win];
-    fx(game, "roundWin", wf.x + wf.w / 2, wf.y + wf.h / 2, { side: win, timer: 80 });
+    if (game.roundWinner === "white") lobby.match.whiteRounds++;
+    if (game.roundWinner === "black") lobby.match.blackRounds++;
 
-    if (lobby.match.whiteRounds >= ROUNDS_TO_WIN || lobby.match.blackRounds >= ROUNDS_TO_WIN) {
-      lobby.match.winner = win;
-      lobby.winner = wf.name;
-      lobby.message = `${wf.name} wins the match ${lobby.match.whiteRounds}-${lobby.match.blackRounds}.`;
-      leaderboard[wf.name] = (leaderboard[wf.name] || 0) + 1;
-      game.roundOverTimer = 220;
+    if (game.roundWinner === "draw") {
+      lobby.message = "Draw round.";
     } else {
-      lobby.message = `${wf.name} wins round ${lobby.match.round}.`;
+      const name = game.roundWinner === "white"
+        ? players[lobby.whiteId]?.name || "White"
+        : players[lobby.blackId]?.name || "Black";
+
+      lobby.message = `${name} wins the round.`;
     }
+
+    game.roundOverTimer = 150;
+    game.shake = Math.max(game.shake, 22);
+
+    fx(game, "roundEnd", W / 2, H / 2, {
+      timer: 90,
+      winner: game.roundWinner
+    });
+  }
+
+  tickEffects(game);
+
+  game.shake = Math.max(0, game.shake - 0.55);
+}
+
+function finishMatch(lobby, winnerSide) {
+  const winnerId = winnerSide === "white" ? lobby.whiteId : lobby.blackId;
+  const winnerName = players[winnerId]?.name || winnerSide;
+
+  leaderboard[winnerName] = (leaderboard[winnerName] || 0) + 1;
+
+  lobby.status = "finished";
+  lobby.winner = winnerName;
+  lobby.message = `${winnerName} wins the match.`;
+  lobby.game = null;
+
+  sendLobbyData();
+}
+
+function afterRound(lobby) {
+  if (!lobby.game || !lobby.game.roundOver) return;
+
+  lobby.game.roundOverTimer--;
+
+  if (lobby.game.roundOverTimer > 0) return;
+
+  if (lobby.match.whiteRounds >= ROUNDS_TO_WIN) {
+    finishMatch(lobby, "white");
+    return;
+  }
+
+  if (lobby.match.blackRounds >= ROUNDS_TO_WIN) {
+    finishMatch(lobby, "black");
+    return;
+  }
+
+  lobby.match.round++;
+  startRound(lobby);
+}
+
+function tick() {
+  for (const lobby of Object.values(lobbies)) {
+    if (lobby.status !== "playing" || !lobby.game) continue;
+
+    updateRound(lobby);
+    afterRound(lobby);
+    sendGame(lobby);
   }
 }
 
-setInterval(() => {
-  for (const lobby of Object.values(lobbies)) {
-    if (lobby.status === "playing" && lobby.game) {
-      updateGame(lobby);
-      sendGame(lobby);
-    }
-  }
-}, 1000 / FPS);
+setInterval(tick, 1000 / FPS);
 
 io.on("connection", (socket) => {
   players[socket.id] = {
     id: socket.id,
-    name: `Player ${Object.keys(players).length + 1}`,
+    name: "Nameless",
     characterKey: "king",
     lobbyId: null,
     role: "menu",
     input: {
+      left: false,
+      right: false,
+      up: false,
+      down: false,
       seq: {
         light: 0,
         heavy: 0,
@@ -2441,14 +2384,6 @@ io.on("connection", (socket) => {
         ultimate: 0,
         jump: 0
       }
-    },
-    lastSeq: {
-      light: 0,
-      heavy: 0,
-      special: 0,
-      counter: 0,
-      ultimate: 0,
-      jump: 0
     }
   };
 
@@ -2461,7 +2396,6 @@ io.on("connection", (socket) => {
 
   socket.on("setName", (name) => {
     players[socket.id].name = cleanName(name);
-    if (!leaderboard[players[socket.id].name]) leaderboard[players[socket.id].name] = 0;
     sendLobbyData();
   });
 
@@ -2474,52 +2408,73 @@ io.on("connection", (socket) => {
   socket.on("createLobby", (name) => {
     leaveLobby(socket.id);
 
-    const id = String(nextLobbyId++);
-
-    lobbies[id] = {
+    const id = nextLobbyId++;
+    const lobby = {
       id,
-      name: String(name || `${players[socket.id].name}'s Board`).trim().slice(0, 28),
-      hostId: socket.id,
+      name: cleanName(name || `${players[socket.id].name}'s Board`),
+      status: "waiting",
       whiteId: socket.id,
       blackId: null,
       spectators: new Set(),
-      status: "waiting",
-      game: null,
-      match: null,
+      message: "Waiting for opponent.",
       winner: null,
-      message: "Waiting for black..."
+      match: null,
+      game: null
     };
+
+    lobbies[id] = lobby;
 
     players[socket.id].lobbyId = id;
     players[socket.id].role = "white";
 
     socket.join(room(id));
-    socket.emit("enteredLobby", { lobbyId: id, role: "white" });
-    sendGame(lobbies[id]);
+
+    socket.emit("enteredLobby", {
+      lobbyId: id,
+      role: "white"
+    });
+
     sendLobbyData();
+    sendGame(lobby);
   });
 
   socket.on("joinLobby", (id) => {
+    id = Number(id);
     const lobby = lobbies[id];
-    if (!lobby || lobby.status !== "waiting" || lobby.blackId) return;
+    if (!lobby) return;
 
     leaveLobby(socket.id);
 
-    lobby.blackId = socket.id;
+    if (!lobby.whiteId) {
+      lobby.whiteId = socket.id;
+      players[socket.id].role = "white";
+    } else if (!lobby.blackId) {
+      lobby.blackId = socket.id;
+      players[socket.id].role = "black";
+    } else {
+      lobby.spectators.add(socket.id);
+      players[socket.id].role = "spectator";
+    }
+
     players[socket.id].lobbyId = id;
-    players[socket.id].role = "black";
-
     socket.join(room(id));
-    socket.emit("enteredLobby", { lobbyId: id, role: "black" });
 
-    initMatch(lobby);
-    startRound(lobby);
+    socket.emit("enteredLobby", {
+      lobbyId: id,
+      role: players[socket.id].role
+    });
 
-    sendGame(lobby);
+    if (lobby.whiteId && lobby.blackId && lobby.status === "waiting") {
+      initMatch(lobby);
+      startRound(lobby);
+    }
+
     sendLobbyData();
+    sendGame(lobby);
   });
 
-  socket.on("watchLobby", (id) => {
+  socket.on("spectateLobby", (id) => {
+    id = Number(id);
     const lobby = lobbies[id];
     if (!lobby) return;
 
@@ -2530,9 +2485,14 @@ io.on("connection", (socket) => {
     players[socket.id].role = "spectator";
 
     socket.join(room(id));
-    socket.emit("enteredLobby", { lobbyId: id, role: "spectator" });
-    sendGame(lobby);
+
+    socket.emit("enteredLobby", {
+      lobbyId: id,
+      role: "spectator"
+    });
+
     sendLobbyData();
+    sendGame(lobby);
   });
 
   socket.on("leaveLobby", () => {
@@ -2543,20 +2503,20 @@ io.on("connection", (socket) => {
 
   socket.on("input", (input) => {
     const p = players[socket.id];
-    if (!p || !input) return;
+    if (!p) return;
 
     p.input = {
-      left: !!input.left,
-      right: !!input.right,
-      up: !!input.up,
-      down: !!input.down,
+      left: !!input?.left,
+      right: !!input?.right,
+      up: !!input?.up,
+      down: !!input?.down,
       seq: {
-        light: Number(input.seq?.light || 0),
-        heavy: Number(input.seq?.heavy || 0),
-        special: Number(input.seq?.special || 0),
-        counter: Number(input.seq?.counter || 0),
-        ultimate: Number(input.seq?.ultimate || 0),
-        jump: Number(input.seq?.jump || 0)
+        light: Number(input?.seq?.light || 0),
+        heavy: Number(input?.seq?.heavy || 0),
+        special: Number(input?.seq?.special || 0),
+        counter: Number(input?.seq?.counter || 0),
+        ultimate: Number(input?.seq?.ultimate || 0),
+        jump: Number(input?.seq?.jump || 0)
       }
     };
   });
@@ -2569,5 +2529,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Chess Brawl server running on http://localhost:${PORT}`);
 });
