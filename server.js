@@ -1748,6 +1748,17 @@ function updateUltimate(f, enemy, game, input) {
   return false;
 }
 
+function canActDuringUltimate(f) {
+  const u = f.ultimateState;
+  if (!u) return true;
+
+  return (
+    (u.type === "bishopSword" && u.phase === "active") ||
+    (u.type === "pawnUprising" && u.phase === "buff") ||
+    (u.type === "queenDominion" && u.phase === "hyper")
+  );
+}
+
 function scriptMove(f) {
   const s = f.script;
   if (!s || typeof s !== "object") return;
@@ -1826,7 +1837,7 @@ function scriptMove(f) {
 }
 
 function startAttack(f, base, input, game) {
-  if (f.attack || f.stun > 0 || f.ultimateState) return false;
+  if (f.attack || f.stun > 0 || !canActDuringUltimate(f)) return false;
 
   const move = moveName(base, f);
   const aim = aimFromInput(input);
@@ -2097,7 +2108,7 @@ function handleJump(f, input) {
     f.jumpBuffer = 8;
   }
 
-  if (f.jumpBuffer > 0 && f.coyote > 0 && f.stun <= 0 && f.hurt <= 4 && !f.ultimateState) {
+  if (f.jumpBuffer > 0 && f.coyote > 0 && f.stun <= 0 && f.hurt <= 4 && canActDuringUltimate(f)) {
     f.vy = -f.jump;
     f.grounded = false;
     f.coyote = 0;
@@ -2106,7 +2117,7 @@ function handleJump(f, input) {
 }
 
 function dash(f, input, game) {
-  if (f.dashCd > 0 || f.stamina < 14 || f.hurt > 4 || f.stun > 0 || f.ultimateState) return;
+  if (f.dashCd > 0 || f.stamina < 14 || f.hurt > 4 || f.stun > 0 || !canActDuringUltimate(f)) return;
 
   const d = input.left && !input.right ? -1 : input.right && !input.left ? 1 : f.facing || 1;
 
@@ -2157,7 +2168,9 @@ function updateFighter(f, enemy, input, game) {
 
   tickTimers(f);
 
-  f.crouching = !!input.down && f.grounded && !f.attack && !f.ultimateState && f.stun <= 0 && f.hurt <= 4;
+  let canAct = canActDuringUltimate(f);
+
+  f.crouching = !!input.down && f.grounded && !f.attack && canAct && f.stun <= 0 && f.hurt <= 4;
   const oldBottom = f.y + f.h;
   f.h = f.crouching ? f.crouchH : f.standH;
   f.y = oldBottom - f.h;
@@ -2170,26 +2183,33 @@ function updateFighter(f, enemy, input, game) {
   }
 
   const ultLocksMovement = updateUltimate(f, enemy, game, input);
+  canAct = canActDuringUltimate(f);
 
-  if (!f.ultimateState) {
-    if (input.seq.light !== f.lastSeq.light) {
-      f.lastSeq.light = input.seq.light;
+  if (input.seq.light !== f.lastSeq.light) {
+    f.lastSeq.light = input.seq.light;
+    if (canAct) {
       startAttack(f, "light", input, game);
     }
+  }
 
-    if (input.seq.heavy !== f.lastSeq.heavy) {
-      f.lastSeq.heavy = input.seq.heavy;
+  if (input.seq.heavy !== f.lastSeq.heavy) {
+    f.lastSeq.heavy = input.seq.heavy;
+    if (canAct) {
       startAttack(f, "heavy", input, game);
     }
+  }
 
-    if (input.seq.special !== f.lastSeq.special) {
-      f.lastSeq.special = input.seq.special;
+  if (input.seq.special !== f.lastSeq.special) {
+    f.lastSeq.special = input.seq.special;
+    if (canAct) {
       startAttack(f, "special", input, game);
     }
+  }
 
-    if (input.seq.counter !== f.lastSeq.counter) {
-      f.lastSeq.counter = input.seq.counter;
+  if (input.seq.counter !== f.lastSeq.counter) {
+    f.lastSeq.counter = input.seq.counter;
 
+    if (canAct) {
       if (input.left || input.right) {
         dash(f, input, game);
       } else {
