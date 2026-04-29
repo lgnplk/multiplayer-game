@@ -2430,9 +2430,12 @@
       return a + (b - a) * clamp(t, 0, 1);
     }
 
-    function swingPhase(f, delay = 0.06, span = 0.76) {
+    function attackProgress(f, lag = 0) {
       const total = Math.max(1, f.attackDuration || 1);
-      const p = clamp(elapsed(f) / total, 0, 1);
+      return clamp(elapsed(f) / total - lag, 0, 1);
+    }
+
+    function swingPhaseAt(p, delay = 0.06, span = 0.76) {
       return ease(clamp((p - delay) / span, 0, 1));
     }
 
@@ -2545,60 +2548,114 @@
       ctx.restore();
     }
 
-    function bishopSwordAttackPose(f, c, d) {
-      const q = swingPhase(f);
-      const e = elapsed(f);
-      const hilt = { x: c.x + d * 2, y: c.y + 28 };
+    function bishopSwordAfterimage(hilt, d, angle, alpha = .18) {
+      if (!hilt || ![hilt.x, hilt.y, d, angle, alpha].every(Number.isFinite)) return;
+
+      const a = d === 1 ? angle : Math.PI - angle;
+      const ux = Math.cos(a);
+      const uy = Math.sin(a);
+      const nx = -uy;
+      const ny = ux;
+      const base = {
+        x: hilt.x + ux * 18,
+        y: hilt.y + uy * 18
+      };
+      const tip = {
+        x: hilt.x + ux * BISHOP_SWORD_LEN,
+        y: hilt.y + uy * BISHOP_SWORD_LEN
+      };
+
+      ctx.save();
+      ctx.globalAlpha = clamp(alpha, 0, .32);
+      ctx.fillStyle = "rgba(255,226,146,.72)";
+      ctx.strokeStyle = "rgba(255,248,208,.82)";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(255,215,90,.4)";
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(base.x + nx * BISHOP_SWORD_WIDTH * .62, base.y + ny * BISHOP_SWORD_WIDTH * .62);
+      ctx.lineTo(tip.x + nx * BISHOP_SWORD_WIDTH * .18, tip.y + ny * BISHOP_SWORD_WIDTH * .18);
+      ctx.lineTo(tip.x - nx * BISHOP_SWORD_WIDTH * .18, tip.y - ny * BISHOP_SWORD_WIDTH * .18);
+      ctx.lineTo(base.x - nx * BISHOP_SWORD_WIDTH * .62, base.y - ny * BISHOP_SWORD_WIDTH * .62);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function bishopSwordAttackPose(f, c, d, lag = 0) {
+      const p = attackProgress(f, lag);
+      const q = swingPhaseAt(p);
+      const total = Math.max(1, f.attackDuration || 1);
+      const e = p * total;
+      const travel = Math.sin(q * Math.PI);
+      const hilt = {
+        x: c.x + d * (2 + travel * 18),
+        y: c.y + 28 - travel * 9
+      };
       let angle = lerp(-1.8, .18, q);
 
       if (f.attack === "light") {
         angle = lerp(-2.18, .12, q);
-        hilt.x += d * lerp(-12, 24, q);
-        hilt.y += lerp(30, 18, q);
+        hilt.x += d * lerp(-22, 42, q);
+        hilt.y += lerp(38, 12, q);
       } else if (f.attack === "airLight") {
         angle = lerp(-1.98, .42, q);
-        hilt.x += d * lerp(-8, 28, q);
-        hilt.y += lerp(14, 20, q);
+        hilt.x += d * lerp(-18, 44, q);
+        hilt.y += lerp(8, 22, q);
       } else if (f.attack === "heavy") {
-        angle = lerp(-2.02, .72, swingPhase(f, .03, .84));
-        hilt.x += d * lerp(-18, 42, q);
-        hilt.y += lerp(10, 34, q);
+        const hq = swingPhaseAt(p, .03, .84);
+        angle = lerp(-2.06, .78, hq);
+        hilt.x += d * lerp(-28, 62, hq);
+        hilt.y += lerp(2, 42, hq);
       } else if (f.attack === "crouchLight") {
         angle = lerp(-.58, .18, q);
-        hilt.x += d * lerp(-8, 22, q);
+        hilt.x += d * lerp(-16, 34, q);
         hilt.y += 54;
       } else if (f.attack === "crouchHeavy") {
-        angle = lerp(-1.05, .74, swingPhase(f, .04, .82));
-        hilt.x += d * lerp(-12, 38, q);
-        hilt.y += 54;
+        const hq = swingPhaseAt(p, .04, .82);
+        angle = lerp(-1.1, .82, hq);
+        hilt.x += d * lerp(-22, 54, hq);
+        hilt.y += 56 - Math.sin(hq * Math.PI) * 8;
       } else if (f.attack === "airHeavy") {
-        angle = lerp(-2.1, .92, swingPhase(f, .02, .82));
-        hilt.x += d * lerp(-14, 36, q);
-        hilt.y += lerp(4, 26, q);
+        const hq = swingPhaseAt(p, .02, .82);
+        angle = lerp(-2.12, .98, hq);
+        hilt.x += d * lerp(-24, 56, hq);
+        hilt.y += lerp(-2, 34, hq);
       } else if (f.attack === "special") {
-        const sq = swingPhase(f, .05, .78);
-        hilt.x += d * lerp(-6, 42, sq);
+        const sq = swingPhaseAt(p, .05, .78);
+        hilt.x += d * lerp(-18, 68, sq);
 
         if (f.attackAim === "up") {
           angle = lerp(.92, -1.42, sq);
-          hilt.y += lerp(34, -12, sq);
+          hilt.y += lerp(38, -26, sq);
         } else if (f.attackAim === "down") {
           angle = lerp(-1.25, .95, sq);
-          hilt.y += lerp(8, 54, sq);
+          hilt.y += lerp(0, 68, sq);
         } else {
           angle = lerp(-1.18, .24, sq);
-          hilt.y += lerp(14, 28, sq);
+          hilt.y += lerp(6, 34, sq);
         }
       } else if (f.attack === "airSpecial") {
         const vx = Number.isFinite(f.vx) && Math.abs(f.vx) > .2 ? f.vx : d;
         const vy = Number.isFinite(f.vy) ? f.vy : 0;
         const worldAngle = Math.atan2(vy, vx);
         angle = d === 1 ? worldAngle : Math.PI - worldAngle;
-        hilt.x += d * (22 + Math.min(e, 16) * .35);
-        hilt.y += 16;
+        hilt.x += d * (28 + Math.min(e, 18) * .55);
+        hilt.y += 16 + Math.sin(p * Math.PI * 2) * 8;
       }
 
       return { hilt, angle };
+    }
+
+    function drawBishopSwordAttack(f, c, d, m, alpha = 1) {
+      const ghostA = bishopSwordAttackPose(f, c, d, .16);
+      const ghostB = bishopSwordAttackPose(f, c, d, .08);
+      const pose = bishopSwordAttackPose(f, c, d);
+
+      bishopSwordAfterimage(ghostA.hilt, d, ghostA.angle, alpha * .13);
+      bishopSwordAfterimage(ghostB.hilt, d, ghostB.angle, alpha * .22);
+      bishopSwordBlade(pose.hilt, d, m, pose.angle, alpha);
     }
 
     function drawBishopIdleSword(f) {
@@ -3045,8 +3102,7 @@
 
       if (p === "bishop") {
         if (sword) {
-          const pose = bishopSwordAttackPose(f, c, d);
-          bishopSwordBlade(pose.hilt, d, m, pose.angle, bishopSwordVisualAlpha(f));
+          drawBishopSwordAttack(f, c, d, m, bishopSwordVisualAlpha(f));
         } else {
           if (f.attack === "light" || f.attack === "airLight") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
           if (f.attack === "heavy") {
@@ -3200,12 +3256,7 @@
       const sword = isBishopSword(f);
 
       if (sword) {
-        const s = e < 14 ? 0 : swingPhase(f, .36, .44);
-        const hilt = {
-          x: c.x + d * lerp(-4, 30, s),
-          y: c.y + lerp(34, 24, s)
-        };
-        bishopSwordBlade(hilt, d, m, lerp(-1.18, .34, s), bishopSwordVisualAlpha(f));
+        drawBishopSwordAttack(f, c, d, m, bishopSwordVisualAlpha(f));
         return;
       }
 

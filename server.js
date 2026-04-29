@@ -29,20 +29,22 @@ const CHARACTERS = {
   king: {
     name: "King",
     title: "Simple Bruiser",
-    hp: 780,
-    speed: 7.0,
+    hp: 750,
+    speed: 6.8,
     jump: 15,
     w: 72,
-    h: 124
+    h: 124,
+    ultimateMax: 135
   },
   rook: {
     name: "Rook",
     title: "Tanky Zoner",
-    hp: 820,
-    speed: 6.0,
-    jump: 14.8,
+    hp: 860,
+    speed: 6.25,
+    jump: 15.1,
     w: 82,
-    h: 128
+    h: 128,
+    ultimateMax: 96
   },
   bishop: {
     name: "Bishop",
@@ -69,7 +71,8 @@ const CHARACTERS = {
     speed: 7.2,
     jump: 17,
     w: 56,
-    h: 106
+    h: 106,
+    ultimateMax: 90
   }
 };
 
@@ -159,7 +162,7 @@ function makeFighter(id, side, key) {
     staminaDelay: 0,
 
     ultimate: 0,
-    ultimateMax: ULTIMATE_MAX,
+    ultimateMax: c.ultimateMax || ULTIMATE_MAX,
     ultimateState: null,
 
     hurt: 0,
@@ -443,27 +446,27 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 9, dmg: 7, kb: 12, lift: -3, cd: 12 });
     if (attack === "airLight") Object.assign(m, { duration: 18, activeA: 4, activeB: 11, dmg: 7, kb: 13, lift: 6, cd: 13 });
     if (attack === "crouchLight") Object.assign(m, { duration: 18, activeA: 5, activeB: 11, dmg: 6, kb: 10, lift: -16, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 38, activeA: 12, activeB: 21, dmg: 21, kb: 34, stamina: 14, cd: 54, armor: 28, breakArmor: true, wall: 46 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 9, activeB: 18, dmg: 17, kb: 25, lift: -24, stamina: 11, cd: 46, armor: 16, wall: 34 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 35, activeA: 7, activeB: 20, dmg: 20, kb: 21, lift: 22, stamina: 12, cd: 50, breakArmor: true, wall: 30 });
+    if (attack === "heavy") Object.assign(m, { duration: 39, activeA: 12, activeB: 21, dmg: 18, kb: 30, stamina: 15, cd: 64, armor: 22, breakArmor: true, wall: 40 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 35, activeA: 9, activeB: 18, dmg: 15, kb: 22, lift: -22, stamina: 12, cd: 56, armor: 12, wall: 28 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 36, activeA: 7, activeB: 20, dmg: 17, kb: 18, lift: 20, stamina: 13, cd: 58, breakArmor: true, wall: 24 });
 
     if (attack === "special" || attack === "airSpecial") {
-      if (aim === "down") Object.assign(m, { duration: 46, activeA: 9, activeB: 18, dmg: 20, kb: 16, lift: -8, stamina: 22, cd: 150, armor: 32, grab: true, throwPower: 68, wall: 58 });
-      else if (aim === "up") Object.assign(m, { duration: 44, activeA: 9, activeB: 22, dmg: 18, kb: 16, lift: -44, stamina: 20, cd: 135, armor: 20, breakArmor: true, wall: 24 });
-      else Object.assign(m, { duration: 50, activeA: 13, activeB: 25, dmg: 22, kb: 42, lift: -10, stamina: 24, cd: 155, armor: 34, breakArmor: true, wall: 62 });
+      if (aim === "down") Object.assign(m, { duration: 47, activeA: 10, activeB: 18, dmg: 17, kb: 14, lift: -7, stamina: 24, cd: 175, armor: 24, grab: true, throwPower: 58, wall: 44 });
+      else if (aim === "up") Object.assign(m, { duration: 45, activeA: 10, activeB: 22, dmg: 15, kb: 14, lift: -38, stamina: 22, cd: 158, armor: 14, breakArmor: true, wall: 18 });
+      else Object.assign(m, { duration: 51, activeA: 14, activeB: 25, dmg: 18, kb: 34, lift: -8, stamina: 26, cd: 182, armor: 26, breakArmor: true, wall: 48 });
     }
   }
 
   if (p === "rook") {
-    if (attack === "light") Object.assign(m, { duration: 20, activeA: 6, activeB: 12, dmg: 5, kb: 17, cd: 18 });
-    if (attack === "heavy") Object.assign(m, { duration: 36, activeA: 11, activeB: 21, dmg: 12, kb: 32, stamina: 13, cd: 56, armor: 26, breakArmor: true, wall: 44 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 34, activeA: 10, activeB: 18, dmg: 10, kb: 30, stamina: 11, cd: 54, wall: 38 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 18, dmg: 10, kb: 26, lift: 12, stamina: 10, cd: 52 });
+    if (attack === "light") Object.assign(m, { duration: 19, activeA: 5, activeB: 12, dmg: 6, kb: 18, cd: 15 });
+    if (attack === "heavy") Object.assign(m, { duration: 35, activeA: 10, activeB: 22, dmg: 15, kb: 34, stamina: 12, cd: 48, armor: 32, breakArmor: true, wall: 46 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 33, activeA: 9, activeB: 18, dmg: 12, kb: 31, stamina: 10, cd: 46, wall: 40 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 31, activeA: 7, activeB: 18, dmg: 12, kb: 27, lift: 12, stamina: 9, cd: 44 });
 
     if (attack === "special") {
-      if (aim === "forward") Object.assign(m, { duration: 96, activeA: 44, activeB: 65, dmg: 5, kb: 46, stamina: 36, cd: 300, armor: 50, breakArmor: true, multi: true, interval: 9, wall: 62 });
-      else if (aim === "up") Object.assign(m, { duration: 62, activeA: 16, activeB: 34, dmg: 5, kb: 20, lift: -33, stamina: 24, cd: 300, multi: true, interval: 10 });
-      else Object.assign(m, { duration: 58, activeA: 14, activeB: 27, dmg: 5, kb: 38, stamina: 25, cd: 300, armor: 36, breakArmor: true, wall: 46 });
+      if (aim === "forward") Object.assign(m, { duration: 92, activeA: 40, activeB: 66, dmg: 6, kb: 42, stamina: 32, cd: 255, armor: 54, breakArmor: true, multi: true, interval: 8, wall: 54 });
+      else if (aim === "up") Object.assign(m, { duration: 60, activeA: 14, activeB: 36, dmg: 6, kb: 18, lift: -35, stamina: 21, cd: 240, multi: true, interval: 9 });
+      else Object.assign(m, { duration: 56, activeA: 12, activeB: 28, dmg: 7, kb: 36, stamina: 22, cd: 235, armor: 40, breakArmor: true, wall: 42 });
     }
   }
 
@@ -512,17 +515,17 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
       if (aim === "up") {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 21, dmg: 14, kb: 26, lift: -44, stamina: 14, cd: 62, breakArmor: true, wall: 44 }
-          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 18, lift: -30, stamina: 17, cd: 140, multi: true, interval: 13 }
+          : { duration: 92, activeA: 5, activeB: 82, dmg: 5, kb: 18, lift: -30, stamina: 20, cd: 158, multi: true, interval: 11 }
         );
       } else if (aim === "down") {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 21, dmg: 15, kb: 42, lift: 18, stamina: 14, cd: 62, breakArmor: true, wall: 58 }
-          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 24, lift: 11, stamina: 17, cd: 140, breakArmor: true, multi: true, interval: 13 }
+          : { duration: 92, activeA: 5, activeB: 82, dmg: 5, kb: 23, lift: 10, stamina: 20, cd: 158, breakArmor: true, multi: true, interval: 11 }
         );
       } else {
         Object.assign(m, sword
           ? { duration: 36, activeA: 7, activeB: 22, dmg: 15, kb: 40, lift: -16, stamina: 14, cd: 62, breakArmor: true, wall: 54 }
-          : { duration: 58, activeA: 7, activeB: 42, dmg: 6, kb: 23, lift: -10, stamina: 17, cd: 140, multi: true, interval: 13 }
+          : { duration: 92, activeA: 5, activeB: 82, dmg: 5, kb: 22, lift: -10, stamina: 20, cd: 158, multi: true, interval: 11 }
         );
       }
     }
@@ -541,8 +544,8 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
         dmg: 4,
         kb: 18,
         lift: -10,
-        stamina: 20,
-        cd: 155,
+        stamina: 14,
+        cd: 58,
         multi: true,
         interval: 5,
         wall: 44
@@ -800,7 +803,16 @@ function charge(f, n) {
 
 function chargeUltimate(f, n) {
   if (!f || f.ultimateState) return;
-  f.ultimate = clamp((f.ultimate || 0) + n, 0, f.ultimateMax || ULTIMATE_MAX);
+
+  const p = pieceOf(f);
+  let scale = 1;
+
+  if (p === "king") scale = 0.72;
+  else if (p === "rook") scale = 1.08;
+  else if (p === "pawn") scale = 1.28;
+  else if (p === "queen") scale = 1.36;
+
+  f.ultimate = clamp((f.ultimate || 0) + n * scale, 0, f.ultimateMax || ULTIMATE_MAX);
 }
 
 function spendUltimate(f) {
@@ -827,6 +839,7 @@ function makeHitbox(owner, x, y, w, h, data = {}) {
     wall: data.wall ?? 20,
     duration: data.duration ?? 1,
     hitstop: data.hitstop ?? 4,
+    stun: data.stun ?? 0,
     breakArmor: !!data.breakArmor,
     ultimate: !!data.ultimate,
     once: data.once !== false,
@@ -868,8 +881,13 @@ function applyHitbox(attacker, defender, hb, game) {
     defender.vx = d * hb.throwPower * 1.52;
     defender.vy = -14;
     defender.hp = Math.max(0, defender.hp - hb.dmg);
-    defender.wallBounceTimer = 50;
-    defender.wallBouncePower = hb.wall;
+    if (hb.wall > 0) {
+      defender.wallBounceTimer = 50;
+      defender.wallBouncePower = hb.wall;
+    } else {
+      defender.wallBounceTimer = 0;
+      defender.wallBouncePower = 0;
+    }
 
     game.hitstop = Math.max(game.hitstop, hb.hitstop + 8);
     game.shake = Math.max(game.shake, 14);
@@ -904,11 +922,21 @@ function applyHitbox(attacker, defender, hb, game) {
     defender.hurt = hb.ultimate ? 16 : 12;
   }
 
+  if (hb.stun > 0) {
+    defender.stun = Math.max(defender.stun, hb.stun);
+    defender.hurt = Math.max(defender.hurt, hb.stun);
+  }
+
   defender.hp = Math.max(0, defender.hp - damage);
   defender.vx += hb.dir * knock;
   defender.vy += lift;
-  defender.wallBounceTimer = 46;
-  defender.wallBouncePower = hb.wall;
+  if (hb.wall > 0) {
+    defender.wallBounceTimer = 46;
+    defender.wallBouncePower = hb.wall;
+  } else {
+    defender.wallBounceTimer = 0;
+    defender.wallBouncePower = 0;
+  }
 
   chargeUltimate(attacker, hb.ultimate ? 0 : damage * 1.15 + 2);
   chargeUltimate(defender, damage * 0.38 + 1);
@@ -1009,15 +1037,18 @@ function knightAirPattern(f, input) {
 function bishopZigzag(f, input) {
   const dir = f.facing || 1;
   const yDir = input.down && !input.up ? 1 : -1;
+  const segmentTicks = 13;
 
   return {
     type: "bishopZigzag",
     dir,
     yDir,
     phase: 0,
-    t: 14,
-    sx: 8.8,
-    sy: 7.4,
+    segments: 6,
+    segmentTicks,
+    t: segmentTicks,
+    sx: 9.6,
+    sy: 8.2,
     trail: []
   };
 }
@@ -1036,7 +1067,7 @@ function makeUltimateState(f, input) {
       phase: "hunt",
       timer: 0,
       duration: 185,
-      grabRange: 126,
+      grabRange: 112,
       dir: d,
       grabbed: false,
       shockwaveDone: false,
@@ -1052,9 +1083,9 @@ function makeUltimateState(f, input) {
       timer: 0,
       dir: d,
       aimY: 0,
-      fireEvery: 13,
+      fireEvery: 11,
       shots: 0,
-      maxShots: 4,
+      maxShots: 5,
       beams: []
     };
   }
@@ -1146,9 +1177,9 @@ function startUltimate(f, input, game) {
   }
 
   if (f.ultimateState.type === "kingVerdict") {
-    f.ultimateCd = 330;
-    f.invuln = Math.max(f.invuln, 34);
-    f.armor = Math.max(f.armor, 64);
+    f.ultimateCd = 420;
+    f.invuln = Math.max(f.invuln, 28);
+    f.armor = Math.max(f.armor, 52);
   }
 
   if (f.ultimateState.type === "rookSiege") {
@@ -1196,7 +1227,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
   u.timer++;
   u.auraPulse = (u.auraPulse || 0) + 1;
 
-  f.armor = Math.max(f.armor, 58);
+  f.armor = Math.max(f.armor, 46);
   f.invuln = Math.max(f.invuln, 3);
 
   const d = enemy.x + enemy.w / 2 > f.x + f.w / 2 ? 1 : -1;
@@ -1216,7 +1247,7 @@ function updateKingUltimate(f, enemy, game, input, u) {
   }
 
   if (u.phase === "hunt") {
-    f.vx = d * Math.max(4.9, f.speed * 1.08);
+    f.vx = d * Math.max(4.4, f.speed * 0.98);
 
     if (u.timer % 13 === 0) {
       fx(game, "kingAfterimage", f.x + f.w / 2, f.y + f.h / 2, {
@@ -1262,10 +1293,10 @@ function updateKingUltimate(f, enemy, game, input, u) {
 
     if (u.timer === 16) {
       const hb = makeHitbox(f, f.x + f.w / 2 - 165, f.y - 32, 330, 205, {
-        dmg: 16,
-        kb: 38,
+        dmg: 13,
+        kb: 32,
         lift: -18,
-        wall: 62,
+        wall: 50,
         hitstop: 10,
         ultimate: true,
         breakArmor: true,
@@ -1284,10 +1315,10 @@ function updateKingUltimate(f, enemy, game, input, u) {
 
     if (u.timer === 38) {
       const hb = makeHitbox(f, f.x + f.w / 2 - 210, f.y - 52, 420, 245, {
-        dmg: 28,
-        kb: 78,
-        lift: -32,
-        wall: 108,
+        dmg: 22,
+        kb: 62,
+        lift: -28,
+        wall: 82,
         hitstop: 18,
         ultimate: true,
         breakArmor: true,
@@ -1315,10 +1346,10 @@ function updateKingUltimate(f, enemy, game, input, u) {
       u.shockwaveDone = true;
 
       const hb = makeHitbox(f, f.x + f.w / 2 - 255, f.y - 42, 510, 228, {
-        dmg: u.grabbed ? 12 : 24,
-        kb: u.grabbed ? 42 : 74,
-        lift: -24,
-        wall: 92,
+        dmg: u.grabbed ? 8 : 18,
+        kb: u.grabbed ? 30 : 58,
+        lift: -20,
+        wall: 68,
         hitstop: 14,
         ultimate: true,
         breakArmor: true,
@@ -1405,13 +1436,14 @@ function updateRookUltimate(f, enemy, game, input, u) {
       const beamX = beam.dir === 1 ? beam.x : beam.x - beam.length;
       const beamW = beam.length;
       const hb = makeHitbox(f, beamX, beam.y, beamW, 42, {
-        dmg: 3,
-        kb: 9 + u.shots * 0.4,
-        lift: -2,
-        wall: 25,
-        hitstop: 2,
+        dmg: 7,
+        kb: 3,
+        lift: 0,
+        wall: 0,
+        hitstop: 4,
+        stun: 16,
         ultimate: true,
-        breakArmor: false,
+        breakArmor: true,
         once: true,
         dir: beam.dir,
         hitKey: `rookUlt:${f.attackId}:${beam.id}`
@@ -1734,8 +1766,8 @@ function updatePawnUltimate(f, enemy, game, input, u) {
 function updateQueenUltimate(f, enemy, game, input, u) {
   u.timer++;
 
-  f.armor = Math.max(f.armor, 14);
-  f.stamina = Math.min(f.maxStamina, f.stamina + 1.5);
+  f.armor = Math.max(f.armor, 22);
+  f.stamina = Math.min(f.maxStamina, f.stamina + 1.8);
 
   if (u.phase === "hyper") {
     if (f.lightCd > 0) f.lightCd--;
@@ -1763,16 +1795,28 @@ function updateQueenUltimate(f, enemy, game, input, u) {
     f.vy *= 0.85;
     f.invuln = Math.max(f.invuln, 3);
 
+    if (u.timer < 24 && enemy?.hp > 0) {
+      const cx = f.x + f.w / 2;
+      const cy = f.y + f.h / 2;
+      const ex = enemy.x + enemy.w / 2;
+      const ey = enemy.y + enemy.h / 2;
+
+      enemy.vx += clamp((cx - ex) * 0.045, -5.5, 5.5);
+      enemy.vy += clamp((cy - ey) * 0.035, -4.2, 4.2);
+      enemy.stun = Math.max(enemy.stun, 4);
+      enemy.hurt = Math.max(enemy.hurt, 4);
+    }
+
     if (!u.finisherDone && u.timer === 24) {
       u.finisherDone = true;
-      const damage = clamp(16 + u.hits * 2, 16, 42);
+      const damage = clamp(30 + u.hits * 3.5, 30, 78);
 
-      const hb = makeHitbox(f, f.x + f.w / 2 - 330, f.y - 110, 660, 300, {
+      const hb = makeHitbox(f, f.x + f.w / 2 - 390, f.y - 135, 780, 360, {
         dmg: damage,
-        kb: 52,
-        lift: -26,
-        wall: 90,
-        hitstop: 14,
+        kb: 72,
+        lift: -38,
+        wall: 116,
+        hitstop: 20,
         ultimate: true,
         breakArmor: true,
         once: true,
@@ -1938,9 +1982,10 @@ function scriptMove(f, input = {}) {
     f.attackFacing = s.dir;
 
     if (s.t <= 0) {
-      if (s.phase === 0) {
-        s.phase = 1;
-        s.t = 14;
+      s.phase++;
+
+      if (s.phase < (s.segments || 2)) {
+        s.t = s.segmentTicks || 13;
         s.yDir *= -1;
       } else {
         f.script = null;
@@ -2183,7 +2228,7 @@ function physics(f, input, game, locked) {
   if (f.x < LEFT) {
     f.x = LEFT;
     if (f.wallBounceTimer > 0) {
-      f.vx = Math.abs(f.wallBouncePower || 20);
+      f.vx = Math.abs(f.wallBouncePower ?? 20);
       f.vy = Math.min(f.vy, -6);
       fx(game, "wall", f.x, f.y + f.h / 2, { timer: 15 });
     } else {
@@ -2194,7 +2239,7 @@ function physics(f, input, game, locked) {
   if (f.x + f.w > RIGHT) {
     f.x = RIGHT - f.w;
     if (f.wallBounceTimer > 0) {
-      f.vx = -Math.abs(f.wallBouncePower || 20);
+      f.vx = -Math.abs(f.wallBouncePower ?? 20);
       f.vy = Math.min(f.vy, -6);
       fx(game, "wall", f.x + f.w, f.y + f.h / 2, { timer: 15 });
     } else {
