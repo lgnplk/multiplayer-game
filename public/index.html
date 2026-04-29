@@ -481,6 +481,47 @@
       font-size: 13px;
     }
 
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .sound-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.36);
+      box-shadow: 0 10px 24px rgba(0,0,0,.24);
+    }
+
+    #soundBtn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 1000;
+      box-shadow: none;
+    }
+
+    #soundBtn.muted {
+      opacity: .58;
+      filter: grayscale(1);
+    }
+
+    #soundVolume {
+      width: 90px;
+      padding: 0;
+      accent-color: #ffd978;
+      cursor: pointer;
+    }
+
     @media (max-width: 900px) {
       #menu {
         grid-template-columns: 1fr;
@@ -583,7 +624,13 @@
               <b>Light:</b> J · <b>Heavy:</b> K · <b>Special:</b> L ·
               <b>Ultimate:</b> I · <b>Dash / Counter:</b> Shift · <b>Hitboxes:</b> H
             </div>
-            <button id="leaveBtn" class="danger">Leave</button>
+            <div class="hud-actions">
+              <div class="sound-control">
+                <button id="soundBtn" class="secondary" aria-label="Toggle sound" title="Toggle sound">&#9835;</button>
+                <input id="soundVolume" type="range" min="0" max="100" value="72" aria-label="Sound volume" title="Sound volume" />
+              </div>
+              <button id="leaveBtn" class="danger">Leave</button>
+            </div>
           </div>
         </div>
       </div>
@@ -606,6 +653,8 @@
     const lobbyInput = document.getElementById("lobbyInput");
     const createBtn = document.getElementById("createBtn");
     const leaveBtn = document.getElementById("leaveBtn");
+    const soundBtn = document.getElementById("soundBtn");
+    const soundVolume = document.getElementById("soundVolume");
 
     const whiteNameEl = document.getElementById("whiteName");
     const blackNameEl = document.getElementById("blackName");
@@ -647,6 +696,9 @@
       shake: 0,
       flash: 0,
       showHitboxes: false,
+      lastAudioRoundKey: null,
+      lastAudioSecond: null,
+      lastAudioStatus: null,
       input: {
         left: false,
         right: false,
