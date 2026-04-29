@@ -2098,7 +2098,8 @@
       }
 
       if (p === "king") {
-        if (f.attack === "light") hammer(c, d, m, clamp((e - 2) / 12, 0, 1));
+        if (f.attack === "light" || f.attack === "airLight") hammer(c, d, m, clamp((e - 2) / 12, 0, 1));
+        if (f.attack === "crouchLight") hammer({ x: c.x, y: c.y + 34 }, d, m, clamp((e - 2) / 10, 0, 1));
         if (f.attack === "heavy") {
           after(f, c.x + d * 28 * swing, c.y, 1.04, .14);
           hammer(c, d, m, clamp((e - 5) / 20, 0, 1));
@@ -2126,9 +2127,13 @@
       }
 
       if (p === "rook") {
-        if (f.attack === "light") {
+        if (f.attack === "light" || f.attack === "airLight") {
           cannon(c, d, m, swing);
           castleBrick(c.x + d * 95 * swing, c.y + 10, m, .1 * d, swing);
+        }
+        if (f.attack === "crouchLight") {
+          cannon({ x: c.x, y: c.y + 30 }, d, m, swing);
+          castleBrick(c.x + d * 76 * swing, c.y + 40, m, .06 * d, swing);
         }
         if (f.attack === "heavy" || f.attack === "crouchHeavy") {
           cannon(c, d, m, swing);
@@ -2139,6 +2144,10 @@
         }
         if (f.attack === "airHeavy") {
           arc(c.x + d * 8, c.y + 10, 64, d === 1 ? -.4 : Math.PI - .9, d === 1 ? -.4 + 1.45 * swing : Math.PI - .9 + 1.45 * swing, m, 12, swing);
+        }
+        if (f.attack === "airSpecial") {
+          cannon(c, d, m, swing);
+          arc(c.x + d * 12, c.y + 8, 84, d === 1 ? -.75 : Math.PI - .35, d === 1 ? -.75 + 1.7 * swing : Math.PI - .35 + 1.7 * swing, m, 16, swing);
         }
 
         if (f.attack === "special") {
@@ -2179,7 +2188,7 @@
 
       if (p === "bishop") {
         if (sword) {
-          if (f.attack === "light") {
+          if (f.attack === "light" || f.attack === "airLight") {
             const q = clamp((e - 2) / 10, 0, 1);
             greatSword(c, d, m, q, -0.34, 215, 18);
             arc(c.x + d * 30, c.y + 5, 88, d === 1 ? -0.65 : Math.PI + .05, d === 1 ? -0.65 + 1.2 * q : Math.PI + .05 - 1.2 * q, { ...m, weapon: "rgba(255,245,190,.72)" }, 12, q);
@@ -2234,7 +2243,7 @@
             spark(c.x + d * 140 * q, c.y - 40 * q, { magic: "rgba(255,245,190,.9)" }, 30 * q, 10);
           }
         } else {
-          if (f.attack === "light") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
+          if (f.attack === "light" || f.attack === "airLight") staff(c, d, m, clamp((e - 2) / 10, 0, 1), -.72, 132, 9);
           if (f.attack === "heavy") {
             const s = clamp((e - 2) / 16, 0, 1);
             after(f, c.x + d * 35 * s, c.y - 24 * s, 1, .14);
@@ -2262,7 +2271,7 @@
       }
 
       if (p === "knight") {
-        if (f.attack === "light") {
+        if (f.attack === "light" || f.attack === "airLight") {
           const q = clamp((e - 2) / 11, 0, 1);
           const retract = clamp((e - 10) / 8, 0, 1);
           const reach = 1 - retract * .35;
@@ -2297,6 +2306,10 @@
           ctx.stroke();
           ctx.restore();
         }
+        if (f.attack === "crouchLight") {
+          const q = clamp((e - 2) / 10, 0, 1);
+          blade(c.x - d * 10, c.y + 42, d === 1 ? .06 : Math.PI - .06, 100, m, q, 7);
+        }
         if (f.attack === "heavy") lance(c, d, m, swing, -1.08);
         if (f.attack === "crouchHeavy") lance(c, d, m, swing, d === 1 ? -2.78 : -.36);
         if (f.attack === "airHeavy") {
@@ -2324,7 +2337,6 @@
           }
 
           for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-          lance(c, d, m, .95, 0);
         } else if (f.attack === "special") {
           const s = clamp((e - 4) / 16, 0, 1);
           if (f.attackAim === "up") {
@@ -2339,7 +2351,7 @@
       }
 
       if (p === "pawn") {
-        if (f.attack === "light" || f.attack === "crouchLight") spear(c, d, m, swing, 106, 7, 0);
+        if (f.attack === "light" || f.attack === "airLight" || f.attack === "crouchLight") spear(c, d, m, swing, 106, 7, f.attack === "airLight" ? -.2 : 0);
         if (f.attack === "heavy") spear(c, d, m, swing, 130, 9, -.18);
         if (f.attack === "crouchHeavy") spear(c, d, m, swing, 116, 9, -.7);
         if (f.attack === "airHeavy") arc(c.x + d * 6, c.y + 12, 44, d === 1 ? -.8 : Math.PI - .35, d === 1 ? -.8 + 1.75 * swing : Math.PI - .35 + 1.75 * swing, m, 9, swing);
@@ -2353,7 +2365,12 @@
       }
 
       if (p === "queen") {
-        if (f.attack === "light") twin(c, d, m, clamp((e - 2) / 10, 0, 1));
+        if (f.attack === "light" || f.attack === "airLight") twin(c, d, m, clamp((e - 2) / 10, 0, 1));
+        if (f.attack === "crouchLight") {
+          const s = clamp((e - 2) / 10, 0, 1);
+          arc(c.x + d * 12, c.y + 36, 58, d === 1 ? -.18 : Math.PI + .18, d === 1 ? -.18 + 1.3 * s : Math.PI + .18 - 1.3 * s, m, 10, s);
+          twin({ x: c.x, y: c.y + 26 }, d, m, s);
+        }
         if (f.attack === "heavy" || f.attack === "crouchHeavy") {
           const s = clamp((e - 4) / 18, 0, 1);
           arc(c.x + d * 28, c.y + 10, 116, d === 1 ? -1 : Math.PI + .06, d === 1 ? -1 + 1.78 * s : Math.PI + .06 - 1.78 * s, m, 16, s);

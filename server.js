@@ -648,6 +648,8 @@ function box(f) {
 
   if (p === "king") {
     if (a === "light") return forward(104, 56, 28);
+    if (a === "airLight") return body(112, 84, 8, 26);
+    if (a === "crouchLight") return forward(96, 42, f.h * 0.58);
     if (a === "heavy") return forward(150, 92, 12);
     if (a === "crouchHeavy") return forward(138, 60, f.h * 0.52);
     if (a === "airHeavy") return body(132, 108, 22, 22);
@@ -660,9 +662,12 @@ function box(f) {
 
   if (p === "rook") {
     if (a === "light") return forward(150, 50, 40);
+    if (a === "airLight") return body(142, 82, 10, 36);
+    if (a === "crouchLight") return forward(132, 42, f.h * 0.6);
     if (a === "heavy") return forward(210, 94, 20);
     if (a === "crouchHeavy") return forward(180, 54, f.h * 0.55);
     if (a === "airHeavy") return forward(134, 102, 18);
+    if (a === "airSpecial") return body(168, 118, 4, 42);
     if (a === "special") {
       if (aim === "up") return up(110, 310);
       if (aim === "down") return forward(270, 66, f.h * 0.62);
@@ -674,6 +679,7 @@ function box(f) {
 
   if (p === "bishop") {
     if (a === "light") return sword ? forward(205, 104, -2) : forward(132, 82, 16);
+    if (a === "airLight") return sword ? body(210, 128, -6, 40) : body(130, 98, 0, 30);
     if (a === "heavy") return sword ? diag(285, 210, -125, 20) : diag(170, 140, -88, 16);
     if (a === "crouchLight") return sword ? forward(180, 56, f.h * 0.56) : forward(120, 36, f.h * 0.65);
     if (a === "crouchHeavy") return sword ? forward(240, 92, f.h * 0.38) : forward(150, 64, f.h * 0.45);
@@ -690,6 +696,8 @@ function box(f) {
 
   if (p === "knight") {
     if (a === "light") return forward(104, 60, 28);
+    if (a === "airLight") return body(112, 90, 0, 32);
+    if (a === "crouchLight") return forward(96, 42, f.h * 0.6);
     if (a === "heavy") return body(112, 104, -12, 30);
     if (a === "crouchHeavy") return forward(102, 74, f.h * 0.43);
     if (a === "airHeavy") return { x: f.x - 32, y: f.y - 28, w: f.w + 64, h: f.h + 56 };
@@ -703,6 +711,7 @@ function box(f) {
 
   if (p === "pawn") {
     if (a === "light") return forward(94, 30, 40);
+    if (a === "airLight") return forward(94, 58, 20);
     if (a === "heavy") return forward(122, 58, 26);
     if (a === "crouchLight") return forward(88, 24, f.h * 0.66);
     if (a === "crouchHeavy") return forward(106, 56, f.h * 0.46);
@@ -716,6 +725,8 @@ function box(f) {
 
   if (p === "queen") {
     if (a === "light") return forward(160, 80, 18);
+    if (a === "airLight") return body(164, 116, 2, 42);
+    if (a === "crouchLight") return forward(142, 48, f.h * 0.58);
     if (a === "heavy") return forward(224, 128, -6);
     if (a === "crouchHeavy") return forward(180, 66, f.h * 0.46);
     if (a === "airHeavy") return forward(160, 126, 8);
