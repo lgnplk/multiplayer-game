@@ -1504,37 +1504,6 @@
       ctx.restore();
     }
 
-    function arc(cx, cy, r, a1, a2, m, width, alpha = 1) {
-      if (![cx, cy, r, a1, a2, width, alpha].every(Number.isFinite)) return;
-      if (r <= 0) return;
-
-      m = m || {};
-
-      ctx.save();
-      ctx.globalAlpha = clamp(alpha, 0, 1);
-      ctx.lineCap = "round";
-
-      ctx.strokeStyle = "rgba(0,0,0,.3)";
-      ctx.lineWidth = width + 6;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, a1, a2);
-      ctx.stroke();
-
-      ctx.strokeStyle = m.weapon || "#eee";
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, a1, a2);
-      ctx.stroke();
-
-      ctx.strokeStyle = m.edge || "#000";
-      ctx.lineWidth = Math.max(2, width * .25);
-      ctx.beginPath();
-      ctx.arc(cx, cy, Math.max(1, r - 2), a1, a2);
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
     function spark(x, y, m, len = 20, rays = 7) {
       if (![x, y, len, rays].every(Number.isFinite)) return;
       m = m || {};
@@ -1595,16 +1564,6 @@
       ctx.restore();
     }
 
-    function swingArc(cx, cy, r, start, sweep, d, m, width, alpha = 1) {
-      if (![cx, cy, r, start, sweep, d, width, alpha].every(Number.isFinite)) return;
-
-      if (d === 1) {
-        arc(cx, cy, r, start, start + sweep, m, width, alpha);
-      } else {
-        arc(cx, cy, r, Math.PI - start, Math.PI - start - sweep, m, width, alpha);
-      }
-    }
-
     function royalAxe(c, d, m, p, angle = 0, len = 150, width = 12) {
       if (!c) return;
       const q = ease(p);
@@ -1613,6 +1572,7 @@
       const baseY = c.y + 16;
       const tipX = baseX + Math.cos(finalAngle) * len * q;
       const tipY = baseY + Math.sin(finalAngle) * len * q;
+      const gold = m.ult || "#ffd84e";
 
       line([
         { x: baseX, y: baseY },
@@ -1633,19 +1593,44 @@
       ctx.lineJoin = "round";
 
       ctx.beginPath();
-      ctx.moveTo(10, 0);
-      ctx.bezierCurveTo(24, -30, 62, -28, 70, -2);
-      ctx.bezierCurveTo(48, -10, 32, -5, 18, 0);
-      ctx.bezierCurveTo(32, 5, 48, 10, 70, 2);
-      ctx.bezierCurveTo(62, 28, 24, 30, 10, 0);
+      ctx.moveTo(8, 0);
+      ctx.bezierCurveTo(18, -34, 58, -40, 74, -10);
+      ctx.bezierCurveTo(54, -13, 35, -8, 19, 0);
+      ctx.bezierCurveTo(35, 8, 54, 13, 74, 10);
+      ctx.bezierCurveTo(58, 40, 18, 34, 8, 0);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = m.weapon || "#eee";
-      rr(-10, -12, 22, 24, 4);
+      ctx.fillStyle = gold;
+      rr(-14, -16, 28, 32, 5);
       ctx.fill();
       ctx.stroke();
+
+      ctx.fillStyle = m.weapon || "#eee";
+      rr(-7, -24, 14, 48, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = gold;
+      ctx.beginPath();
+      ctx.moveTo(-24, -8);
+      ctx.lineTo(-8, -16);
+      ctx.lineTo(-2, 0);
+      ctx.lineTo(-8, 16);
+      ctx.lineTo(-24, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = m.edge || "#111";
+      ctx.beginPath();
+      ctx.moveTo(-2, -5);
+      ctx.lineTo(3, 0);
+      ctx.lineTo(-2, 5);
+      ctx.lineTo(-7, 0);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     }
 
@@ -2159,7 +2144,6 @@
         if (f.attack === "airLight") {
           const q = clamp((e - 2) / 10, 0, 1);
           royalAxe(c, d, m, q, .42, 134, 9);
-          swingArc(c.x + d * 20, c.y + 6, 54, -.25, 1.3 * q, d, m, 8, q);
         }
         if (f.attack === "crouchLight") {
           const q = clamp((e - 2) / 10, 0, 1);
@@ -2170,7 +2154,6 @@
           const q = clamp((e - 5) / 20, 0, 1);
           after(f, c.x + d * 34 * q, c.y, 1.05, .16);
           royalAxe(c, d, m, q, -0.72, 190, 16);
-          swingArc(c.x + d * 30, c.y + 6, 92, -1.2, 2.1 * q, d, m, 16, q);
         }
         if (f.attack === "crouchHeavy") {
           royalAxe({ x: c.x, y: c.y + 42 }, d, m, swing, .16, 178, 13);
@@ -2180,30 +2163,16 @@
         if (f.attack === "airHeavy") {
           const q = clamp((e - 2) / 18, 0, 1);
           royalAxe({ x: c.x + d * 8, y: c.y + 16 }, d, m, q, 1.1, 190, 18);
-          swingArc(c.x, c.y + 34, 76, .1, 1.8 * q, d, m, 15, q);
         }
         if (f.attack === "special" || f.attack === "airSpecial") {
           if (f.attackAim === "down") {
-            ctx.save();
-            ctx.globalAlpha = .82 * swing;
-            ctx.strokeStyle = m.magic;
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.arc(c.x + d * 42, c.y + 12, 34 + 28 * swing, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.globalAlpha = .26 * swing;
-            ctx.fillStyle = m.ult;
-            ctx.beginPath();
-            ctx.arc(c.x + d * 42, c.y + 12, 44 + 20 * swing, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = .9 * swing;
-            ctx.strokeStyle = m.edge;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(c.x + d * 42, c.y + 12, 68 * swing, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
             royalAxe(c, d, m, swing, .15, 138, 12);
+            line([
+              { x: c.x - d * 18, y: c.y - 34 },
+              { x: c.x + d * 42 * swing, y: c.y + 18 },
+              { x: c.x + d * 84 * swing, y: c.y - 20 }
+            ], { ...m, weapon: m.magic }, 10, swing);
+            dust(c.x + d * 44, f.y + f.h + 5, d, m, Math.ceil(5 * swing));
           } else if (f.attackAim === "up") {
             royalAxe(c, d, m, swing, -1.35, 260, 16);
             line([{ x: c.x - d * 28, y: c.y + 60 }, { x: c.x, y: c.y - 118 * swing }, { x: c.x + d * 44, y: c.y - 180 * swing }], { ...m, weapon: "rgba(255,245,190,.78)" }, 14, swing);
@@ -2232,11 +2201,11 @@
           dust(c.x + d * 90, f.y + f.h + 4, d, m, Math.ceil(7 * swing));
         }
         if (f.attack === "airHeavy") {
-          swingArc(c.x + d * 8, c.y + 10, 64, -.4, 1.45 * swing, d, m, 12, swing);
+          line([{ x: c.x - d * 18, y: c.y - 18 }, { x: c.x + d * 52 * swing, y: c.y + 28 }], m, 10, swing);
         }
         if (f.attack === "airSpecial") {
           cannon(c, d, m, swing);
-          swingArc(c.x + d * 12, c.y + 8, 84, -.75, 1.7 * swing, d, m, 16, swing);
+          line([{ x: c.x - d * 20, y: c.y + 42 }, { x: c.x + d * 88 * swing, y: c.y - 34 }], m, 14, swing);
         }
 
         if (f.attack === "special") {
@@ -2280,7 +2249,7 @@
           if (f.attack === "light" || f.attack === "airLight") {
             const q = clamp((e - 2) / 10, 0, 1);
             greatSword(c, d, m, q, -0.34, 215, 18);
-            swingArc(c.x + d * 30, c.y + 5, 88, -0.65, 1.2 * q, d, { ...m, weapon: "rgba(255,245,190,.72)" }, 12, q);
+            line([{ x: c.x - d * 24, y: c.y + 42 }, { x: c.x + d * 115 * q, y: c.y - 32 }], { ...m, weapon: "rgba(255,245,190,.72)" }, 12, q);
           }
 
           if (f.attack === "heavy") {
@@ -2443,7 +2412,7 @@
         if (f.attack === "light" || f.attack === "airLight" || f.attack === "crouchLight") spear(c, d, m, swing, 106, 7, f.attack === "airLight" ? -.2 : 0);
         if (f.attack === "heavy") spear(c, d, m, swing, 130, 9, -.18);
         if (f.attack === "crouchHeavy") spear(c, d, m, swing, 116, 9, -.7);
-        if (f.attack === "airHeavy") swingArc(c.x + d * 6, c.y + 12, 44, -.8, 1.75 * swing, d, m, 9, swing);
+        if (f.attack === "airHeavy") line([{ x: c.x - d * 16, y: c.y - 14 }, { x: c.x + d * 58 * swing, y: c.y + 38 }], m, 9, swing);
         if (f.attack === "special" || f.attack === "airSpecial") {
           const s = clamp((e - 4) / 14, 0, 1);
           if (f.attackAim === "up") spear(c, d, m, s, 140, 11, -1.25);
@@ -2457,15 +2426,15 @@
         if (f.attack === "light" || f.attack === "airLight") twin(c, d, m, clamp((e - 2) / 10, 0, 1));
         if (f.attack === "crouchLight") {
           const s = clamp((e - 2) / 10, 0, 1);
-          swingArc(c.x + d * 12, c.y + 36, 58, -.18, 1.3 * s, d, m, 10, s);
+          line([{ x: c.x - d * 20, y: c.y + 44 }, { x: c.x + d * 76 * s, y: c.y + 28 }], m, 10, s);
           twin({ x: c.x, y: c.y + 26 }, d, m, s);
         }
         if (f.attack === "heavy" || f.attack === "crouchHeavy") {
           const s = clamp((e - 4) / 18, 0, 1);
-          swingArc(c.x + d * 28, c.y + 10, 116, -1, 1.78 * s, d, m, 16, s);
+          line([{ x: c.x - d * 42, y: c.y + 70 }, { x: c.x + d * 130 * s, y: c.y - 60 * s }], m, 16, s);
           twin(c, d, m, s);
         }
-        if (f.attack === "airHeavy") swingArc(c.x + d * 12, c.y, 86, -.9, 1.9 * swing, d, m, 14, swing);
+        if (f.attack === "airHeavy") line([{ x: c.x - d * 28, y: c.y - 48 }, { x: c.x + d * 98 * swing, y: c.y + 44 * swing }], m, 14, swing);
         if (f.attack === "special" || f.attack === "airSpecial") {
           const s = clamp((e - 6) / 22, 0, 1);
           after(f, c.x + d * 50 * s, c.y, 1.06, .16 * s);
@@ -2488,8 +2457,12 @@
         ctx.globalAlpha = .55 + Math.sin(state.t * .6) * .12;
         ctx.strokeStyle = sword ? "rgba(255,245,190,.95)" : m.magic;
         ctx.lineWidth = sword ? 6 : 4;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.arc(c.x, c.y, 40 + e * 2, 0, Math.PI * 2);
+        ctx.moveTo(c.x - 34 - e * 2, c.y - 34);
+        ctx.lineTo(c.x + 34 + e * 2, c.y + 34);
+        ctx.moveTo(c.x + 34 + e * 2, c.y - 34);
+        ctx.lineTo(c.x - 34 - e * 2, c.y + 34);
         ctx.stroke();
 
         if (sword) greatSword(c, d, m, .55, -1.1, 190, 15);
@@ -2505,15 +2478,14 @@
       const s = clamp((e - 14) / 14, 0, 1);
 
       if (p === "king") {
-        hammer(c, d, m, s);
-        blade(c.x - d * 8, c.y + 30, d === 1 ? -.2 : Math.PI + .2, 130, m, s, 18);
+        royalAxe(c, d, m, s, -.2, 170, 18);
       } else if (p === "rook") {
         cannon(c, d, m, s);
         for (let i = 0; i < 6; i++) castleBrick(c.x + d * (35 + i * 28) * s, c.y - 34 + i * 9, m, d * .18, s);
       } else if (p === "bishop") {
         if (sword) {
           greatSword(c, d, m, s, -0.4, 270, 23);
-          swingArc(c.x + d * 16, c.y, 120 * s, -1.2, 2.1, d, { ...m, weapon: "rgba(255,245,190,.8)" }, 18, s);
+          line([{ x: c.x - d * 50, y: c.y + 70 }, { x: c.x + d * 135 * s, y: c.y - 92 * s }], { ...m, weapon: "rgba(255,245,190,.8)" }, 18, s);
         } else {
           staff(c, d, m, s, -.88, 166, 15);
           staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
@@ -2525,7 +2497,7 @@
         spear(c, d, m, s, 126, 11, 0);
       } else {
         twin(c, d, m, s);
-        swingArc(c.x + d * 12, c.y, 110 * s, -1.2, 2.15, d, m, 16, s);
+        line([{ x: c.x - d * 42, y: c.y + 64 }, { x: c.x + d * 125 * s, y: c.y - 86 * s }], m, 16, s);
       }
     }
 
