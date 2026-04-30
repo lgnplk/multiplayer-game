@@ -57,12 +57,12 @@ const CHARACTERS = {
   },
   knight: {
     name: "Knight",
-    title: "Swift Evader",
-    hp: 660,
-    speed: 8.6,
-    jump: 20.5,
-    w: 66,
-    h: 116
+    title: "Mobile Striker",
+    hp: 720,
+    speed: 8.9,
+    jump: 21,
+    w: 68,
+    h: 118
   },
   pawn: {
     name: "Pawn",
@@ -416,7 +416,7 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
     if (p === "king") Object.assign(m, { dmg: 13, kb: 34, grab: true, throwPower: 34, cd: 140 });
     if (p === "rook") Object.assign(m, { dmg: 12, kb: 40, armor: 24, wall: 48, cd: 150 });
     if (p === "bishop") Object.assign(m, { dmg: sword ? 14 : 10, kb: sword ? 38 : 28, lift: sword ? -30 : -25, cd: sword ? 72 : 118, breakArmor: sword });
-    if (p === "knight") Object.assign(m, { dmg: 10, kb: 31, lift: -18, cd: 110 });
+    if (p === "knight") Object.assign(m, { dmg: 13, kb: 36, lift: -20, cd: 100, wall: 42 });
     if (p === "pawn") Object.assign(m, { dmg: 5, kb: 24, cd: 92 });
     if (p === "queen") Object.assign(m, { dmg: 16, kb: 24, lift: -20, cd: 92, breakArmor: true });
 
@@ -534,28 +534,31 @@ function meta(f, attack = f.attack, aim = f.attackAim) {
   }
 
   if (p === "knight") {
-    if (attack === "light") Object.assign(m, { duration: 17, activeA: 4, activeB: 11, dmg: 5, kb: 14, lift: -3, cd: 13 });
-    if (attack === "heavy") Object.assign(m, { duration: 27, activeA: 8, activeB: 15, dmg: 5, kb: 22, lift: -23, stamina: 8, cd: 34 });
-    if (attack === "crouchHeavy") Object.assign(m, { duration: 24, activeA: 7, activeB: 13, dmg: 5, kb: 20, lift: -17, stamina: 8, cd: 34 });
-    if (attack === "airHeavy") Object.assign(m, { duration: 32, activeA: 4, activeB: 22, dmg: 10, kb: 25, stamina: 10, cd: 40 });
+    if (attack === "light") Object.assign(m, { duration: 19, activeA: 5, activeB: 12, dmg: 8, kb: 20, lift: -6, cd: 14, wall: 24 });
+    if (attack === "airLight") Object.assign(m, { duration: 20, activeA: 4, activeB: 13, dmg: 8, kb: 22, lift: 8, cd: 15, wall: 28 });
+    if (attack === "crouchLight") Object.assign(m, { duration: 18, activeA: 5, activeB: 12, dmg: 7, kb: 18, lift: -18, cd: 15, wall: 22 });
+    if (attack === "heavy") Object.assign(m, { duration: 34, activeA: 9, activeB: 22, dmg: 17, kb: 38, lift: -14, stamina: 11, cd: 48, armor: 10, breakArmor: true, wall: 55 });
+    if (attack === "crouchHeavy") Object.assign(m, { duration: 32, activeA: 8, activeB: 20, dmg: 15, kb: 34, lift: -26, stamina: 10, cd: 44, armor: 8, breakArmor: true, wall: 48 });
+    if (attack === "airHeavy") Object.assign(m, { duration: 36, activeA: 7, activeB: 25, dmg: 16, kb: 33, lift: 22, stamina: 10, cd: 46, breakArmor: true, wall: 50 });
     if (attack === "airSpecial") {
       Object.assign(m, {
         duration: 34,
         activeA: 1,
         activeB: 31,
-        dmg: 4,
-        kb: 18,
-        lift: -10,
+        dmg: 6,
+        kb: 24,
+        lift: -12,
         stamina: 14,
-        cd: 58,
+        cd: 48,
         multi: true,
-        interval: 5,
-        wall: 44
+        interval: 7,
+        wall: 46,
+        breakArmor: true
       });
     } else if (attack === "special") {
-      if (aim === "up") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 9, kb: 20, lift: -38, stamina: 17, cd: 140 });
-      else if (aim === "down") Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 11, kb: 34, lift: 18, stamina: 18, cd: 145, breakArmor: true });
-      else Object.assign(m, { duration: 36, activeA: 8, activeB: 17, dmg: 10, kb: 31, lift: -18, stamina: 17, cd: 140 });
+      if (aim === "up") Object.assign(m, { duration: 42, activeA: 8, activeB: 24, dmg: 14, kb: 25, lift: -52, stamina: 16, cd: 96, armor: 12, breakArmor: true, wall: 36 });
+      else if (aim === "down") Object.assign(m, { duration: 42, activeA: 9, activeB: 24, dmg: 16, kb: 42, lift: 16, stamina: 17, cd: 105, armor: 18, breakArmor: true, wall: 60 });
+      else Object.assign(m, { duration: 40, activeA: 8, activeB: 25, dmg: 15, kb: 38, lift: -10, stamina: 16, cd: 100, armor: 14, breakArmor: true, wall: 56 });
     }
   }
 
@@ -702,17 +705,17 @@ function box(f) {
   }
 
   if (p === "knight") {
-    if (a === "light") return forward(104, 60, 28);
-    if (a === "airLight") return body(112, 90, 0, 32);
-    if (a === "crouchLight") return forward(96, 42, f.h * 0.6);
-    if (a === "heavy") return body(112, 104, -12, 30);
-    if (a === "crouchHeavy") return forward(102, 74, f.h * 0.43);
-    if (a === "airHeavy") return { x: f.x - 32, y: f.y - 28, w: f.w + 64, h: f.h + 56 };
-    if (a === "airSpecial") return { x: f.x - 34, y: f.y - 34, w: f.w + 68, h: f.h + 68 };
+    if (a === "light") return forward(150, 70, 20);
+    if (a === "airLight") return body(160, 110, -4, 42);
+    if (a === "crouchLight") return forward(140, 46, f.h * 0.62);
+    if (a === "heavy") return body(230, 126, -18, 72);
+    if (a === "crouchHeavy") return forward(200, 74, f.h * 0.46);
+    if (a === "airHeavy") return body(210, 160, -16, 40);
+    if (a === "airSpecial") return { x: f.x - 54, y: f.y - 54, w: f.w + 108, h: f.h + 108 };
     if (a === "special") {
-      if (aim === "up") return up(120, 154, 10);
-      if (aim === "down") return body(142, 112, f.h * 0.3, 42);
-      return body(140, 110, 0, 50);
+      if (aim === "up") return up(155, 220, 14);
+      if (aim === "down") return body(210, 130, f.h * 0.25, 62);
+      return body(220, 125, -6, 80);
     }
   }
 
@@ -2102,7 +2105,20 @@ function startAttack(f, base, input, game) {
     }
 
     if (p === "knight") {
-      f.script = move === "airSpecial" ? knightAirPattern(f, input) : knightPattern(f, input);
+      if (move === "airSpecial") {
+        f.script = knightAirPattern(f, input);
+      } else if (aim === "up") {
+        f.vy = -13.8;
+        f.vx += d * 5.5;
+        f.armor = Math.max(f.armor, 12);
+      } else if (aim === "down") {
+        f.vx += d * 10;
+        f.vy = Math.max(f.vy, 7);
+        f.armor = Math.max(f.armor, 18);
+      } else {
+        f.script = fixed(d * 18, -1.5, 10);
+        f.armor = Math.max(f.armor, 14);
+      }
     }
 
     if (p === "pawn") {
@@ -2147,8 +2163,20 @@ function startAttack(f, base, input, game) {
       f.vx += d * 7.5;
     }
 
-    if (p === "knight" && base === "heavy") {
-      f.vx += d * 4;
+    if (p === "knight") {
+      if (base === "light") {
+        f.vx += d * 2.6;
+      }
+
+      if (base === "heavy") {
+        f.vx += d * 8;
+        f.armor = Math.max(f.armor, m.armor);
+      }
+
+      if (move === "airHeavy") {
+        f.vx += d * 4.2;
+        f.vy = Math.max(f.vy, 9.5);
+      }
     }
 
     if (p === "queen" && base === "heavy") {

@@ -3241,53 +3241,50 @@
       }
 
       if (p === "knight") {
-        if (f.attack === "light" || f.attack === "airLight") {
-          const q = clamp((e - 2) / 11, 0, 1);
-          const retract = clamp((e - 10) / 8, 0, 1);
-          const reach = 1 - retract * .35;
+        const q = swingPhaseAt(attackProgress(f), .08, .72);
 
-          after(f, c.x - d * 10 * q, c.y, .96, .12);
-
-          blade(
-            c.x - d * 8,
-            c.y + 14,
-            d === 1 ? -.08 : Math.PI + .08,
-            118 * reach,
-            m,
-            q,
-            8
-          );
-
-          ctx.save();
-          ctx.globalAlpha = .55 * q;
-          ctx.strokeStyle = m.weapon;
-          ctx.lineWidth = 3;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(c.x - d * 18, c.y + 32);
-          ctx.lineTo(c.x + d * 64 * q, c.y + 20);
-          ctx.stroke();
-
-          ctx.strokeStyle = m.edge;
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(c.x - d * 18, c.y + 36);
-          ctx.lineTo(c.x + d * 58 * q, c.y + 28);
-          ctx.stroke();
-          ctx.restore();
+        if (f.attack === "light") {
+          after(f, c.x - d * 14 * q, c.y, .96, .12);
+          blade(c.x - d * 20, c.y + 22, d === 1 ? -.26 : Math.PI + .26, 168, m, q, 11);
+          line([{ x: c.x - d * 20, y: c.y + 36 }, { x: c.x + d * 130 * q, y: c.y + 2 }], { ...m, weapon: "rgba(255,245,190,.62)" }, 9, q * .72);
         }
+
+        if (f.attack === "airLight") {
+          blade(c.x - d * 20, c.y + 10, d === 1 ? .28 : Math.PI - .28, 172, m, q, 11);
+          line([{ x: c.x - d * 22, y: c.y - 22 }, { x: c.x + d * 122 * q, y: c.y + 38 }], { ...m, weapon: "rgba(255,245,190,.58)" }, 9, q * .7);
+        }
+
         if (f.attack === "crouchLight") {
-          const q = clamp((e - 2) / 10, 0, 1);
-          blade(c.x - d * 10, c.y + 42, d === 1 ? .06 : Math.PI - .06, 100, m, q, 7);
+          const s = swingPhaseAt(attackProgress(f), .08, .68);
+          blade(c.x - d * 24, c.y + 56, d === 1 ? -.08 : Math.PI + .08, 150, m, s, 10);
+          dust(c.x + d * 68, f.y + f.h + 4, d, m, Math.ceil(3 * s));
         }
-        if (f.attack === "heavy") lance(c, d, m, swing, -1.08);
-        if (f.attack === "crouchHeavy") lance(c, d, m, swing, d === 1 ? -2.78 : -.36);
+
+        if (f.attack === "heavy") {
+          const s = swingPhaseAt(attackProgress(f), .12, .72);
+          after(f, c.x + d * 36 * s, c.y - 10 * s, 1.04, .14);
+          blade(c.x - d * 26, c.y + 42, d === 1 ? -.74 : Math.PI + .74, 242, m, s, 18);
+          line([
+            { x: c.x - d * 42, y: c.y + 74 },
+            { x: c.x + d * 98 * s, y: c.y - 34 * s },
+            { x: c.x + d * 196 * s, y: c.y - 74 * s }
+          ], { ...m, weapon: "rgba(255,245,190,.72)" }, 15, s * .78);
+        }
+
+        if (f.attack === "crouchHeavy") {
+          const s = swingPhaseAt(attackProgress(f), .1, .72);
+          blade(c.x - d * 28, c.y + 66, d === 1 ? .14 : Math.PI - .14, 226, m, s, 17);
+          line([{ x: c.x - d * 34, y: c.y + 72 }, { x: c.x + d * 178 * s, y: c.y + 54 }], { ...m, weapon: "rgba(255,245,190,.68)" }, 16, s * .74);
+          dust(c.x + d * 114, f.y + f.h + 5, d, m, Math.ceil(8 * s));
+        }
+
         if (f.attack === "airHeavy") {
-          const trail = Array.isArray(f.script?.trail) ? f.script.trail : [];
-          if (trail.length > 1) line(trail, m, 14, .85);
-          for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
-          lance(c, d, m, .9, 0);
+          const s = swingPhaseAt(attackProgress(f), .08, .76);
+          after(f, c.x + d * 22 * s, c.y + 22 * s, .96, .13);
+          blade(c.x - d * 18, c.y - 28, d === 1 ? .82 : Math.PI - .82, 234, m, s, 18);
+          line([{ x: c.x - d * 28, y: c.y - 54 }, { x: c.x + d * 150 * s, y: c.y + 108 * s }], { ...m, weapon: "rgba(255,245,190,.68)" }, 15, s * .76);
         }
+
         if (f.attack === "airSpecial") {
           const s = f.script || {};
           const trail = Array.isArray(s.trail) ? s.trail : [];
@@ -3307,15 +3304,20 @@
           }
 
           for (let i = 0; i < trail.length; i += 4) after(f, trail[i].x, trail[i].y, .9, .12);
+          blade(c.x - d * 18, c.y + 10, d === 1 ? -.2 : Math.PI + .2, 178, m, .92, 13);
         } else if (f.attack === "special") {
-          const s = clamp((e - 4) / 16, 0, 1);
+          const s = swingPhaseAt(attackProgress(f), .08, .74);
           if (f.attackAim === "up") {
-            line([{ x: c.x, y: c.y + 40 }, { x: c.x, y: c.y - 104 * s }, { x: c.x + d * 72 * s, y: c.y - 104 * s }], m, 14, s);
+            blade(c.x - d * 8, c.y + 46, -Math.PI / 2, 250, m, s, 17);
+            line([{ x: c.x - d * 10, y: c.y + 48 }, { x: c.x + d * 22 * s, y: c.y - 142 * s }], { ...m, weapon: "rgba(255,245,190,.72)" }, 16, s * .78);
           } else if (f.attackAim === "down") {
-            line([{ x: c.x, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y - 28 }, { x: c.x + d * 104 * s, y: c.y + 86 * s }], m, 14, s);
-            dust(c.x + d * 94, f.y + f.h + 5, d, m, Math.ceil(8 * s));
+            blade(c.x - d * 24, c.y + 16, d === 1 ? .42 : Math.PI - .42, 228, m, s, 17);
+            line([{ x: c.x - d * 28, y: c.y + 2 }, { x: c.x + d * 178 * s, y: c.y + 86 * s }], { ...m, weapon: "rgba(255,245,190,.72)" }, 16, s * .78);
+            dust(c.x + d * 110, f.y + f.h + 5, d, m, Math.ceil(9 * s));
           } else {
-            line([{ x: c.x, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y + 28 }, { x: c.x + d * 90 * s, y: c.y - 54 * s }], m, 14, s);
+            after(f, c.x + d * 44 * s, c.y - 5, 1.02, .14);
+            blade(c.x - d * 22, c.y + 34, d === 1 ? -.18 : Math.PI + .18, 242, m, s, 18);
+            line([{ x: c.x - d * 42, y: c.y + 42 }, { x: c.x + d * 198 * s, y: c.y - 8 * s }], { ...m, weapon: "rgba(255,245,190,.72)" }, 17, s * .8);
           }
         }
       }
@@ -3402,7 +3404,7 @@
         staff(c, d, m, Math.max(0, s - .18), .65, 120, 10);
       } else if (p === "knight") {
         line([{ x: c.x - d * 46, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y + 34 }, { x: c.x + d * 42 * s, y: c.y - 60 * s }], m, 16, s);
-        lance(c, d, m, s, -.2);
+        blade(c.x - d * 24, c.y + 38, d === 1 ? -.28 : Math.PI + .28, 190, m, s, 14);
       } else if (p === "pawn") {
         spear(c, d, m, s, 126, 11, 0);
       } else {
